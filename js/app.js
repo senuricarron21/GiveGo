@@ -2108,7 +2108,19 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (catFilter !== 'all') {
-            filtered = filtered.filter(d => d.category === catFilter);
+            filtered = filtered.filter(d => {
+                if (!d.category) return false;
+                const c = d.category.toLowerCase().trim();
+                const f = catFilter.toLowerCase().trim();
+                return c === f || c.includes(f) || f.includes(c) ||
+                       (f.includes('food') && c.includes('food')) ||
+                       (f.includes('medical') && c.includes('medical')) ||
+                       (f.includes('clothing') && c.includes('clothing')) ||
+                       (f.includes('education') && c.includes('education')) ||
+                       (f.includes('electronics') && c.includes('electronics')) ||
+                       (f.includes('furniture') && c.includes('furniture')) ||
+                       (f.includes('household') && c.includes('household'));
+            });
         }
 
         if (districtFilter !== 'all') {
@@ -2120,7 +2132,8 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const isReceiver = currentUser && (currentUser.role || "").toLowerCase().includes('receiver');
+        const roleStr = ((currentUser && currentUser.role) || (currentUser && currentUser.accountType) || "").toLowerCase();
+        const isReceiver = roleStr.includes('receiver') || (currentUser && !!currentUser.receiverCategory);
 
         grid.innerHTML = filtered.map(d => {
             const reqBtn = isReceiver ? `<button class="btn btn-primary" style="width:100%; font-size:0.75rem; padding:6px; margin-top:8px; font-weight:800;" onclick="openRequestAvailableItemModal('${d.id}')">Request Item (Self Pick Up)</button>` : '';
@@ -2131,7 +2144,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <img src="${d.photoUrl || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=200&q=80'}" style="width: 100%; height: 95px; border-radius: 6px; object-fit: cover; margin-bottom: 8px;">
                         <h4 style="font-size: 0.85rem; font-weight: 800; color: var(--color-teal-primary); margin-bottom: 4px; line-height: 1.2;">${d.itemName}</h4>
                         <div style="font-size: 0.75rem; color: #5C6B5E; margin-bottom: 4px;">Category: <strong>${d.category}</strong></div>
-                        <div style="font-size: 0.75rem; color: #5C6B5E; margin-bottom: 6px;">Qty: <strong>${d.quantity} units</strong></div>
+                        <div style="font-size: 0.75rem; color: #5C6B5E; margin-bottom: 6px;">Qty: <strong>${d.quantity} ${d.unit || 'units'}</strong></div>
                     </div>
                     <div>
                         <div style="font-size: 0.75rem; color: var(--color-teal-muted); font-weight: 700; border-top: 1px solid #F5EFE0; padding-top: 6px;">
