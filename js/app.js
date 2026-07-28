@@ -250,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             await db.collection("notifications").add({
                 userId: req.receiverId,
-                message: `⚡ AI Smart Match: Admin auto-connected Donor ${don.donorName}'s surplus "${don.itemName}" for your request "${req.itemName}".`,
+                message: `⚡ Smart Match: Admin auto-connected Donor ${don.donorName}'s surplus "${don.itemName}" for your request "${req.itemName}".`,
                 read: false,
                 createdAt: new Date().toISOString()
             });
@@ -272,21 +272,20 @@ document.addEventListener("DOMContentLoaded", () => {
         const smartMatches = [];
 
         for (let req of publishedReqs) {
-            const reqTitle = (req.itemName || "").toLowerCase();
+            const reqTitle = (req.itemName || "").toLowerCase().trim();
+            if (!reqTitle) continue;
             const reqWords = reqTitle.split(/\s+/).filter(w => w.length > 2);
-            const reqCat = (req.category || "").toLowerCase();
 
             for (let don of availDonations) {
-                const donTitle = (don.itemName || "").toLowerCase();
+                const donTitle = (don.itemName || "").toLowerCase().trim();
+                if (!donTitle) continue;
                 const donWords = donTitle.split(/\s+/).filter(w => w.length > 2);
-                const donCat = (don.category || "").toLowerCase();
 
-                // Check keyword or category overlap (e.g., umbrella === umbrella)
+                // Match strictly by Item Name / Title words (e.g., umbrella === umbrella)
                 const matchedWord = reqWords.find(rw => donWords.some(dw => dw.includes(rw) || rw.includes(dw)));
-                const hasKeywordMatch = !!matchedWord || (reqTitle && donTitle && (reqTitle.includes(donTitle) || donTitle.includes(reqTitle)));
-                const hasCategoryMatch = reqCat && donCat && reqCat === donCat;
+                const hasItemNameMatch = !!matchedWord || (reqTitle.length > 2 && donTitle.length > 2 && (reqTitle.includes(donTitle) || donTitle.includes(reqTitle)));
 
-                if (hasKeywordMatch || hasCategoryMatch) {
+                if (hasItemNameMatch) {
                     smartMatches.push({
                         requestId: req.id,
                         requestName: req.itemName,
@@ -297,15 +296,15 @@ document.addEventListener("DOMContentLoaded", () => {
                         donorId: don.donorId,
                         donorName: don.donorName,
                         category: don.category,
-                        matchedWord: matchedWord || don.category,
-                        matchType: hasKeywordMatch ? 'Exact Item Name Match (' + (matchedWord || req.itemName) + ')' : 'Category Match (' + don.category + ')'
+                        matchedWord: matchedWord || req.itemName,
+                        matchType: 'Item Name Match: ' + (matchedWord || req.itemName)
                     });
                 }
             }
         }
 
         if (smartMatches.length === 0) {
-            container.innerHTML = `<div style="text-align: center; color: var(--color-text-muted); padding: 20px; font-size: 0.85rem;">No active AI keyword smart matches detected yet. When a receiver requests an item (e.g. "Umbrella") and a donor posts the same item, it will automatically match here!</div>`;
+            container.innerHTML = `<div style="text-align: center; color: var(--color-text-muted); padding: 20px; font-size: 0.85rem;">No active item name matches detected yet. When a receiver requests an item (e.g. "Umbrella") and a donor posts an item with the same name, it will automatically match here!</div>`;
             return;
         }
 
