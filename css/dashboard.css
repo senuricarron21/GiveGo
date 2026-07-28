@@ -81,6 +81,7 @@ body {
 .menu-item a {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     padding: 10px 16px;
     color: var(--color-teal-muted);
     text-decoration: none;
@@ -95,6 +96,23 @@ body {
     background-color: var(--color-teal-primary);
     color: #FFFFFF;
     text-decoration: none;
+}
+
+.menu-item.active a .nav-badge-dot {
+    border: 1px solid #FFFFFF;
+}
+
+.nav-badge-dot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #DC3545;
+    color: #FFFFFF;
+    font-size: 0.7rem;
+    font-weight: 800;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
 }
 
 /* User profile card inside Sidebar */
@@ -192,6 +210,17 @@ body {
     font-weight: 700;
     color: var(--color-teal-primary);
     cursor: pointer;
+    position: relative;
+}
+
+.notification-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #DC3545;
+    border-radius: 50%;
+    position: absolute;
+    top: 6px;
+    right: 8px;
 }
 
 /* Overview Stat Cards Grid - 4 Columns Exact Row */

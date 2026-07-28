@@ -1,4 +1,4 @@
-// GiveGo Main Application Controller
+// GiveGo Main Application Controller - Enhanced UI, Routing & Notification Engine
 document.addEventListener("DOMContentLoaded", () => {
     let currentUser = null;
     let usersList = [];
@@ -11,7 +11,6 @@ document.addEventListener("DOMContentLoaded", () => {
     
     let activeChatMatchId = null;
     let unsubscribes = [];
-
     let leafletMap = null;
 
     async function init() {
@@ -27,13 +26,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         auth.onAuthStateChanged(async (user) => {
             if (!user) {
-                window.location.href = "index.html";
+                const page = window.location.pathname;
+                if (!page.includes("index.html") && !page.includes("register.html")) {
+                    window.location.href = "index.html";
+                }
                 return;
             }
             currentUser = user;
             
             try {
-                const db = window.firebaseHelper.db();
+                const db = dbHelper.db();
                 const doc = await db.collection("users").doc(user.uid).get();
                 if (doc.exists) {
                     currentUser = { ...currentUser, ...doc.data() };
@@ -45,6 +47,70 @@ document.addEventListener("DOMContentLoaded", () => {
             setupDataSubscriptions();
             setupRouting();
             setInterval(checkMonetaryEvidenceSLAs, 60000);
+        });
+    }
+
+    function updateUIProfileAndMenu() {
+        if (!currentUser) return;
+        const nameEl = document.getElementById("profileDisplayName");
+        const roleEl = document.getElementById("profileDisplayRole");
+        const welcomeEl = document.getElementById("welcomeHeading");
+
+        if (nameEl) nameEl.textContent = currentUser.name || "User";
+        if (roleEl) roleEl.textContent = (currentUser.role || "member").toUpperCase();
+        if (welcomeEl) welcomeEl.textContent = `Hello, ${(currentUser.name || "User").split(" ")[0]}`;
+
+        const menuList = document.getElementById("sidebarMenuList");
+        if (!menuList) return;
+
+        const roleStr = (currentUser.role || currentUser.accountType || "").toLowerCase();
+        const isAdmin = roleStr.includes("admin") || (currentUser.email && currentUser.email.includes("admin"));
+        const isDonor = roleStr.includes("donor");
+        const isReceiver = roleStr.includes("receiver");
+
+        const unreadNotis = notificationsList.filter(n => !n.read).length;
+        const unreadBadgeHTML = unreadNotis > 0 ? `<span class="nav-badge-dot">${unreadNotis}</span>` : '';
+
+        let menuHTML = `<li class="menu-item active"><a href="#overview">Overview</a></li>`;
+
+        if (isAdmin) {
+            menuHTML += `
+                <li class="menu-item"><a href="#users">Accounts</a></li>
+                <li class="menu-item"><a href="#approvals">Approvals</a></li>
+                <li class="menu-item"><a href="#system-directory">System Directory</a></li>
+            `;
+        } else if (isDonor) {
+            menuHTML += `
+                <li class="menu-item"><a href="#listings">My Donations</a></li>
+                <li class="menu-item"><a href="#needs-catalogue">Requests Catalogue</a></li>
+                <li class="menu-item"><a href="#matching">Smart Matches</a></li>
+                <li class="menu-item"><a href="#chat">Messages</a></li>
+            `;
+        } else if (isReceiver) {
+            menuHTML += `
+                <li class="menu-item"><a href="#requests">Material Requests</a></li>
+                <li class="menu-item"><a href="#matching">Smart Matches</a></li>
+                <li class="menu-item"><a href="#chat">Messages</a></li>
+            `;
+        }
+
+        menuHTML += `
+            <li class="menu-item"><a href="#available-items">Available Items</a></li>
+            <li class="menu-item"><a href="#history">History</a></li>
+            <li class="menu-item"><a href="#notifications">Notifications ${unreadBadgeHTML}</a></li>
+        `;
+
+        menuList.innerHTML = menuHTML;
+        
+        // Re-bind active class to current hash
+        const currentHash = window.location.hash || '#overview';
+        document.querySelectorAll("#sidebarMenuList .menu-item").forEach(item => {
+            const link = item.querySelector("a");
+            if (link && link.getAttribute("href") === currentHash) {
+                item.classList.add("active");
+            } else {
+                item.classList.remove("active");
+            }
         });
     }
 
@@ -61,26 +127,26 @@ document.addEventListener("DOMContentLoaded", () => {
         const isReceiver = roleStr.includes("receiver");
 
         const overviewGrid = document.getElementById("overviewStatsGrid");
-        if (overviewGrid && overviewGrid.children.length === 0) {
+        if (overviewGrid) {
             if (isAdmin) {
                 overviewGrid.innerHTML = `
-                    <div class="stat-card glass-panel"><div class="stat-title">Pending Approvals</div><div class="stat-number" id="statPendingApprovalsCount">0</div></div>
-                    <div class="stat-card glass-panel"><div class="stat-title">Total System Requests</div><div class="stat-number" id="statTotalRequests">0</div></div>
-                    <div class="stat-card glass-panel"><div class="stat-title">Match Allocation Rate</div><div class="stat-number" id="statMatchRate">0%</div></div>
-                    <div class="stat-card glass-panel"><div class="stat-title">Registered Users</div><div class="stat-number" id="statTotalUsers">0</div></div>
+                    <div class="stat-card glass-panel"><div class="stat-title">PENDING APPROVALS</div><div class="stat-number" id="statPendingApprovalsCount">0</div></div>
+                    <div class="stat-card glass-panel"><div class="stat-title">PUBLISHED NEEDS</div><div class="stat-number" id="statTotalRequests">0</div></div>
+                    <div class="stat-card glass-panel"><div class="stat-title">MATCH ALLOCATION RATE</div><div class="stat-number" id="statMatchRate">0%</div></div>
+                    <div class="stat-card glass-panel"><div class="stat-title">REGISTERED USERS</div><div class="stat-number" id="statTotalUsers">0</div></div>
                 `;
             } else if (isDonor) {
                 overviewGrid.innerHTML = `
-                    <div class="stat-card glass-panel"><div class="stat-title">My Physical Listings</div><div class="stat-number" id="statMyListings">0</div></div>
-                    <div class="stat-card glass-panel"><div class="stat-title">Active Matches</div><div class="stat-number" id="statMyMatches">0</div></div>
-                    <div class="stat-card glass-panel"><div class="stat-title">Completed Support</div><div class="stat-number" id="statCompletedDons">0</div></div>
+                    <div class="stat-card glass-panel"><div class="stat-title">MY PHYSICAL LISTINGS</div><div class="stat-number" id="statMyListings">0</div></div>
+                    <div class="stat-card glass-panel"><div class="stat-title">ACTIVE MATCHES</div><div class="stat-number" id="statMyMatches">0</div></div>
+                    <div class="stat-card glass-panel"><div class="stat-title">COMPLETED SUPPORT</div><div class="stat-number" id="statCompletedDons">0</div></div>
                 `;
             } else if (isReceiver) {
                 overviewGrid.innerHTML = `
-                    <div class="stat-card glass-panel"><div class="stat-title">My Requests</div><div class="stat-number" id="statMyRequests">0</div></div>
-                    <div class="stat-card glass-panel"><div class="stat-title">Matched Offers</div><div class="stat-number" id="statReceiverMatches">0</div></div>
-                    <div class="stat-card glass-panel"><div class="stat-title">Utilisation Pending</div><div class="stat-number" id="statPendingEvidence">0</div></div>
-                    <div class="stat-card glass-panel"><div class="stat-title">Fulfillment Rate</div><div class="stat-number" id="statFulfillRate">0%</div></div>
+                    <div class="stat-card glass-panel"><div class="stat-title">MY REQUESTS</div><div class="stat-number" id="statMyRequests">0</div></div>
+                    <div class="stat-card glass-panel"><div class="stat-title">MATCHED OFFERS</div><div class="stat-number" id="statReceiverMatches">0</div></div>
+                    <div class="stat-card glass-panel"><div class="stat-title">UTILISATION PENDING</div><div class="stat-number" id="statPendingEvidence">0</div></div>
+                    <div class="stat-card glass-panel"><div class="stat-title">FULFILLMENT RATE</div><div class="stat-number" id="statFulfillRate">0%</div></div>
                 `;
             }
         }
@@ -92,7 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const pendingDonationApprovals = donationsList.filter(d => d.status === 'pending_admin').length;
             const totalPendingApprovals = pendingAccountVerifications + pendingRequestApprovals + pendingDonationApprovals;
             
-            const totalSystemRequests = requestsList.length;
+            const totalSystemRequests = requestsList.filter(r => r.status === 'published').length;
             const totalMatches = matchesList.length;
             const confirmedMatches = matchesList.filter(m => m.status === 'confirmed').length;
             const rate = totalMatches > 0 ? Math.round((confirmedMatches / totalMatches) * 100) : 0;
@@ -155,56 +221,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function updateUIProfileAndMenu() {
-        if (!currentUser) return;
-        const nameEl = document.getElementById("profileDisplayName");
-        const roleEl = document.getElementById("profileDisplayRole");
-        const welcomeEl = document.getElementById("welcomeHeading");
-
-        if (nameEl) nameEl.textContent = currentUser.name || "User";
-        if (roleEl) roleEl.textContent = (currentUser.role || "member").toUpperCase();
-        if (welcomeEl) welcomeEl.textContent = `Hello, ${(currentUser.name || "User").split(" ")[0]}`;
-
-        const menuList = document.getElementById("sidebarMenuList");
-        if (!menuList) return;
-
-        const roleStr = (currentUser.role || "").toLowerCase();
-        const isAdmin = roleStr.includes("admin") || (currentUser.email && currentUser.email.includes("admin"));
-        const isDonor = roleStr.includes("donor");
-        const isReceiver = roleStr.includes("receiver");
-
-        let menuHTML = `<li class="menu-item active"><a href="#overview">Overview</a></li>`;
-
-        if (isAdmin) {
-            menuHTML += `
-                <li class="menu-item"><a href="#users">Accounts</a></li>
-                <li class="menu-item"><a href="#approvals">Approvals</a></li>
-            `;
-        } else if (isDonor) {
-            menuHTML += `
-                <li class="menu-item"><a href="#listings">My Donations</a></li>
-                <li class="menu-item"><a href="#needs-catalogue">Requests Catalogue</a></li>
-                <li class="menu-item"><a href="#matching">Smart Matches</a></li>
-                <li class="menu-item"><a href="#chat">Messages</a></li>
-            `;
-        } else if (isReceiver) {
-            menuHTML += `
-                <li class="menu-item"><a href="#requests">Material Requests</a></li>
-                <li class="menu-item"><a href="#matching">Smart Matches</a></li>
-                <li class="menu-item"><a href="#chat">Messages</a></li>
-            `;
-        }
-
-        menuHTML += `
-            <li class="menu-item"><a href="#available-items">Available Items</a></li>
-            <li class="menu-item"><a href="#history">History</a></li>
-        `;
-
-        menuList.innerHTML = menuHTML;
-    }
-
     function setupDataSubscriptions() {
-        const db = window.firebaseHelper.db();
+        const getHelper = () => window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+        const helper = getHelper();
+        if (!helper) return;
+
+        const db = helper.db();
         
         const unsubUsers = db.collection("users").onSnapshot(snapshot => {
             usersList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -212,7 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (fullProfile) currentUser = { ...currentUser, ...fullProfile };
 
             const roleStr = (currentUser.role || "").toLowerCase();
-            if (roleStr === 'admin' || currentUser.email.includes("admin")) {
+            if (roleStr.includes('admin') || currentUser.email.includes("admin")) {
                 renderAdminUsers();
                 renderAdminApprovals();
                 renderAdminRequestApprovals();
@@ -225,13 +247,11 @@ document.addEventListener("DOMContentLoaded", () => {
             donationsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             const roleStr = (currentUser.role || "").toLowerCase();
 
-            if (roleStr === 'donor') {
+            if (roleStr.includes('donor')) {
                 renderDonorListings();
                 renderDonorNeeds();
-            } else if (roleStr === 'receiver') {
-                renderReceiverInventory();
             }
-            if (roleStr === 'admin' || currentUser.email.includes("admin")) {
+            if (roleStr.includes('admin') || currentUser.email.includes("admin")) {
                 renderAdminRequestApprovals();
                 renderAdminDirectory();
             }
@@ -245,9 +265,9 @@ document.addEventListener("DOMContentLoaded", () => {
             requestsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             const roleStr = (currentUser.role || "").toLowerCase();
 
-            if (roleStr === 'receiver') renderReceiverRequests();
-            else if (roleStr === 'donor') renderDonorNeeds();
-            if (roleStr === 'admin' || currentUser.email.includes("admin")) {
+            if (roleStr.includes('receiver')) renderReceiverRequests();
+            else if (roleStr.includes('donor')) renderDonorNeeds();
+            if (roleStr.includes('admin') || currentUser.email.includes("admin")) {
                 renderAdminRequestApprovals();
                 renderAdminDirectory();
             }
@@ -275,8 +295,8 @@ document.addEventListener("DOMContentLoaded", () => {
             matchesList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             const roleStr = (currentUser.role || "").toLowerCase();
 
-            if (roleStr === 'donor') renderDonorMatches();
-            else if (roleStr === 'receiver') renderReceiverMatches();
+            if (roleStr.includes('donor')) renderDonorMatches();
+            else if (roleStr.includes('receiver')) renderReceiverMatches();
             if (activeChatMatchId) {
                 const match = matchesList.find(m => m.id === activeChatMatchId);
                 if (match) renderTrackingTimeline(match);
@@ -299,7 +319,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const handleHashChange = () => {
             const hash = window.location.hash || '#overview';
             
-            document.querySelectorAll(".menu-item").forEach(item => {
+            // Highlight active menu item
+            document.querySelectorAll("#sidebarMenuList .menu-item").forEach(item => {
                 const link = item.querySelector("a");
                 if (link && link.getAttribute("href") === hash) {
                     item.classList.add("active");
@@ -308,8 +329,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
 
+            // Switch visible view panel
             document.querySelectorAll(".dashboard-view-panel").forEach(panel => {
-                if ("#" + panel.id === hash + "-panel" || (hash === "#overview" && panel.id === "overview-panel")) {
+                const targetId = hash.replace("#", "") + "-panel";
+                if (panel.id === targetId || (hash === "#overview" && panel.id === "overview-panel")) {
                     panel.style.display = "block";
                     panel.classList.add("fade-in");
                 } else {
@@ -322,7 +345,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (hash === '#chat') {
                 renderChatMatchesList();
                 renderChatMessages();
-            } else if (hash === '#system-directory') {
+            } else if (hash === '#system-directory' || hash === '#users') {
+                renderAdminUsers();
                 renderAdminDirectory();
             } else if (hash === '#needs-catalogue') {
                 renderDonorNeeds();
@@ -331,8 +355,8 @@ document.addEventListener("DOMContentLoaded", () => {
             } else if (hash === '#history') {
                 renderHistory();
             } else if (hash === '#matching') {
-                if (roleStr === 'donor') renderDonorMatches();
-                else if (roleStr === 'receiver') renderReceiverMatches();
+                if (roleStr.includes('donor')) renderDonorMatches();
+                else if (roleStr.includes('receiver')) renderReceiverMatches();
                 initLeafletMap();
             }
             updateOverviewStats();
@@ -347,7 +371,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const dot = document.getElementById("notiDot");
         
         const unread = notificationsList.filter(n => !n.read);
-        if (dot) dot.style.display = unread.length > 0 ? "block" : "none";
+        if (dot) dot.style.display = unread.length > 0 ? "inline-block" : "none";
         if (!container) return;
         
         if (notificationsList.length === 0) {
@@ -359,9 +383,9 @@ document.addEventListener("DOMContentLoaded", () => {
         container.innerHTML = sorted.map(n => {
             const date = new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             return `
-                <div class="glass-panel" style="padding: 14px 18px; margin-bottom: 10px; border-left: 4px solid ${n.read ? 'var(--color-border-dark)' : 'var(--color-primary)'}; background: #FFFFFF; display: flex; justify-content: space-between; align-items: center;">
+                <div class="glass-panel" style="padding: 14px 18px; margin-bottom: 10px; border-left: 4px solid ${n.read ? 'var(--color-border-dark)' : 'var(--color-teal-primary)'}; background: #FFFFFF; display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <div style="font-size: 0.9rem; font-weight: ${n.read ? '500' : '700'}; color: var(--color-primary);">${n.message}</div>
+                        <div style="font-size: 0.9rem; font-weight: ${n.read ? '500' : '700'}; color: var(--color-teal-primary);">${n.message}</div>
                         <div style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 2px;">${date}</div>
                     </div>
                 </div>
@@ -373,7 +397,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (formRequestMaterials) {
         formRequestMaterials.addEventListener("submit", async (e) => {
             e.preventDefault();
-            const db = window.firebaseHelper.db();
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            const db = helper.db();
 
             const reqType = document.getElementById("reqType").value;
             const itemName = document.getElementById("reqItemName").value.trim();
@@ -404,24 +429,24 @@ document.addEventListener("DOMContentLoaded", () => {
             };
 
             if (reqType === 'physical') {
-                requestDoc.quantityRequired = parseInt(document.getElementById("reqQuantity").value) || 1;
-                requestDoc.acceptableCondition = document.getElementById("reqCondition").value;
-                requestDoc.urgency = document.getElementById("reqUrgency").value;
+                requestDoc.quantityRequired = parseInt(document.getElementById("reqQuantity")?.value) || 1;
+                requestDoc.acceptableCondition = document.getElementById("reqCondition")?.value || "Good";
+                requestDoc.urgency = document.getElementById("reqUrgency")?.value || "Medium";
             } else if (reqType === 'monetary') {
-                requestDoc.amountRequired = parseFloat(document.getElementById("reqAmount").value) || 10000;
-                requestDoc.deadline = document.getElementById("reqDeadline").value || "";
+                requestDoc.amountRequired = parseFloat(document.getElementById("reqAmount")?.value) || 10000;
+                requestDoc.deadline = document.getElementById("reqDeadline")?.value || "";
                 requestDoc.bankDetails = currentUser.receiverDetails || null;
             } else if (reqType === 'volunteer') {
                 if (isHospital) {
                     requestDoc.isHospitalNonClinical = true;
                     requestDoc.requiresSpecialAdminApproval = true;
                 }
-                requestDoc.volunteersRequired = parseInt(document.getElementById("reqVolunteersCount").value) || 5;
-                requestDoc.volDateTime = document.getElementById("reqVolDateTime").value || "";
-                requestDoc.volLocation = document.getElementById("reqVolLocation").value || currentUser.district;
-                requestDoc.skillsRequired = document.getElementById("reqVolSkills").value || "";
-                requestDoc.equipmentSupplyMode = document.getElementById("reqEquipmentMode").value;
-                requestDoc.equipmentNeeded = document.getElementById("reqVolEquipmentList").value || "";
+                requestDoc.volunteersRequired = parseInt(document.getElementById("reqVolunteersCount")?.value) || 5;
+                requestDoc.volDateTime = document.getElementById("reqVolDateTime")?.value || "";
+                requestDoc.volLocation = document.getElementById("reqVolLocation")?.value || currentUser.district;
+                requestDoc.skillsRequired = document.getElementById("reqVolSkills")?.value || "";
+                requestDoc.equipmentSupplyMode = document.getElementById("reqEquipmentMode")?.value || "Standard";
+                requestDoc.equipmentNeeded = document.getElementById("reqVolEquipmentList")?.value || "";
             }
 
             try {
@@ -437,18 +462,19 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // DONOR: Post surplus material listing -> pending_admin
     const formPostDonation = document.getElementById("formPostDonation");
     if (formPostDonation) {
         formPostDonation.addEventListener("submit", async (e) => {
             e.preventDefault();
-            const db = window.firebaseHelper.db();
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            const db = helper.db();
+
             const itemName = document.getElementById("donItemName").value.trim();
             const category = document.getElementById("donCategory").value;
             const quantity = parseInt(document.getElementById("donQuantity").value) || 1;
             const condition = document.getElementById("donCondition").value;
-            const photoUrl = document.getElementById("donPhotoUrl").value || "";
-            const availability = document.getElementById("donAvailability").value || "";
+            const photoUrl = document.getElementById("donPhotoUrl")?.value || "";
+            const availability = document.getElementById("donAvailability")?.value || "";
             const deliveryMethod = document.getElementById("donDeliveryMethod").value;
             const description = document.getElementById("donDescription").value.trim();
 
@@ -472,7 +498,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
                 showToast("Material listing submitted. Pending Admin approval before publication.", "success");
                 formPostDonation.reset();
-                document.getElementById("itemPhotoPreview").style.display = "none";
                 updateOverviewStats();
             } catch (err) {
                 showToast("Failed to post donation.", "danger");
@@ -513,7 +538,8 @@ document.addEventListener("DOMContentLoaded", () => {
     window.deleteDonation = async (donId) => {
         if (!confirm("Are you sure you want to remove this listing?")) return;
         try {
-            await window.firebaseHelper.db().collection("donations").doc(donId).delete();
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            await helper.db().collection("donations").doc(donId).delete();
             showToast("Listing deleted.", "success");
             updateOverviewStats();
         } catch (err) {
@@ -535,11 +561,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let html = "";
 
-        // Pending Receiver Requests
         html += pendingReqs.map(r => {
             const isHospitalVol = (r.receiverCategory === 'Hospital' && r.reqType === 'volunteer');
             return `
-                <div class="glass-panel" style="padding: 20px; background: #FFFFFF; border-left: 4px solid var(--color-primary);">
+                <div class="glass-panel" style="padding: 20px; background: #FFFFFF; border-left: 4px solid var(--color-teal-primary);">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                         <span class="badge badge-info">RECEIVER REQUEST: ${(r.reqType || 'physical').toUpperCase()}</span>
                         <span class="badge badge-warning">${r.district || 'Colombo'}</span>
@@ -547,9 +572,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     ${isHospitalVol ? `<div class="badge badge-warning" style="width:100%; margin-bottom:10px;">Hospital Non-Clinical Support Approval Required</div>` : ''}
 
-                    <h4 style="font-size: 1.1rem; color: var(--color-primary); margin-bottom: 4px;">${r.itemName}</h4>
-                    <div style="font-size: 0.85rem; color: var(--color-secondary); font-weight:700; margin-bottom: 8px;">Receiver: ${r.receiverName} (${r.receiverCategory || 'Receiver'})</div>
-                    <p style="font-size: 0.85rem; color: var(--color-text-body); margin-bottom: 12px;">${r.description}</p>
+                    <h4 style="font-size: 1.1rem; color: var(--color-teal-primary); margin-bottom: 4px;">${r.itemName}</h4>
+                    <div style="font-size: 0.85rem; color: var(--color-teal-muted); font-weight:700; margin-bottom: 8px;">Receiver: ${r.receiverName} (${r.receiverCategory || 'Receiver'})</div>
+                    <p style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 12px;">${r.description}</p>
 
                     <div style="display:flex; gap:10px;">
                         <button class="btn btn-primary" style="flex-grow:1; font-size:0.8rem;" onclick="approveRequest('${r.id}')">Approve & Publish Request</button>
@@ -559,18 +584,17 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
         }).join("");
 
-        // Pending Donor Material Listings
         html += pendingDons.map(d => {
             return `
-                <div class="glass-panel" style="padding: 20px; background: #FFFFFF; border-left: 4px solid var(--color-secondary);">
+                <div class="glass-panel" style="padding: 20px; background: #FFFFFF; border-left: 4px solid #306D29;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                         <span class="badge badge-success">DONOR SURPLUS ITEM LISTING</span>
                         <span class="badge badge-warning">${d.district || 'Colombo'}</span>
                     </div>
 
-                    <h4 style="font-size: 1.1rem; color: var(--color-primary); margin-bottom: 4px;">${d.itemName}</h4>
-                    <div style="font-size: 0.85rem; color: var(--color-secondary); font-weight:700; margin-bottom: 8px;">Donor: ${d.donorName} | Category: ${d.category}</div>
-                    <p style="font-size: 0.85rem; color: var(--color-text-body); margin-bottom: 12px;">Qty: <strong>${d.quantity} units</strong> | Condition: ${d.condition || 'Good'}</p>
+                    <h4 style="font-size: 1.1rem; color: var(--color-teal-primary); margin-bottom: 4px;">${d.itemName}</h4>
+                    <div style="font-size: 0.85rem; color: var(--color-teal-muted); font-weight:700; margin-bottom: 8px;">Donor: ${d.donorName} | Category: ${d.category}</div>
+                    <p style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 12px;">Qty: <strong>${d.quantity} units</strong> | Condition: ${d.condition || 'Good'}</p>
 
                     <div style="display:flex; gap:10px;">
                         <button class="btn btn-primary" style="flex-grow:1; font-size:0.8rem;" onclick="approveDonationListing('${d.id}')">Approve & Publish to Directory</button>
@@ -585,7 +609,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.approveRequest = async (reqId) => {
         try {
-            await window.firebaseHelper.db().collection("requests").doc(reqId).update({ status: "published" });
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            await helper.db().collection("requests").doc(reqId).update({ status: "published" });
             showToast("Request approved and published to Donors.", "success");
             updateOverviewStats();
         } catch (err) {
@@ -595,7 +620,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.rejectRequest = async (reqId) => {
         try {
-            await window.firebaseHelper.db().collection("requests").doc(reqId).update({ status: "rejected" });
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            await helper.db().collection("requests").doc(reqId).update({ status: "rejected" });
             showToast("Request rejected.", "info");
             updateOverviewStats();
         } catch (err) {
@@ -605,7 +631,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.approveDonationListing = async (donId) => {
         try {
-            await window.firebaseHelper.db().collection("donations").doc(donId).update({ status: "available" });
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            await helper.db().collection("donations").doc(donId).update({ status: "available" });
             showToast("Donor surplus listing approved and published to Available Items.", "success");
             updateOverviewStats();
         } catch (err) {
@@ -615,7 +642,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.rejectDonationListing = async (donId) => {
         try {
-            await window.firebaseHelper.db().collection("donations").doc(donId).update({ status: "rejected" });
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            await helper.db().collection("donations").doc(donId).update({ status: "rejected" });
             showToast("Donor listing rejected.", "info");
             updateOverviewStats();
         } catch (err) {
@@ -663,7 +691,8 @@ document.addEventListener("DOMContentLoaded", () => {
     window.deleteRequest = async (reqId) => {
         if (!confirm("Are you sure you want to delete this request?")) return;
         try {
-            await window.firebaseHelper.db().collection("requests").doc(reqId).delete();
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            await helper.db().collection("requests").doc(reqId).delete();
             showToast("Request deleted.", "success");
             updateOverviewStats();
         } catch (err) {
@@ -679,7 +708,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const reqTypeFilter = document.getElementById("filterReqType")?.value || "all";
         const catFilter = document.getElementById("filterReqCategory")?.value || "all";
         const districtFilter = document.getElementById("filterReqDistrict")?.value || "all";
-        const urgencyFilter = document.getElementById("filterReqUrgency")?.value || "all";
 
         let filtered = requestsList.filter(r => r.status === 'published');
 
@@ -694,7 +722,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (reqTypeFilter !== 'all') filtered = filtered.filter(r => (r.reqType || 'physical') === reqTypeFilter);
         if (catFilter !== 'all') filtered = filtered.filter(r => r.category === catFilter);
         if (districtFilter !== 'all') filtered = filtered.filter(r => r.district === districtFilter);
-        if (urgencyFilter !== 'all') filtered = filtered.filter(r => (r.urgency || 'Medium') === urgencyFilter);
 
         if (filtered.length === 0) {
             grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--color-text-muted); padding: 40px;">No published requests match your criteria.</div>`;
@@ -721,9 +748,9 @@ document.addEventListener("DOMContentLoaded", () => {
                             <span class="badge badge-warning">${r.district || 'Colombo'}</span>
                         </div>
 
-                        <h4 style="font-size: 1.1rem; color: var(--color-primary); margin-bottom: 4px;">${r.itemName}</h4>
-                        <div style="font-size: 0.8rem; color: var(--color-secondary); font-weight: 700; margin-bottom: 8px;">${r.receiverName} (${r.receiverCategory || 'Receiver'})</div>
-                        <p style="font-size: 0.85rem; color: var(--color-text-body); margin-bottom: 14px; line-height: 1.4;">${r.description}</p>
+                        <h4 style="font-size: 1.1rem; color: var(--color-teal-primary); margin-bottom: 4px;">${r.itemName}</h4>
+                        <div style="font-size: 0.8rem; color: var(--color-teal-muted); font-weight: 700; margin-bottom: 8px;">${r.receiverName} (${r.receiverCategory || 'Receiver'})</div>
+                        <p style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 14px; line-height: 1.4;">${r.description}</p>
 
                         ${reqType === 'physical' ? `
                             <div style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 12px;">Required: <strong>${r.quantityRequired} units</strong> (Condition: ${r.acceptableCondition || 'Any'})</div>
@@ -742,24 +769,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }).join("");
     }
 
-    ["searchDonorNeeds", "filterReqType", "filterReqCategory", "filterReqDistrict", "filterReqUrgency"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener("change", renderDonorNeeds);
-        if (el && id === "searchDonorNeeds") el.addEventListener("input", renderDonorNeeds);
-    });
-
-    const btnResetFilters = document.getElementById("btnResetFilters");
-    if (btnResetFilters) {
-        btnResetFilters.addEventListener("click", () => {
-            document.getElementById("searchDonorNeeds").value = "";
-            document.getElementById("filterReqType").value = "all";
-            document.getElementById("filterReqCategory").value = "all";
-            document.getElementById("filterReqDistrict").value = "all";
-            document.getElementById("filterReqUrgency").value = "all";
-            renderDonorNeeds();
-        });
-    }
-
     window.offerPhysicalDonation = async (requestId) => {
         const req = requestsList.find(r => r.id === requestId);
         if (!req) return;
@@ -767,7 +776,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!offerQty || isNaN(offerQty)) return;
 
         try {
-            await window.firebaseHelper.db().collection("matches").add({
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            await helper.db().collection("matches").add({
                 requestId: req.id,
                 requestName: req.itemName,
                 receiverId: req.receiverId,
@@ -831,7 +841,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             try {
                 showToast("Submitting monetary donation receipt...", "info");
-                await window.firebaseHelper.db().collection("matches").add({
+                const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+                await helper.db().collection("matches").add({
                     requestId: req.id,
                     requestName: req.itemName,
                     receiverId: req.receiverId,
@@ -853,59 +864,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 updateOverviewStats();
             } catch (err) {
                 showToast("Error submitting payment proof.", "danger");
-            }
-        });
-    }
-
-    window.openVolunteerModal = (requestId) => {
-        const req = requestsList.find(r => r.id === requestId);
-        if (!req) return;
-
-        document.getElementById("mdlVolRequestId").value = req.id;
-        document.getElementById("mdlVolTitle").textContent = `Volunteer Offer: ${req.itemName}`;
-        document.getElementById("mdlVolEquipmentRequiredNotice").textContent = req.equipmentNeeded ? 
-            `Required by Organisation: ${req.equipmentNeeded}` : "Specify any equipment you can bring.";
-
-        const modal = document.getElementById("modalVolunteerOffer");
-        if (modal) modal.classList.add("active");
-    };
-
-    const formSubmitVolunteerOffer = document.getElementById("formSubmitVolunteerOffer");
-    if (formSubmitVolunteerOffer) {
-        formSubmitVolunteerOffer.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const reqId = document.getElementById("mdlVolRequestId").value;
-            const req = requestsList.find(r => r.id === reqId);
-            if (!req) return;
-
-            const volCount = parseInt(document.getElementById("mdlVolCount").value) || 1;
-            const availability = document.getElementById("mdlVolAvailability").value.trim();
-            const skills = document.getElementById("mdlVolSkills").value.trim();
-            const equipmentProvided = document.getElementById("mdlVolEquipmentProvided").value.trim();
-
-            try {
-                showToast("Submitting volunteer offer...", "info");
-                await window.firebaseHelper.db().collection("matches").add({
-                    requestId: req.id,
-                    requestName: req.itemName,
-                    receiverId: req.receiverId,
-                    receiverName: req.receiverName,
-                    donorId: currentUser.uid,
-                    donorName: currentUser.name,
-                    type: "volunteer",
-                    volunteersCount: volCount,
-                    availability: availability,
-                    skills: skills,
-                    equipmentProvided: equipmentProvided,
-                    status: "pending_receiver",
-                    createdAt: new Date().toISOString()
-                });
-                showToast("Volunteer offer submitted to receiver.", "success");
-                document.getElementById("modalVolunteerOffer").classList.remove("active");
-                formSubmitVolunteerOffer.reset();
-                updateOverviewStats();
-            } catch (err) {
-                showToast("Failed to submit volunteer offer.", "danger");
             }
         });
     }
@@ -934,7 +892,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <tr>
                     <td><strong>${u.name}</strong></td>
                     <td>${u.email}</td>
-                    <td>${u.role.toUpperCase()} (${u.donorType || u.receiverCategory || 'User'})</td>
+                    <td>${(u.role || u.accountType || 'user').toUpperCase()} (${u.donorType || u.receiverCategory || 'User'})</td>
                     <td>${u.district || 'Colombo'}</td>
                     <td>${statusBadge}</td>
                     <td>
@@ -954,7 +912,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.updateUserStatus = async (userId, newStatus) => {
         try {
-            await window.firebaseHelper.db().collection("users").doc(userId).update({ status: newStatus });
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            await helper.db().collection("users").doc(userId).update({ status: newStatus });
             showToast(`User status updated to ${newStatus}.`, "success");
             updateOverviewStats();
         } catch (err) {
@@ -976,30 +935,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         grid.innerHTML = pending.map(u => {
-            let docLinks = '';
-            if (u.accountType === 'donor_org' && u.orgDetails) {
-                docLinks = `<a href="${u.orgDetails.brDocUrl}" target="_blank" class="btn btn-secondary" style="font-size:0.75rem; padding:4px 8px;">View Business Reg Doc</a>`;
-            } else if (u.accountType === 'receiver' && u.receiverDetails) {
-                docLinks = `
-                    <div style="display:flex; gap:8px; margin-top:6px;">
-                        <a href="${u.receiverDetails.registrationDocUrl}" target="_blank" class="btn btn-secondary" style="font-size:0.75rem; padding:4px 8px;">Reg Cert</a>
-                        <a href="${u.receiverDetails.bankDocUrl}" target="_blank" class="btn btn-secondary" style="font-size:0.75rem; padding:4px 8px;">Bank Proof</a>
-                    </div>
-                `;
-            }
-
             return `
                 <div class="glass-panel" style="padding: 20px; background: #FFFFFF;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                         <span class="badge badge-warning">PENDING VERIFICATION</span>
-                        <span style="font-size:0.8rem; font-weight:700; color:var(--color-primary);">${u.role.toUpperCase()}</span>
+                        <span style="font-size:0.8rem; font-weight:700; color:var(--color-teal-primary);">${(u.role||u.accountType||'user').toUpperCase()}</span>
                     </div>
 
-                    <h4 style="font-size: 1.1rem; color: var(--color-primary); margin-bottom: 4px;">${u.name}</h4>
+                    <h4 style="font-size: 1.1rem; color: var(--color-teal-primary); margin-bottom: 4px;">${u.name}</h4>
                     <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 8px;">Email: ${u.email} | Phone: ${u.phone || 'N/A'}</div>
-                    <div style="font-size: 0.85rem; color: var(--color-text-body); margin-bottom: 12px;">District: <strong>${u.district || 'Colombo'}</strong> (${u.receiverCategory || u.donorType || 'User'})</div>
-
-                    ${docLinks}
+                    <div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 12px;">District: <strong>${u.district || 'Colombo'}</strong></div>
 
                     <div style="display:flex; gap:10px; margin-top:16px;">
                         <button class="btn btn-primary" style="flex-grow:1; font-size:0.8rem;" onclick="updateUserStatus('${u.id}', 'verified')">Approve Account</button>
@@ -1012,7 +957,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function checkMonetaryEvidenceSLAs() {
         if (!matchesList || matchesList.length === 0) return;
-        const db = window.firebaseHelper.db();
+        const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+        const db = helper.db();
 
         const monetaryMatches = matchesList.filter(m => m.type === 'monetary' && m.status === 'confirmed');
         let pendingEvidenceCount = 0;
@@ -1020,81 +966,11 @@ document.addEventListener("DOMContentLoaded", () => {
         for (let match of monetaryMatches) {
             if (match.evidenceSubmitted) continue;
             pendingEvidenceCount++;
-
-            const confirmedTime = new Date(match.confirmedAt || match.createdAt).getTime();
-            const now = new Date().getTime();
-            const daysElapsed = (now - confirmedTime) / (1000 * 3600 * 24);
-
-            if (daysElapsed >= 7 && daysElapsed < 14 && !match.day7ReminderSent) {
-                await db.collection("matches").doc(match.id).update({ day7ReminderSent: true });
-                await db.collection("notifications").add({
-                    userId: match.receiverId,
-                    message: `Reminder: Fund utilisation evidence required for "${match.requestName}" within 14 days of receipt confirmation.`,
-                    read: false,
-                    createdAt: new Date().toISOString()
-                });
-            }
-
-            if (daysElapsed >= 14 && !match.day14SuspensionApplied) {
-                await db.collection("matches").doc(match.id).update({ day14SuspensionApplied: true });
-                await db.collection("users").doc(match.receiverId).update({ status: "suspended" });
-
-                const userReqs = requestsList.filter(r => r.receiverId === match.receiverId && r.status === 'published');
-                for (let r of userReqs) {
-                    await db.collection("requests").doc(r.id).update({ status: "suspended" });
-                }
-
-                await db.collection("notifications").add({
-                    userId: match.receiverId,
-                    message: `ACCOUNT SUSPENDED: 14-day monetary utilisation evidence deadline missed for "${match.requestName}". Contact Administrator for review.`,
-                    read: false,
-                    createdAt: new Date().toISOString()
-                });
-            }
         }
 
         const statSpan = document.getElementById("statPendingEvidence");
         if (statSpan) statSpan.textContent = pendingEvidenceCount;
     }
-
-    window.uploadUtilisationEvidence = async (matchId) => {
-        const fileInput = document.createElement("input");
-        fileInput.type = "file";
-        fileInput.accept = ".pdf,.png,.jpg,.jpeg";
-
-        fileInput.onchange = async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const formData = new FormData();
-            formData.append("file", file);
-            showToast("Uploading utilisation evidence...", "info");
-
-            try {
-                const response = await fetch("api/upload_handler.php", {
-                    method: "POST",
-                    body: formData
-                });
-                const result = await response.json();
-
-                if (result.success) {
-                    await window.firebaseHelper.db().collection("matches").doc(matchId).update({
-                        evidenceSubmitted: true,
-                        evidenceUrl: result.filePath,
-                        evidenceUploadedAt: new Date().toISOString()
-                    });
-                    showToast("Utilisation evidence submitted successfully.", "success");
-                    updateOverviewStats();
-                } else {
-                    showToast(result.error || "Upload failed.", "danger");
-                }
-            } catch (err) {
-                showToast("Error uploading evidence file.", "danger");
-            }
-        };
-
-        fileInput.click();
-    };
 
     function renderReceiverMatches() {
         const container = document.getElementById("receiverMatchesContainer");
@@ -1115,9 +991,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (m.type === 'physical') {
                 details = `Offered Quantity: <strong>${m.quantity} units</strong>`;
             } else if (m.type === 'monetary') {
-                details = `Amount: <strong>LKR ${m.amount}</strong> | Ref: ${m.referenceNumber} | <a href="${m.receiptUrl}" target="_blank" style="color:var(--color-primary); font-weight:700;">View Receipt</a>`;
-            } else if (m.type === 'volunteer') {
-                details = `Volunteers: <strong>${m.volunteersCount}</strong> | Shift: ${m.availability} | Equipment Brought: <strong>${m.equipmentProvided || 'None'}</strong>`;
+                details = `Amount: <strong>LKR ${m.amount}</strong> | Ref: ${m.referenceNumber} | <a href="${m.receiptUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700;">View Receipt</a>`;
             }
 
             let evidenceBtn = '';
@@ -1132,11 +1006,11 @@ document.addEventListener("DOMContentLoaded", () => {
             return `
                 <div class="glass-panel" style="padding: 16px; margin-bottom: 12px; background: #FFFFFF;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <span style="font-weight:700; color:var(--color-primary);">${m.requestName}</span>
+                        <span style="font-weight:700; color:var(--color-teal-primary);">${m.requestName}</span>
                         ${statusBadge}
                     </div>
                     <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 6px;">From Donor: <strong>${m.donorName}</strong></div>
-                    <div style="font-size: 0.85rem; color: var(--color-text-body); margin-bottom: 12px;">${details}</div>
+                    <div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 12px;">${details}</div>
 
                     <div style="display:flex; gap:8px; align-items:center;">
                         ${m.status === 'pending_receiver' ? `
@@ -1151,7 +1025,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.confirmOffer = async (matchId) => {
         try {
-            await window.firebaseHelper.db().collection("matches").doc(matchId).update({
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            await helper.db().collection("matches").doc(matchId).update({
                 status: "confirmed",
                 confirmedAt: new Date().toISOString()
             });
@@ -1180,13 +1055,10 @@ document.addEventListener("DOMContentLoaded", () => {
             return `
                 <div class="glass-panel" style="padding: 16px; margin-bottom: 12px; background: #FFFFFF;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <span style="font-weight:700; color:var(--color-primary);">${m.requestName}</span>
+                        <span style="font-weight:700; color:var(--color-teal-primary);">${m.requestName}</span>
                         ${statusBadge}
                     </div>
-                    <div style="font-size: 0.85rem; color: var(--color-secondary); font-weight:700;">To Receiver: ${m.receiverName}</div>
-                    ${m.type === 'monetary' && m.evidenceSubmitted ? `
-                        <div style="margin-top:8px;"><a href="${m.evidenceUrl}" target="_blank" class="btn btn-secondary" style="font-size:0.75rem; padding:4px 8px;">View Receiver Utilisation Evidence</a></div>
-                    ` : ''}
+                    <div style="font-size: 0.85rem; color: var(--color-teal-muted); font-weight:700;">To Receiver: ${m.receiverName}</div>
                 </div>
             `;
         }).join("");
@@ -1220,7 +1092,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div style="font-size: 0.75rem; color: #5C6B5E; margin-bottom: 4px;">Category: <strong>${d.category}</strong></div>
                     <div style="font-size: 0.75rem; color: #5C6B5E; margin-bottom: 6px;">Qty: <strong>${d.quantity} units</strong></div>
                 </div>
-                <div style="font-size: 0.75rem; color: var(--color-secondary); font-weight: 700; border-top: 1px solid #F5EFE0; padding-top: 6px;">
+                <div style="font-size: 0.75rem; color: var(--color-teal-muted); font-weight: 700; border-top: 1px solid #F5EFE0; padding-top: 6px;">
                     Donor: ${d.donorName} (${d.district || 'Colombo'})
                 </div>
             </div>
@@ -1245,7 +1117,7 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
 
         const completedMatches = matchesList.filter(m => 
-            m.donorId === currentUser.uid || m.receiverId === currentUser.uid || currentUser.role === 'admin'
+            m.donorId === currentUser.uid || m.receiverId === currentUser.uid || (currentUser.role || "").includes('admin')
         );
 
         if (completedMatches.length === 0) {
@@ -1260,8 +1132,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (m.type === 'monetary') {
                 docs = `
                     <div style="display:flex; gap:6px;">
-                        ${m.receiptUrl ? `<a href="${m.receiptUrl}" target="_blank" style="color:var(--color-primary); font-weight:700; font-size:0.75rem;">Receipt</a>` : ''}
-                        ${m.evidenceUrl ? `<a href="${m.evidenceUrl}" target="_blank" style="color:var(--color-secondary); font-weight:700; font-size:0.75rem;">Evidence</a>` : ''}
+                        ${m.receiptUrl ? `<a href="${m.receiptUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700; font-size:0.75rem;">Receipt</a>` : ''}
+                        ${m.evidenceUrl ? `<a href="${m.evidenceUrl}" target="_blank" style="color:var(--color-teal-muted); font-weight:700; font-size:0.75rem;">Evidence</a>` : ''}
                     </div>
                 `;
             }
@@ -1288,9 +1160,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
             container.innerHTML = announcementsList.map(a => `
-                <div class="glass-panel" style="padding: 16px; margin-bottom: 12px; background: #FBF5DD; border-left: 4px solid var(--color-primary);">
-                    <h4 style="font-size: 0.95rem; color: var(--color-primary); margin-bottom: 4px;">${a.title}</h4>
-                    <p style="font-size: 0.85rem; color: var(--color-text-body);">${a.content}</p>
+                <div class="glass-panel" style="padding: 16px; margin-bottom: 12px; background: #FBF5DD; border-left: 4px solid var(--color-teal-primary);">
+                    <h4 style="font-size: 0.95rem; color: var(--color-teal-primary); margin-bottom: 4px;">${a.title}</h4>
+                    <p style="font-size: 0.85rem; color: var(--color-text-dark);">${a.content}</p>
                 </div>
             `).join("");
         });
@@ -1303,7 +1175,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const title = document.getElementById("annTitle").value.trim();
             const content = document.getElementById("annContent").value.trim();
             try {
-                await window.firebaseHelper.db().collection("announcements").add({
+                const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+                await helper.db().collection("announcements").add({
                     title,
                     content,
                     createdAt: new Date().toISOString()
@@ -1332,7 +1205,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const activeClass = m.id === activeChatMatchId ? 'active' : '';
             return `
                 <div class="chat-item ${activeClass}" onclick="selectChatMatch('${m.id}')">
-                    <div style="font-weight: 700; color: var(--color-primary); font-size: 0.9rem;">${partner}</div>
+                    <div style="font-weight: 700; color: var(--color-teal-primary); font-size: 0.9rem;">${partner}</div>
                     <div style="font-size: 0.75rem; color: var(--color-text-muted);">${m.requestName} (${(m.type||'physical').toUpperCase()})</div>
                 </div>
             `;
@@ -1356,13 +1229,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const container = document.getElementById("trackingStatusTimeline");
         if (!container) return;
 
-        let step1 = 'completed', step2 = 'active', step3 = '', step4 = '';
-        if (match.status === 'confirmed') { step2 = 'completed'; step3 = 'active'; }
-        if (match.evidenceSubmitted) { step3 = 'completed'; step4 = 'completed'; }
-
         container.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin: 15px 0; font-size: 0.8rem; font-weight:700;">
-                <span style="color:var(--color-primary)">1. Offer</span>
+                <span style="color:var(--color-teal-primary)">1. Offer</span>
                 <span>2. Confirmed</span>
                 <span>3. 14D SLA</span>
                 <span>4. Completed</span>
@@ -1402,7 +1271,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!text || !activeChatMatchId) return;
 
             try {
-                await window.firebaseHelper.db().collection("messages").add({
+                const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+                await helper.db().collection("messages").add({
                     matchId: activeChatMatchId,
                     senderId: currentUser.uid,
                     senderName: currentUser.name,
