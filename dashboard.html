@@ -414,6 +414,32 @@
                 <!-- Available Items Panel -->
                 <div class="dashboard-view-panel" id="available-items-panel" style="display:none;">
                     <h3 class="section-title">Approved Available Material Donations</h3>
+                    <div class="glass-panel" style="padding:16px; margin-bottom:20px; background:#FFFFFF;">
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            <input class="form-control" type="text" id="searchAllAvailableItems" placeholder="Search available items or donor..." style="max-width: 220px;">
+                            <select class="form-control form-select" id="filterAvailableCategory" style="max-width: 160px;">
+                                <option value="all">All Categories</option>
+                                <option value="Food">Food Rations</option>
+                                <option value="Clothing">Clothing</option>
+                                <option value="Books">Books</option>
+                                <option value="Medical">Medical</option>
+                                <option value="Furniture">Furniture</option>
+                            </select>
+                            <select class="form-control form-select" id="filterAvailableDistrict" style="max-width: 160px;">
+                                <option value="all">All Districts</option>
+                                <option value="Colombo">Colombo</option>
+                                <option value="Gampaha">Gampaha</option>
+                                <option value="Kalutara">Kalutara</option>
+                                <option value="Kandy">Kandy</option>
+                                <option value="Galle">Galle</option>
+                                <option value="Jaffna">Jaffna</option>
+                            </select>
+                            <select class="form-control form-select" id="sortAvailableItemsOrder" style="max-width: 180px; font-weight:700;">
+                                <option value="latest">Latest Added First</option>
+                                <option value="oldest">Oldest First</option>
+                            </select>
+                        </div>
+                    </div>
                     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px;" id="allAvailableItemsGrid"></div>
                 </div>
 

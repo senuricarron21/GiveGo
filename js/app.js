@@ -1480,39 +1480,73 @@ document.addEventListener("DOMContentLoaded", () => {
         const grid = document.getElementById("allAvailableItemsGrid");
         if (!grid) return;
 
-        const search = (document.getElementById("searchAllAvailableItems")?.value || "").toLowerCase();
+        const searchKeyword = (document.getElementById("searchAllAvailableItems")?.value || "").toLowerCase();
+        const catFilter = document.getElementById("filterAvailableCategory")?.value || "all";
+        const districtFilter = document.getElementById("filterAvailableDistrict")?.value || "all";
+        const sortOrder = document.getElementById("sortAvailableItemsOrder")?.value || "latest";
+
         let filtered = donationsList.filter(d => d.status === 'available');
 
-        if (search) {
+        if (sortOrder === "latest") {
+            filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        } else {
+            filtered.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+        }
+
+        if (searchKeyword) {
             filtered = filtered.filter(d => 
-                (d.itemName && d.itemName.toLowerCase().includes(search)) ||
-                (d.category && d.category.toLowerCase().includes(search)) ||
-                (d.donorName && d.donorName.toLowerCase().includes(search))
+                (d.itemName && d.itemName.toLowerCase().includes(searchKeyword)) ||
+                (d.category && d.category.toLowerCase().includes(searchKeyword)) ||
+                (d.donorName && d.donorName.toLowerCase().includes(searchKeyword))
             );
         }
 
+        if (catFilter !== 'all') {
+            filtered = filtered.filter(d => d.category === catFilter);
+        }
+
+        if (districtFilter !== 'all') {
+            filtered = filtered.filter(d => (d.district || 'Colombo') === districtFilter);
+        }
+
         if (filtered.length === 0) {
-            grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--color-text-muted); padding: 30px;">No approved available material donations found.</div>`;
+            grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--color-text-muted); padding: 40px;">No approved available material donations found matching your filters.</div>`;
             return;
         }
 
-        grid.innerHTML = filtered.map(d => `
-            <div class="glass-panel" style="padding: 12px; background: #FFFFFF; border-radius: 8px; border: 1px solid var(--color-border); display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <img src="${d.photoUrl || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=200&q=80'}" style="width: 100%; height: 95px; border-radius: 6px; object-fit: cover; margin-bottom: 8px;">
-                    <h4 style="font-size: 0.85rem; font-weight: 800; color: var(--color-teal-primary); margin-bottom: 4px; line-height: 1.2;">${d.itemName}</h4>
-                    <div style="font-size: 0.75rem; color: #5C6B5E; margin-bottom: 4px;">Category: <strong>${d.category}</strong></div>
-                    <div style="font-size: 0.75rem; color: #5C6B5E; margin-bottom: 6px;">Qty: <strong>${d.quantity} units</strong></div>
+        const isReceiver = currentUser && (currentUser.role || "").toLowerCase().includes('receiver');
+
+        grid.innerHTML = filtered.map(d => {
+            const reqBtn = isReceiver ? `<button class="btn btn-primary" style="width:100%; font-size:0.75rem; padding:6px; margin-top:8px; font-weight:800;" onclick="openRequestAvailableItemModal('${d.id}')">Request Item (Self Pick Up)</button>` : '';
+
+            return `
+                <div class="glass-panel" style="padding: 12px; background: #FFFFFF; border-radius: 8px; border: 1px solid var(--color-border); display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <img src="${d.photoUrl || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=200&q=80'}" style="width: 100%; height: 95px; border-radius: 6px; object-fit: cover; margin-bottom: 8px;">
+                        <h4 style="font-size: 0.85rem; font-weight: 800; color: var(--color-teal-primary); margin-bottom: 4px; line-height: 1.2;">${d.itemName}</h4>
+                        <div style="font-size: 0.75rem; color: #5C6B5E; margin-bottom: 4px;">Category: <strong>${d.category}</strong></div>
+                        <div style="font-size: 0.75rem; color: #5C6B5E; margin-bottom: 6px;">Qty: <strong>${d.quantity} units</strong></div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.75rem; color: var(--color-teal-muted); font-weight: 700; border-top: 1px solid #F5EFE0; padding-top: 6px;">
+                            Donor: ${d.donorName} (${d.district || 'Colombo'})
+                        </div>
+                        ${reqBtn}
+                    </div>
                 </div>
-                <div style="font-size: 0.75rem; color: var(--color-teal-muted); font-weight: 700; border-top: 1px solid #F5EFE0; padding-top: 6px;">
-                    Donor: ${d.donorName} (${d.district || 'Colombo'})
-                </div>
-            </div>
-        `).join("");
+            `;
+        }).join("");
     }
 
     const searchAllAvailableItems = document.getElementById("searchAllAvailableItems");
+    const filterAvailableCategory = document.getElementById("filterAvailableCategory");
+    const filterAvailableDistrict = document.getElementById("filterAvailableDistrict");
+    const sortAvailableItemsOrder = document.getElementById("sortAvailableItemsOrder");
+
     if (searchAllAvailableItems) searchAllAvailableItems.addEventListener("input", renderAllAvailableItems);
+    if (filterAvailableCategory) filterAvailableCategory.addEventListener("change", renderAllAvailableItems);
+    if (filterAvailableDistrict) filterAvailableDistrict.addEventListener("change", renderAllAvailableItems);
+    if (sortAvailableItemsOrder) sortAvailableItemsOrder.addEventListener("change", renderAllAvailableItems);
 
     function renderHistory() {
         const header = document.getElementById("historyTableHeader");
