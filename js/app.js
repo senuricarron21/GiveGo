@@ -452,7 +452,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const itemName = document.getElementById("reqItemName").value.trim();
             const category = document.getElementById("reqCategory").value;
             const description = document.getElementById("reqDescription").value.trim();
-            const photoUrl = document.getElementById("reqPhotoUrl")?.value || "";
 
             if (!itemName || !category || !description) {
                 showToast("Please complete all required request fields.", "warning");
@@ -470,7 +469,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 itemName,
                 category,
                 description,
-                photoUrl,
                 status: "pending_admin",
                 quantityReceived: 0,
                 amountReceived: 0,
