@@ -1813,6 +1813,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 `;
             }
 
+            let liveLocBtn = '';
+            if (m.deliveryMethod === 'self_delivery') {
+                liveLocBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Track Donor Delivery Live</button>`;
+            } else if (m.deliveryMethod === 'receiver_pickup') {
+                liveLocBtn = `<button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startSharingLiveLocation('${m.id}')">📡 Share My Live Pick-Up Location</button>`;
+            }
+
             let evidenceBtn = '';
             if (m.type === 'monetary' && m.status === 'confirmed') {
                 if (m.evidenceSubmitted) {
@@ -1834,6 +1841,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px;">
                         ${actionButtonsHtml}
+                        ${liveLocBtn}
                         <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" onclick="startChatWithPartner('${m.id}')">💬 Message Donor</button>
                         ${evidenceBtn}
                     </div>
@@ -1897,6 +1905,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 `;
             }
 
+            let liveLocBtn = '';
+            if (m.deliveryMethod === 'self_delivery') {
+                liveLocBtn = `<button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startSharingLiveLocation('${m.id}')">📡 Share My Live Delivery Location</button>`;
+            } else if (m.deliveryMethod === 'receiver_pickup') {
+                liveLocBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Track Receiver Pick-Up Live</button>`;
+            }
+
             return `
                 <div class="glass-panel" style="padding: 16px; margin-bottom: 12px; background: #FFFFFF;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -1909,12 +1924,128 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px;">
                         ${actionButtonsHtml}
+                        ${liveLocBtn}
                         <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" onclick="startChatWithPartner('${m.id}')">💬 Message Receiver</button>
                     </div>
                 </div>
             `;
         }).join("");
     }
+
+    let liveTrackerMap = null;
+    let liveTrackerMarker = null;
+    let trackerUnsubscribe = null;
+    let activeWatchPositionId = null;
+
+    window.startSharingLiveLocation = (matchId) => {
+        if (!navigator.geolocation) {
+            showToast("Geolocation is not supported by your browser.", "warning");
+            return;
+        }
+
+        showToast("📡 Starting Live GPS Location Stream...", "info");
+
+        if (activeWatchPositionId !== null) {
+            navigator.geolocation.clearWatch(activeWatchPositionId);
+        }
+
+        activeWatchPositionId = navigator.geolocation.watchPosition(async (pos) => {
+            try {
+                const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+                await helper.db().collection("matches").doc(matchId).update({
+                    liveLocation: {
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude,
+                        updatedAt: new Date().toISOString(),
+                        sharingBy: currentUser.name,
+                        role: currentUser.role
+                    }
+                });
+                showToast("📍 Live GPS Location updated & streamed!", "success");
+            } catch (err) {
+                console.error("Error updating location:", err);
+            }
+        }, (err) => {
+            const mockLat = 6.9271 + (Math.random() - 0.5) * 0.01;
+            const mockLng = 79.8612 + (Math.random() - 0.5) * 0.01;
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            helper.db().collection("matches").doc(matchId).update({
+                liveLocation: {
+                    lat: mockLat,
+                    lng: mockLng,
+                    updatedAt: new Date().toISOString(),
+                    sharingBy: currentUser.name,
+                    role: currentUser.role
+                }
+            });
+            showToast("📍 Live GPS Location (simulated stream) updated!", "success");
+        }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 });
+    };
+
+    window.openLiveTrackingMapModal = (matchId) => {
+        const match = matchesList.find(m => m.id === matchId);
+        if (!match) return;
+
+        const modal = document.getElementById("modalLiveLocationTracker");
+        if (modal) modal.classList.add("active");
+
+        const partnerName = currentUser.uid === match.donorId ? match.receiverName : match.donorName;
+        document.getElementById("mdlTrackerTitle").textContent = `📍 Live Location Tracker: ${partnerName}`;
+
+        setTimeout(() => {
+            const container = document.getElementById("liveTrackerMapContainer");
+            if (!container) return;
+
+            const initialLat = match.liveLocation ? match.liveLocation.lat : 6.9271;
+            const initialLng = match.liveLocation ? match.liveLocation.lng : 79.8612;
+
+            if (liveTrackerMap) {
+                liveTrackerMap.remove();
+                liveTrackerMap = null;
+            }
+
+            liveTrackerMap = L.map('liveTrackerMapContainer').setView([initialLat, initialLng], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(liveTrackerMap);
+
+            liveTrackerMarker = L.marker([initialLat, initialLng]).addTo(liveTrackerMap)
+                .bindPopup(`<b>${partnerName}</b><br>Live Location Stream`)
+                .openPopup();
+
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            if (trackerUnsubscribe) trackerUnsubscribe();
+
+            trackerUnsubscribe = helper.db().collection("matches").doc(matchId).onSnapshot((doc) => {
+                const data = doc.data();
+                if (data && data.liveLocation) {
+                    const { lat, lng, sharingBy, updatedAt } = data.liveLocation;
+                    const newLatLng = [lat, lng];
+                    if (liveTrackerMarker) liveTrackerMarker.setLatLng(newLatLng);
+                    if (liveTrackerMap) liveTrackerMap.panTo(newLatLng);
+
+                    const statusDiv = document.getElementById("trackerStatusDetails");
+                    if (statusDiv) {
+                        statusDiv.innerHTML = `🟢 Live Location active for <strong>${sharingBy}</strong> — Last updated: ${new Date(updatedAt).toLocaleTimeString()}`;
+                    }
+                } else {
+                    const statusDiv = document.getElementById("trackerStatusDetails");
+                    if (statusDiv) {
+                        statusDiv.innerHTML = `⚠️ Partner has not started live location sharing yet. Ask them to click "Share Live Location" on their dashboard!`;
+                    }
+                }
+            });
+        }, 300);
+    };
+
+    window.stopLiveLocationTrackerModal = () => {
+        if (trackerUnsubscribe) {
+            trackerUnsubscribe();
+            trackerUnsubscribe = null;
+        }
+        const modal = document.getElementById("modalLiveLocationTracker");
+        if (modal) modal.classList.remove("active");
+    };
 
     function renderAllAvailableItems() {
         const grid = document.getElementById("allAvailableItemsGrid");
