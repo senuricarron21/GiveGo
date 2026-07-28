@@ -122,65 +122,36 @@
             letter-spacing: 0.5px;
         }
 
-        /* Login Card Styling */
+        /* Universal Login Card Styling */
         .login-card {
             background: #FFFFFF;
             border-radius: 20px;
-            padding: 36px 32px;
+            padding: 40px 36px;
             border: 1px solid #D8CE9C;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
             position: relative;
         }
 
         .login-header {
-            margin-bottom: 24px;
+            margin-bottom: 28px;
         }
 
         .login-title {
-            font-size: 1.75rem;
+            font-size: 1.8rem;
             font-weight: 800;
             color: #0D7C7A;
             margin: 0 0 6px 0;
         }
 
         .login-subtitle {
-            font-size: 0.88rem;
+            font-size: 0.9rem;
             color: #667067;
             margin: 0;
         }
 
-        .demo-roles-bar {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 22px;
-            background: #F5EFE0;
-            padding: 4px;
-            border-radius: 10px;
-            border: 1px solid #D8CE9C;
-        }
-
-        .demo-role-btn {
-            flex: 1;
-            padding: 7px 10px;
-            font-size: 0.78rem;
-            font-weight: 700;
-            border: none;
-            background: transparent;
-            color: #0D7C7A;
-            border-radius: 7px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .demo-role-btn.active, .demo-role-btn:hover {
-            background: #FFFFFF;
-            color: #0D7C7A;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-        }
-
         .input-group-custom {
             position: relative;
-            margin-bottom: 18px;
+            margin-bottom: 20px;
         }
 
         .input-group-custom label {
@@ -195,7 +166,7 @@
 
         .input-group-custom input {
             width: 100%;
-            padding: 12px 14px;
+            padding: 13px 15px;
             font-size: 0.95rem;
             border-radius: 10px;
             border: 1.5px solid #D8CE9C;
@@ -225,7 +196,7 @@
             transition: all 0.2s ease;
             box-shadow: 0 4px 12px rgba(13, 124, 122, 0.25);
             margin-top: 6px;
-            margin-bottom: 20px;
+            margin-bottom: 22px;
         }
 
         .btn-submit-login:hover {
@@ -236,9 +207,9 @@
 
         .register-footer {
             text-align: center;
-            font-size: 0.88rem;
+            font-size: 0.9rem;
             color: #667067;
-            padding-top: 16px;
+            padding-top: 18px;
             border-top: 1px solid #EAE3CA;
         }
 
@@ -293,24 +264,17 @@
             </div>
         </div>
 
-        <!-- Right Side: Clean Login Card -->
+        <!-- Right Side: Clean Universal Login Card -->
         <div class="login-card">
             <div class="login-header">
                 <h2 class="login-title">Welcome Back</h2>
                 <p class="login-subtitle">Sign in to access your GiveGo donation dashboard.</p>
             </div>
 
-            <!-- Fast Role Auto-Fill Tabs -->
-            <div class="demo-roles-bar">
-                <button type="button" class="demo-role-btn active" onclick="fillDemoCredentials('donor')">👤 Donor</button>
-                <button type="button" class="demo-role-btn" onclick="fillDemoCredentials('receiver')">🏥 Receiver</button>
-                <button type="button" class="demo-role-btn" onclick="fillDemoCredentials('admin')">🛡️ Admin</button>
-            </div>
-
             <form id="loginForm">
                 <div class="input-group-custom">
                     <label for="loginEmail">Email Address</label>
-                    <input type="email" id="loginEmail" placeholder="e.g. donor@givego.lk" required autocomplete="email">
+                    <input type="email" id="loginEmail" placeholder="e.g. user@givego.lk" required autocomplete="email">
                 </div>
 
                 <div class="input-group-custom">
@@ -335,27 +299,6 @@
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
     <script>
-        function fillDemoCredentials(role) {
-            const emailInput = document.getElementById("loginEmail");
-            const passInput = document.getElementById("loginPassword");
-            const btns = document.querySelectorAll(".demo-role-btn");
-
-            btns.forEach(b => b.classList.remove("active"));
-            if (role === 'donor') {
-                if (btns[0]) btns[0].classList.add("active");
-                emailInput.value = "donor@givego.lk";
-                passInput.value = "donor123";
-            } else if (role === 'receiver') {
-                if (btns[1]) btns[1].classList.add("active");
-                emailInput.value = "receiver@givego.lk";
-                passInput.value = "receiver123";
-            } else if (role === 'admin') {
-                if (btns[2]) btns[2].classList.add("active");
-                emailInput.value = "admin@givego.lk";
-                passInput.value = "admin123";
-            }
-        }
-
         document.addEventListener("DOMContentLoaded", () => {
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
             if (helper && helper.auth()) {
