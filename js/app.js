@@ -547,11 +547,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const searchKeyword = (document.getElementById("filterDonorSearch")?.value || "").toLowerCase();
         const statusFilter = document.getElementById("filterDonorStatus")?.value || "all";
         const catFilter = document.getElementById("filterDonorCategory")?.value || "all";
+        const sortOrder = document.getElementById("sortDonorOrder")?.value || "latest";
 
         let myDonations = donationsList.filter(d => d.donorId === currentUser.uid);
 
-        // Sort latest added items first
-        myDonations.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        if (sortOrder === "latest") {
+            myDonations.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        } else {
+            myDonations.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+        }
 
         if (searchKeyword) {
             myDonations = myDonations.filter(d => 
@@ -596,9 +600,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const filterDonorSearch = document.getElementById("filterDonorSearch");
     const filterDonorStatus = document.getElementById("filterDonorStatus");
     const filterDonorCategory = document.getElementById("filterDonorCategory");
+    const sortDonorOrder = document.getElementById("sortDonorOrder");
     if (filterDonorSearch) filterDonorSearch.addEventListener("input", renderDonorListings);
     if (filterDonorStatus) filterDonorStatus.addEventListener("change", renderDonorListings);
     if (filterDonorCategory) filterDonorCategory.addEventListener("change", renderDonorListings);
+    if (sortDonorOrder) sortDonorOrder.addEventListener("change", renderDonorListings);
 
     function renderReceiverRequests() {
         const body = document.getElementById("receiverRequestsBody");
@@ -607,11 +613,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const searchKeyword = (document.getElementById("filterReceiverSearch")?.value || "").toLowerCase();
         const statusFilter = document.getElementById("filterReceiverStatus")?.value || "all";
         const catFilter = document.getElementById("filterReceiverCategory")?.value || "all";
+        const sortOrder = document.getElementById("sortReceiverOrder")?.value || "latest";
 
         let myRequests = requestsList.filter(r => r.receiverId === currentUser.uid);
 
-        // Sort latest added items first
-        myRequests.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        if (sortOrder === "latest") {
+            myRequests.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        } else {
+            myRequests.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+        }
 
         if (searchKeyword) {
             myRequests = myRequests.filter(r => 
@@ -663,9 +673,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const filterReceiverSearch = document.getElementById("filterReceiverSearch");
     const filterReceiverStatus = document.getElementById("filterReceiverStatus");
     const filterReceiverCategory = document.getElementById("filterReceiverCategory");
+    const sortReceiverOrder = document.getElementById("sortReceiverOrder");
     if (filterReceiverSearch) filterReceiverSearch.addEventListener("input", renderReceiverRequests);
     if (filterReceiverStatus) filterReceiverStatus.addEventListener("change", renderReceiverRequests);
     if (filterReceiverCategory) filterReceiverCategory.addEventListener("change", renderReceiverRequests);
+    if (sortReceiverOrder) sortReceiverOrder.addEventListener("change", renderReceiverRequests);
 
     window.deleteDonation = async (donId) => {
         if (!confirm("Are you sure you want to remove this listing?")) return;
@@ -904,6 +916,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (catFilter !== 'all') filtered = filtered.filter(r => r.category === catFilter);
         if (districtFilter !== 'all') filtered = filtered.filter(r => r.district === districtFilter);
 
+        const sortOrder = document.getElementById("sortCatalogueOrder")?.value || "latest";
+        if (sortOrder === "latest") {
+            filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        } else {
+            filtered.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+        }
+
         if (filtered.length === 0) {
             grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--color-text-muted); padding: 40px;">No published requests match your criteria.</div>`;
             return;
@@ -949,6 +968,15 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
         }).join("");
     }
+
+    const searchDonorNeeds = document.getElementById("searchDonorNeeds");
+    const filterReqType = document.getElementById("filterReqType");
+    const filterReqCategory = document.getElementById("filterReqCategory");
+    const sortCatalogueOrder = document.getElementById("sortCatalogueOrder");
+    if (searchDonorNeeds) searchDonorNeeds.addEventListener("input", renderDonorNeeds);
+    if (filterReqType) filterReqType.addEventListener("change", renderDonorNeeds);
+    if (filterReqCategory) filterReqCategory.addEventListener("change", renderDonorNeeds);
+    if (sortCatalogueOrder) sortCatalogueOrder.addEventListener("change", renderDonorNeeds);
 
     window.offerPhysicalDonation = async (requestId) => {
         const req = requestsList.find(r => r.id === requestId);

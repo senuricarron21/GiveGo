@@ -171,7 +171,7 @@
                     <div class="glass-panel" style="padding:20px; background:#FFFFFF;">
                         <!-- Donor Filter Bar -->
                         <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
-                            <input class="form-control" type="text" id="filterDonorSearch" placeholder="Search my listings..." style="max-width: 220px;">
+                            <input class="form-control" type="text" id="filterDonorSearch" placeholder="Search my listings..." style="max-width: 200px;">
                             <select class="form-control form-select" id="filterDonorStatus" style="max-width: 180px;">
                                 <option value="all">All Statuses</option>
                                 <option value="pending_admin">Pending Admin</option>
@@ -185,6 +185,10 @@
                                 <option value="Books">Books</option>
                                 <option value="Medical">Medical</option>
                                 <option value="Furniture">Furniture</option>
+                            </select>
+                            <select class="form-control form-select" id="sortDonorOrder" style="max-width: 180px; font-weight:700;">
+                                <option value="latest">Latest Added First</option>
+                                <option value="oldest">Oldest First</option>
                             </select>
                         </div>
                         <table class="table">
@@ -205,6 +209,29 @@
 
                 <div class="dashboard-view-panel" id="needs-catalogue-panel" style="display:none;">
                     <h3 class="section-title">Published Receiver Needs Catalogue</h3>
+                    <div class="glass-panel" style="padding:16px; margin-bottom:20px; background:#FFFFFF;">
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                            <input class="form-control" type="text" id="searchDonorNeeds" placeholder="Search receiver needs..." style="max-width: 220px;">
+                            <select class="form-control form-select" id="filterReqType" style="max-width: 160px;">
+                                <option value="all">All Request Types</option>
+                                <option value="physical">Physical Items</option>
+                                <option value="monetary">Monetary Fund</option>
+                                <option value="volunteer">Volunteer Shift</option>
+                            </select>
+                            <select class="form-control form-select" id="filterReqCategory" style="max-width: 160px;">
+                                <option value="all">All Categories</option>
+                                <option value="Medical">Medical</option>
+                                <option value="Food">Food Rations</option>
+                                <option value="Clothing">Clothing</option>
+                                <option value="Books">Books</option>
+                                <option value="General">General</option>
+                            </select>
+                            <select class="form-control form-select" id="sortCatalogueOrder" style="max-width: 180px; font-weight:700;">
+                                <option value="latest">Latest Added First</option>
+                                <option value="oldest">Oldest First</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="grid-cols-2" id="donorNeedsGrid"></div>
                 </div>
 
@@ -310,7 +337,7 @@
                     <div class="glass-panel" style="padding:20px; background:#FFFFFF;">
                         <!-- Receiver Filter Bar -->
                         <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
-                            <input class="form-control" type="text" id="filterReceiverSearch" placeholder="Search my requests..." style="max-width: 220px;">
+                            <input class="form-control" type="text" id="filterReceiverSearch" placeholder="Search my requests..." style="max-width: 200px;">
                             <select class="form-control form-select" id="filterReceiverStatus" style="max-width: 180px;">
                                 <option value="all">All Statuses</option>
                                 <option value="pending_admin">Pending Admin</option>
@@ -325,6 +352,10 @@
                                 <option value="Clothing">Clothing</option>
                                 <option value="Books">Books</option>
                                 <option value="General">General</option>
+                            </select>
+                            <select class="form-control form-select" id="sortReceiverOrder" style="max-width: 180px; font-weight:700;">
+                                <option value="latest">Latest Added First</option>
+                                <option value="oldest">Oldest First</option>
                             </select>
                         </div>
                         <table class="table">
