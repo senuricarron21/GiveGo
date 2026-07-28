@@ -235,21 +235,38 @@
                     <div class="glass-panel" style="padding:16px; margin-bottom:20px; background:#FFFFFF;">
                         <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                             <input class="form-control" type="text" id="searchDonorNeeds" placeholder="Search receiver needs..." style="max-width: 220px;">
-                            <select class="form-control form-select" id="filterReqType" style="max-width: 160px;">
+                            <select class="form-control form-select" id="filterReqType" style="max-width: 150px;">
                                 <option value="all">All Request Types</option>
                                 <option value="physical">Physical Items</option>
                                 <option value="monetary">Monetary Fund</option>
                                 <option value="volunteer">Volunteer Shift</option>
                             </select>
-                            <select class="form-control form-select" id="filterReqCategory" style="max-width: 160px;">
-                                <option value="all">All Categories</option>
-                                <option value="Medical">Medical</option>
-                                <option value="Food">Food Rations</option>
-                                <option value="Clothing">Clothing</option>
-                                <option value="Books">Books</option>
-                                <option value="General">General</option>
+                            <select class="form-control form-select" id="filterReqCategory" style="max-width: 170px;">
+                                <option value="all">All Item Categories</option>
+                                <option value="Education Supplies">Education Supplies</option>
+                                <option value="Medical Supplies">Medical Supplies</option>
+                                <option value="Food & Nutrition">Food & Nutrition</option>
+                                <option value="Furniture">Furniture</option>
+                                <option value="Electronics & IT Equipment">Electronics & IT Equipment</option>
+                                <option value="Clothing & Personal Care">Clothing & Personal Care</option>
+                                <option value="Household Essentials">Household Essentials</option>
+                                <option value="Other Supplies">Other Supplies</option>
                             </select>
-                            <select class="form-control form-select" id="sortCatalogueOrder" style="max-width: 180px; font-weight:700;">
+                            <select class="form-control form-select" id="filterReceiverCategory" style="max-width: 170px;">
+                                <option value="all">All Receiver Types</option>
+                                <option value="Schools">Schools</option>
+                                <option value="Hospitals">Hospitals</option>
+                                <option value="Orphanages">Orphanages</option>
+                                <option value="Elder Care Homes">Elder Care Homes</option>
+                                <option value="Disaster Relief Organization">Disaster Relief Organization</option>
+                            </select>
+                            <select class="form-control form-select" id="filterReqPriority" style="max-width: 140px;">
+                                <option value="all">All Priorities</option>
+                                <option value="High">High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                            <select class="form-control form-select" id="sortCatalogueOrder" style="max-width: 160px; font-weight:700;">
                                 <option value="latest">Latest Added First</option>
                                 <option value="oldest">Oldest First</option>
                             </select>
@@ -281,12 +298,14 @@
                             <div class="form-group">
                                 <label class="form-label">Category</label>
                                 <select class="form-control form-select" id="reqCategory" required>
-                                    <option value="Medical">Medical / Health Supplies</option>
-                                    <option value="Food">Food Rations</option>
-                                    <option value="Clothing">Clothing / Apparel</option>
-                                    <option value="Books">Books / Learning Materials</option>
-                                    <option value="Monetary">Monetary Funding</option>
-                                    <option value="Volunteer Support">Volunteer Support</option>
+                                    <option value="Education Supplies">Education Supplies</option>
+                                    <option value="Medical Supplies">Medical Supplies</option>
+                                    <option value="Food & Nutrition">Food & Nutrition</option>
+                                    <option value="Furniture">Furniture</option>
+                                    <option value="Electronics & IT Equipment">Electronics & IT Equipment</option>
+                                    <option value="Clothing & Personal Care">Clothing & Personal Care</option>
+                                    <option value="Household Essentials">Household Essentials</option>
+                                    <option value="Other Supplies">Other Supplies</option>
                                 </select>
                             </div>
 

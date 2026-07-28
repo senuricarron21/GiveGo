@@ -1030,28 +1030,42 @@ document.addEventListener("DOMContentLoaded", () => {
         const searchKeyword = (document.getElementById("searchDonorNeeds")?.value || "").toLowerCase();
         const reqTypeFilter = document.getElementById("filterReqType")?.value || "all";
         const catFilter = document.getElementById("filterReqCategory")?.value || "all";
+        const receiverCatFilter = document.getElementById("filterReceiverCategory")?.value || "all";
+        const priorityFilter = document.getElementById("filterReqPriority")?.value || "all";
         const districtFilter = document.getElementById("filterReqDistrict")?.value || "all";
 
-        let filtered = requestsList.filter(r => r.status === 'published');
+        let filtered = requestsList.filter(r => r.status === 'published' || r.status === 'partially_fulfilled');
 
         if (searchKeyword) {
             filtered = filtered.filter(r => 
                 (r.itemName && r.itemName.toLowerCase().includes(searchKeyword)) ||
-                (r.description && r.description.toLowerCase().includes(searchKeyword)) ||
+                (r.category && r.category.toLowerCase().includes(searchKeyword)) ||
+                (r.receiverCategory && r.receiverCategory.toLowerCase().includes(searchKeyword)) ||
                 (r.receiverName && r.receiverName.toLowerCase().includes(searchKeyword))
             );
         }
 
         if (reqTypeFilter !== 'all') filtered = filtered.filter(r => (r.reqType || 'physical') === reqTypeFilter);
         if (catFilter !== 'all') filtered = filtered.filter(r => r.category === catFilter);
+        if (receiverCatFilter !== 'all') filtered = filtered.filter(r => r.receiverCategory === receiverCatFilter);
+        if (priorityFilter !== 'all') filtered = filtered.filter(r => (r.priorityLevel || 'Medium') === priorityFilter);
         if (districtFilter !== 'all') filtered = filtered.filter(r => r.district === districtFilter);
 
+        // Sort: Donor's local district first, then by date order
         const sortOrder = document.getElementById("sortCatalogueOrder")?.value || "latest";
-        if (sortOrder === "latest") {
-            filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-        } else {
-            filtered.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
-        }
+        const userDistrict = currentUser.district || "Colombo";
+
+        filtered.sort((a, b) => {
+            const aIsLocal = (a.district === userDistrict) ? 1 : 0;
+            const bIsLocal = (b.district === userDistrict) ? 1 : 0;
+            if (aIsLocal !== bIsLocal) return bIsLocal - aIsLocal; // Local district first
+
+            if (sortOrder === "latest") {
+                return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+            } else {
+                return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+            }
+        });
 
         if (filtered.length === 0) {
             grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--color-text-muted); padding: 40px;">No published requests match your criteria.</div>`;
@@ -1813,6 +1827,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 `;
             }
 
+            if (m.status === 'delivered' || m.status === 'in_transit') {
+                actionButtonsHtml += `
+                    <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="confirmPhysicalReceipt('${m.id}')">✅ Confirm Receipt (Complete)</button>
+                `;
+            }
+
             let liveLocBtn = '';
             if (m.deliveryMethod === 'self_delivery') {
                 liveLocBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Track Donor Delivery Live</button>`;
@@ -1821,7 +1841,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             let evidenceBtn = '';
-            if (m.type === 'monetary' && m.status === 'confirmed') {
+            if (m.type === 'monetary' && (m.status === 'confirmed' || m.status === 'completed')) {
                 if (m.evidenceSubmitted) {
                     evidenceBtn = `<a href="${m.evidenceUrl}" target="_blank" class="btn btn-secondary" style="font-size:0.75rem; padding:4px 8px;">View Uploaded Evidence</a>`;
                 } else {
@@ -1829,13 +1849,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
 
+            let sessionBadge = m.deliverySessionId ? `<div style="font-size:0.75rem; font-weight:700; color:var(--color-teal-primary); margin-top:2px;">Session ID: ${m.deliverySessionId}</div>` : '';
+
             return `
                 <div class="glass-panel" style="padding: 16px; margin-bottom: 12px; background: #FFFFFF;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                         <span style="font-weight:700; color:var(--color-teal-primary);">${m.requestName}</span>
                         ${statusBadge}
                     </div>
-                    <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 6px;">Donor: <strong>${m.donorName}</strong></div>
+                    <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 6px;">Donor: <strong>${m.donorName}</strong> ${sessionBadge}</div>
                     <div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 8px;">${details}</div>
                     ${scheduleInfo}
 
@@ -1864,6 +1886,9 @@ document.addEventListener("DOMContentLoaded", () => {
         container.innerHTML = myOffers.map(m => {
             let statusBadge = `<span class="badge badge-warning">${m.status}</span>`;
             if (m.status === 'confirmed') statusBadge = `<span class="badge badge-success">Confirmed</span>`;
+            else if (m.status === 'in_transit') statusBadge = `<span class="badge badge-info">In Transit (Delivery Active)</span>`;
+            else if (m.status === 'delivered') statusBadge = `<span class="badge badge-success">Delivered (Pending Receiver Confirmation)</span>`;
+            else if (m.status === 'completed') statusBadge = `<span class="badge badge-success">Completed</span>`;
             else if (m.status === 'rejected') statusBadge = `<span class="badge badge-danger">Declined</span>`;
             else if (m.status === 'pending_donor_approval') statusBadge = `<span class="badge badge-warning">Request Pending Your Approval</span>`;
             else if (m.status === 'accepted_pending_delivery_method') statusBadge = `<span class="badge badge-info">Receiver Accepted Offer (Select Delivery)</span>`;
@@ -1902,6 +1927,16 @@ document.addEventListener("DOMContentLoaded", () => {
                     <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="acceptSchedule('${m.id}')">Accept Proposed Time</button>
                     <button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openNegotiateModal('${m.id}')">Re-Negotiate</button>
                     <button class="btn btn-danger" style="padding:4px 10px; font-size:0.75rem;" onclick="rejectSchedule('${m.id}')">Reject Proposal</button>
+                `;
+            }
+
+            if (m.status === 'confirmed' || m.status === 'donor_scheduled_delivery') {
+                actionButtonsHtml += `
+                    <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startDeliverySession('${m.id}')">🚚 Start Delivery (In Transit)</button>
+                `;
+            } else if (m.status === 'in_transit') {
+                actionButtonsHtml += `
+                    <button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="markDeliveryDelivered('${m.id}')">📦 Mark Delivered</button>
                 `;
             }
 
