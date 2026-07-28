@@ -72,8 +72,8 @@
                 </div>
                 
                 <div class="actions-section">
-                    <div class="notification-bell glass-panel" style="padding: 8px 16px; border-radius: var(--radius-sm);" id="btnNotificationsToggle">
-                        <span style="font-size: 0.85rem; font-weight:700; color: var(--color-primary);">Alerts</span>
+                    <div class="notification-bell glass-panel" style="padding: 8px 16px; border-radius: var(--radius-sm); cursor: pointer;" id="btnNotificationsToggle" onclick="window.location.hash='#notifications'">
+                        <span style="font-size: 0.85rem; font-weight:700; color: var(--color-teal-primary);">Alerts</span>
                         <span class="notification-dot" id="notiDot" style="display: none;"></span>
                     </div>
                 </div>
@@ -292,6 +292,12 @@
                             <tbody id="historyTableBody"></tbody>
                         </table>
                     </div>
+                </div>
+
+                <!-- Notifications Panel -->
+                <div class="dashboard-view-panel" id="notifications-panel" style="display:none;">
+                    <h3 class="section-title">System Alerts & Notifications</h3>
+                    <div id="notificationsListContainer"></div>
                 </div>
             </div>
 

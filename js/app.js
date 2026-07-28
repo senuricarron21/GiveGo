@@ -354,6 +354,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 renderAllAvailableItems();
             } else if (hash === '#history') {
                 renderHistory();
+            } else if (hash === '#notifications') {
+                renderNotifications();
             } else if (hash === '#matching') {
                 if (roleStr.includes('donor')) renderDonorMatches();
                 else if (roleStr.includes('receiver')) renderReceiverMatches();
@@ -375,23 +377,39 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!container) return;
         
         if (notificationsList.length === 0) {
-            container.innerHTML = `<div style="text-align: center; color: var(--color-text-muted); padding: 40px;">No active alerts. You are up to date.</div>`;
+            container.innerHTML = `
+                <div class="glass-panel" style="padding: 40px; text-align: center; background: #FFFFFF;">
+                    <h4 style="color: var(--color-teal-primary); font-size: 1.1rem; margin-bottom: 8px;">No Active Alerts</h4>
+                    <p style="color: var(--color-text-muted); font-size: 0.9rem;">You are up to date! System notifications and donation match alerts will appear here automatically.</p>
+                </div>
+            `;
             return;
         }
 
         const sorted = [...notificationsList].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
         container.innerHTML = sorted.map(n => {
-            const date = new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const date = new Date(n.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
             return `
-                <div class="glass-panel" style="padding: 14px 18px; margin-bottom: 10px; border-left: 4px solid ${n.read ? 'var(--color-border-dark)' : 'var(--color-teal-primary)'}; background: #FFFFFF; display: flex; justify-content: space-between; align-items: center;">
+                <div class="glass-panel" style="padding: 16px 20px; margin-bottom: 12px; border-left: 5px solid ${n.read ? 'var(--color-border)' : 'var(--color-teal-primary)'}; background: #FFFFFF; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="markNotificationRead('${n.id}')">
                     <div>
-                        <div style="font-size: 0.9rem; font-weight: ${n.read ? '500' : '700'}; color: var(--color-teal-primary);">${n.message}</div>
-                        <div style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 2px;">${date}</div>
+                        <div style="font-size: 0.95rem; font-weight: ${n.read ? '600' : '800'}; color: var(--color-teal-primary); margin-bottom: 4px;">${n.message}</div>
+                        <div style="font-size: 0.75rem; color: var(--color-text-muted);">${date}</div>
                     </div>
+                    ${n.read ? `<span class="badge badge-info" style="font-size:0.7rem;">Read</span>` : `<span class="badge badge-success" style="font-size:0.7rem;">New Alert</span>`}
                 </div>
             `;
         }).join("");
     }
+
+    window.markNotificationRead = async (notiId) => {
+        try {
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            await helper.db().collection("notifications").doc(notiId).update({ read: true });
+            updateOverviewStats();
+        } catch (err) {
+            console.error("Error marking notification read:", err);
+        }
+    };
 
     const formRequestMaterials = document.getElementById("formRequestMaterials");
     if (formRequestMaterials) {
