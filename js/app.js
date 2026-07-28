@@ -543,17 +543,40 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderDonorListings() {
         const body = document.getElementById("donorListingsBody");
         if (!body) return;
-        const myDonations = donationsList.filter(d => d.donorId === currentUser.uid);
+
+        const searchKeyword = (document.getElementById("filterDonorSearch")?.value || "").toLowerCase();
+        const statusFilter = document.getElementById("filterDonorStatus")?.value || "all";
+        const catFilter = document.getElementById("filterDonorCategory")?.value || "all";
+
+        let myDonations = donationsList.filter(d => d.donorId === currentUser.uid);
+
+        // Sort latest added items first
+        myDonations.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+        if (searchKeyword) {
+            myDonations = myDonations.filter(d => 
+                (d.itemName && d.itemName.toLowerCase().includes(searchKeyword)) ||
+                (d.category && d.category.toLowerCase().includes(searchKeyword))
+            );
+        }
+
+        if (statusFilter !== 'all') {
+            myDonations = myDonations.filter(d => (d.status || 'pending_admin') === statusFilter);
+        }
+
+        if (catFilter !== 'all') {
+            myDonations = myDonations.filter(d => d.category === catFilter);
+        }
 
         if (myDonations.length === 0) {
-            body.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--color-text-muted); padding: 30px;">No material listings posted yet.</td></tr>`;
+            body.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--color-text-muted); padding: 30px;">No material listings match the selected filters.</td></tr>`;
             return;
         }
 
         body.innerHTML = myDonations.map(d => {
             let statusBadge = `<span class="badge badge-warning">Pending Admin</span>`;
             if (d.status === 'available') statusBadge = `<span class="badge badge-success">Approved / Available</span>`;
-            else if (d.status === 'rejected') statusBadge = `<span class="badge badge-danger">Rejected</span>`;
+            else if (d.status === 'rejected') statusBadge = `<span class="badge badge-danger">Rejected by Admin</span>`;
 
             return `
                 <tr>
@@ -569,6 +592,80 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
         }).join("");
     }
+
+    const filterDonorSearch = document.getElementById("filterDonorSearch");
+    const filterDonorStatus = document.getElementById("filterDonorStatus");
+    const filterDonorCategory = document.getElementById("filterDonorCategory");
+    if (filterDonorSearch) filterDonorSearch.addEventListener("input", renderDonorListings);
+    if (filterDonorStatus) filterDonorStatus.addEventListener("change", renderDonorListings);
+    if (filterDonorCategory) filterDonorCategory.addEventListener("change", renderDonorListings);
+
+    function renderReceiverRequests() {
+        const body = document.getElementById("receiverRequestsBody");
+        if (!body) return;
+
+        const searchKeyword = (document.getElementById("filterReceiverSearch")?.value || "").toLowerCase();
+        const statusFilter = document.getElementById("filterReceiverStatus")?.value || "all";
+        const catFilter = document.getElementById("filterReceiverCategory")?.value || "all";
+
+        let myRequests = requestsList.filter(r => r.receiverId === currentUser.uid);
+
+        // Sort latest added items first
+        myRequests.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+        if (searchKeyword) {
+            myRequests = myRequests.filter(r => 
+                (r.itemName && r.itemName.toLowerCase().includes(searchKeyword)) ||
+                (r.category && r.category.toLowerCase().includes(searchKeyword))
+            );
+        }
+
+        if (statusFilter !== 'all') {
+            myRequests = myRequests.filter(r => (r.status || 'pending_admin') === statusFilter);
+        }
+
+        if (catFilter !== 'all') {
+            myRequests = myRequests.filter(r => r.category === catFilter);
+        }
+
+        if (myRequests.length === 0) {
+            body.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--color-text-muted); padding: 30px;">No requests match the selected filters.</td></tr>`;
+            return;
+        }
+
+        body.innerHTML = myRequests.map(r => {
+            let typeBadge = `<span class="badge badge-info">${(r.reqType || 'physical').toUpperCase()}</span>`;
+            let targetText = r.quantityRequired ? `${r.quantityRequired} units` : (r.amountRequired ? `LKR ${r.amountRequired}` : `${r.volunteersRequired || 0} volunteers`);
+            let fulfilledText = r.quantityReceived ? `${r.quantityReceived} units` : (r.amountReceived ? `LKR ${r.amountReceived}` : `${r.volunteersAssigned || 0} filled`);
+
+            let statusBadge = `<span class="badge badge-warning">Pending Admin</span>`;
+            if (r.status === 'published') statusBadge = `<span class="badge badge-success">Approved / Published</span>`;
+            else if (r.status === 'rejected') statusBadge = `<span class="badge badge-danger">Rejected by Admin</span>`;
+            else if (r.status === 'fulfilled') statusBadge = `<span class="badge badge-info">Completed</span>`;
+            else if (r.status === 'suspended') statusBadge = `<span class="badge badge-danger">Suspended</span>`;
+
+            return `
+                <tr>
+                    <td>${typeBadge}</td>
+                    <td><strong>${r.itemName}</strong></td>
+                    <td>${r.category}</td>
+                    <td>${targetText}</td>
+                    <td>${fulfilledText}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="deleteRequest('${r.id}')">Delete</button>
+                    </td>
+                </tr>
+            `;
+        }).join("");
+    }
+
+    const filterReceiverSearch = document.getElementById("filterReceiverSearch");
+    const filterReceiverStatus = document.getElementById("filterReceiverStatus");
+    const filterReceiverCategory = document.getElementById("filterReceiverCategory");
+    if (filterReceiverSearch) filterReceiverSearch.addEventListener("input", renderReceiverRequests);
+    if (filterReceiverStatus) filterReceiverStatus.addEventListener("change", renderReceiverRequests);
+    if (filterReceiverCategory) filterReceiverCategory.addEventListener("change", renderReceiverRequests);
 
     window.deleteDonation = async (donId) => {
         if (!confirm("Are you sure you want to remove this listing?")) return;

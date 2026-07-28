@@ -169,6 +169,24 @@
 
                     <h3 class="section-title">My Surplus Listings</h3>
                     <div class="glass-panel" style="padding:20px; background:#FFFFFF;">
+                        <!-- Donor Filter Bar -->
+                        <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+                            <input class="form-control" type="text" id="filterDonorSearch" placeholder="Search my listings..." style="max-width: 220px;">
+                            <select class="form-control form-select" id="filterDonorStatus" style="max-width: 180px;">
+                                <option value="all">All Statuses</option>
+                                <option value="pending_admin">Pending Admin</option>
+                                <option value="available">Approved / Available</option>
+                                <option value="rejected">Rejected by Admin</option>
+                            </select>
+                            <select class="form-control form-select" id="filterDonorCategory" style="max-width: 180px;">
+                                <option value="all">All Categories</option>
+                                <option value="Food">Food Rations</option>
+                                <option value="Clothing">Clothing</option>
+                                <option value="Books">Books</option>
+                                <option value="Medical">Medical</option>
+                                <option value="Furniture">Furniture</option>
+                            </select>
+                        </div>
                         <table class="table">
                             <thead>
                                 <tr>
@@ -290,6 +308,25 @@
 
                     <h3 class="section-title">My Submitted Requests</h3>
                     <div class="glass-panel" style="padding:20px; background:#FFFFFF;">
+                        <!-- Receiver Filter Bar -->
+                        <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+                            <input class="form-control" type="text" id="filterReceiverSearch" placeholder="Search my requests..." style="max-width: 220px;">
+                            <select class="form-control form-select" id="filterReceiverStatus" style="max-width: 180px;">
+                                <option value="all">All Statuses</option>
+                                <option value="pending_admin">Pending Admin</option>
+                                <option value="published">Approved / Published</option>
+                                <option value="rejected">Rejected by Admin</option>
+                                <option value="fulfilled">Completed</option>
+                            </select>
+                            <select class="form-control form-select" id="filterReceiverCategory" style="max-width: 180px;">
+                                <option value="all">All Categories</option>
+                                <option value="Medical">Medical</option>
+                                <option value="Food">Food Rations</option>
+                                <option value="Clothing">Clothing</option>
+                                <option value="Books">Books</option>
+                                <option value="General">General</option>
+                            </select>
+                        </div>
                         <table class="table">
                             <thead>
                                 <tr>
