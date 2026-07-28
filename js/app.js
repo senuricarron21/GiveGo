@@ -1206,6 +1206,11 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("mdlReqDonationId").value = item.id;
         document.getElementById("mdlReqItemTitle").textContent = `Request Item: ${item.itemName}`;
 
+        const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        const isoString = tomorrow.toISOString().slice(0, 16);
+        const dateInput = document.getElementById("mdlReqPickUpDateTime");
+        if (dateInput && !dateInput.value) dateInput.value = isoString;
+
         const modal = document.getElementById("modalRequestAvailableItem");
         if (modal) modal.classList.add("active");
     };
@@ -1228,6 +1233,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
                 const db = helper.db();
 
+                const formattedDate = new Date(pickUpDateTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+
                 const matchDoc = {
                     donationId: item.id,
                     requestName: item.itemName,
@@ -1238,6 +1245,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     type: "physical",
                     category: item.category,
                     quantity: item.quantity,
+                    unit: item.unit || "Units",
                     deliveryMethod: "receiver_pickup",
                     scheduledDateTime: pickUpDateTime,
                     schedulingStatus: "receiver_scheduled",
@@ -1249,12 +1257,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 await db.collection("notifications").add({
                     userId: item.donorId,
-                    message: `Receiver ${currentUser.name} has requested "${item.itemName}" for Self Pick Up scheduled at ${new Date(pickUpDateTime).toLocaleString()}.`,
+                    message: `📍 Receiver ${currentUser.name} has requested your available "${item.itemName}" for Self Pick Up scheduled at ${formattedDate}.`,
                     read: false,
                     createdAt: new Date().toISOString()
                 });
 
-                showToast("Pick Up request submitted to donor.", "success");
+                showToast("Self Pick Up request & schedule submitted to donor!", "success");
                 document.getElementById("modalRequestAvailableItem").classList.remove("active");
                 formSubmitItemRequest.reset();
                 updateOverviewStats();
