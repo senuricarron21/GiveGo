@@ -1425,6 +1425,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         ${m.status === 'pending_receiver' ? `
                             <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem;" onclick="confirmOffer('${m.id}')">Accept & Confirm Receipt</button>
                         ` : ''}
+                        <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" onclick="startChatWithPartner('${m.id}')">💬 Message Donor</button>
                         ${scheduleBtn}
                         ${evidenceBtn}
                     </div>
@@ -1468,7 +1469,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         <span style="font-weight:700; color:var(--color-teal-primary);">${m.requestName}</span>
                         ${statusBadge}
                     </div>
-                    <div style="font-size: 0.85rem; color: var(--color-teal-muted); font-weight:700;">To Receiver: ${m.receiverName}</div>
+                    <div style="font-size: 0.85rem; color: var(--color-teal-muted); font-weight:700; margin-bottom:10px;">To Receiver: ${m.receiverName}</div>
+                    <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" onclick="startChatWithPartner('${m.id}')">💬 Message Receiver</button>
                 </div>
             `;
         }).join("");
@@ -1633,6 +1635,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    window.startChatWithPartner = (matchId) => {
+        const commNav = document.querySelector('.nav-item[data-view="communication-panel"]');
+        if (commNav) commNav.click();
+        selectChatMatch(matchId);
+    };
+
     function renderChatMatchesList() {
         const container = document.getElementById("chatMatchesList");
         if (!container) return;
@@ -1648,9 +1656,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const partner = currentUser.uid === m.donorId ? m.receiverName : m.donorName;
             const activeClass = m.id === activeChatMatchId ? 'active' : '';
             return `
-                <div class="chat-item ${activeClass}" onclick="selectChatMatch('${m.id}')">
-                    <div style="font-weight: 700; color: var(--color-teal-primary); font-size: 0.9rem;">${partner}</div>
-                    <div style="font-size: 0.75rem; color: var(--color-text-muted);">${m.requestName} (${(m.type||'physical').toUpperCase()})</div>
+                <div class="chat-item ${activeClass}" onclick="selectChatMatch('${m.id}')" style="padding:10px; margin-bottom:8px; border-radius:6px; cursor:pointer; background:${m.id === activeChatMatchId ? 'var(--color-teal-primary)' : '#FBF5DD'}; color:${m.id === activeChatMatchId ? '#FFFFFF' : 'var(--color-text-dark)'};">
+                    <div style="font-weight: 800; font-size: 0.9rem;">💬 ${partner}</div>
+                    <div style="font-size: 0.75rem; opacity: 0.9;">Item: ${m.requestName} (${(m.type||'physical').toUpperCase()})</div>
                 </div>
             `;
         }).join("");
@@ -1662,7 +1670,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (match) {
             const partner = currentUser.uid === match.donorId ? match.receiverName : match.donorName;
             const peerName = document.getElementById("chatPeerName");
-            if (peerName) peerName.textContent = partner;
+            if (peerName) peerName.textContent = `Conversation with ${partner} (${match.requestName})`;
             renderTrackingTimeline(match);
         }
         renderChatMatchesList();
@@ -1673,12 +1681,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const container = document.getElementById("trackingStatusTimeline");
         if (!container) return;
 
+        let step1 = 'var(--color-teal-primary)';
+        let step2 = match.status === 'confirmed' ? 'var(--color-teal-primary)' : 'var(--color-text-muted)';
+        let step3 = match.evidenceSubmitted ? 'var(--color-teal-primary)' : 'var(--color-text-muted)';
+
         container.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin: 15px 0; font-size: 0.8rem; font-weight:700;">
-                <span style="color:var(--color-teal-primary)">1. Offer</span>
-                <span>2. Confirmed</span>
-                <span>3. 14D SLA</span>
-                <span>4. Completed</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin: 10px 0 15px 0; font-size: 0.75rem; font-weight:700; background:#F5EFE0; padding:8px 12px; border-radius:6px;">
+                <span style="color:${step1}">1. Match Created</span>
+                <span style="color:${step2}">2. Order Confirmed</span>
+                <span style="color:${step3}">3. SLA Evidence</span>
             </div>
         `;
     }
@@ -1688,18 +1699,21 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!container || !activeChatMatchId) return;
 
         const msgs = messagesList.filter(m => m.matchId === activeChatMatchId)
-                                .sort((a,b) => new Date(a.createdAt) - new Date(a.createdAt));
+                                .sort((a,b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
 
         if (msgs.length === 0) {
-            container.innerHTML = `<div style="text-align: center; color: var(--color-text-muted); padding: 30px; font-size:0.85rem;">No messages yet. Send a message below.</div>`;
+            container.innerHTML = `<div style="text-align: center; color: var(--color-text-muted); padding: 30px; font-size:0.85rem;">No messages yet. Type your message below to chat with your partner.</div>`;
             return;
         }
 
         container.innerHTML = msgs.map(m => {
             const isOutgoing = m.senderId === currentUser.uid;
             return `
-                <div class="message-bubble ${isOutgoing ? 'outgoing' : 'incoming'}">
-                    ${m.text}
+                <div style="display:flex; justify-content:${isOutgoing ? 'flex-end' : 'flex-start'}; margin-bottom:8px;">
+                    <div style="max-width:75%; padding:8px 12px; border-radius:8px; font-size:0.85rem; background:${isOutgoing ? 'var(--color-teal-primary)' : '#E4DCAE'}; color:${isOutgoing ? '#FFFFFF' : 'var(--color-text-dark)'};">
+                        <div style="font-size:0.7rem; opacity:0.8; margin-bottom:2px;">${m.senderName || (isOutgoing ? 'You' : 'Partner')}</div>
+                        <div>${m.text}</div>
+                    </div>
                 </div>
             `;
         }).join("");
@@ -1712,10 +1726,16 @@ document.addEventListener("DOMContentLoaded", () => {
     if (btnSendChatMessage && chatMessageInput) {
         const sendMsg = async () => {
             const text = chatMessageInput.value.trim();
-            if (!text || !activeChatMatchId) return;
+            if (!text || !activeChatMatchId) {
+                if (!activeChatMatchId) showToast("Please select a conversation first.", "warning");
+                return;
+            }
 
             try {
                 const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+                const match = matchesList.find(m => m.id === activeChatMatchId);
+                const recipientId = match ? (currentUser.uid === match.donorId ? match.receiverId : match.donorId) : null;
+
                 await helper.db().collection("messages").add({
                     matchId: activeChatMatchId,
                     senderId: currentUser.uid,
@@ -1723,7 +1743,18 @@ document.addEventListener("DOMContentLoaded", () => {
                     text,
                     createdAt: new Date().toISOString()
                 });
+
+                if (recipientId) {
+                    await helper.db().collection("notifications").add({
+                        userId: recipientId,
+                        message: `New message from ${currentUser.name}: "${text.substring(0, 40)}..."`,
+                        read: false,
+                        createdAt: new Date().toISOString()
+                    });
+                }
+
                 chatMessageInput.value = "";
+                renderChatMessages();
             } catch (err) {
                 showToast("Failed to send message.", "danger");
             }
