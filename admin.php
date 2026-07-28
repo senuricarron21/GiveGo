@@ -1,0 +1,192 @@
+<!-- Admin Dashboard Panel -->
+
+<!-- 1. OVERVIEW SECTION -->
+<div id="overview-panel" class="dashboard-view-panel">
+    <!-- Stats Cards Grid -->
+    <div class="stats-grid">
+        <div class="glass-panel stat-card">
+            <div class="stat-info">
+                <h3>Pending Approvals</h3>
+                <div class="stat-number" id="statPendingApprovalsCount">0</div>
+            </div>
+        </div>
+        <div class="glass-panel stat-card">
+            <div class="stat-info">
+                <h3>Published Needs</h3>
+                <div class="stat-number" id="statTotalRequests">0</div>
+            </div>
+        </div>
+        <div class="glass-panel stat-card">
+            <div class="stat-info">
+                <h3>Match Allocation Rate</h3>
+                <div class="stat-number" id="statMatchRate">0%</div>
+            </div>
+        </div>
+        <div class="glass-panel stat-card">
+            <div class="stat-info">
+                <h3>Registered Users</h3>
+                <div class="stat-number" id="statTotalUsers">0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick action layout -->
+    <div class="dashboard-grid">
+        <!-- Reports and Statistics Widget -->
+        <div class="glass-panel" style="padding: 30px; background: #FFFFFF;">
+            <div class="card-header">
+                <h3 class="card-title">System Activities & Compliance Reports</h3>
+                <a href="api/reports.php?download=1" class="btn btn-primary" style="padding: 6px 14px; font-size: 0.8rem; border-radius: 4px; display: inline-flex; align-items: center;">
+                    Download CSV Report
+                </a>
+            </div>
+            
+            <p style="color:var(--color-text-muted); font-size:0.9rem; margin-bottom: 20px;">
+                Retrieve summary logs of donations, active matching records, receiver bank evidence, categories, and users.
+            </p>
+            
+            <div id="reportsCategoryList" style="margin-top: 10px;">
+                <!-- Filled dynamically by app.js -->
+            </div>
+        </div>
+
+        <!-- Publish System Announcement Card -->
+        <div class="glass-panel" style="padding: 30px; background: #FFFFFF;">
+            <div class="card-header">
+                <h3 class="card-title">Publish System Announcement</h3>
+            </div>
+            
+            <form id="formPublishAnnouncement">
+                <div class="form-group">
+                    <label class="form-label">Announcement Title</label>
+                    <input type="text" class="form-control" id="annTitle" placeholder="e.g. System Maintenance Schedule" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Announcement Content</label>
+                    <textarea class="form-control" id="annContent" rows="4" placeholder="Enter system announcement context..." required></textarea>
+                </div>
+
+                <button class="btn btn-primary" type="submit" style="width: 100%;">
+                    Publish Announcement
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 2. USER ACCOUNTS SECTION -->
+<div id="users-panel" class="dashboard-view-panel" style="display: none;">
+    <div class="glass-panel" style="padding: 30px; margin-bottom: 24px; background: #FFFFFF;">
+        <div class="card-header">
+            <h3 class="card-title">System User Accounts Directory</h3>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <input type="text" id="searchAdminUsers" class="form-control" placeholder="Search user accounts by name, email, district, or role..." style="max-width: 350px;">
+        </div>
+        
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Name / Org</th>
+                        <th>Email</th>
+                        <th>Role & Type</th>
+                        <th>District</th>
+                        <th>Verification Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="adminUsersBody">
+                    <!-- Filled dynamically by app.js -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 3. APPROVALS/VERIFICATION CENTER SECTION -->
+<div id="approvals-panel" class="dashboard-view-panel" style="display: none;">
+    <!-- Pending User Accounts & Bank Verification -->
+    <div class="glass-panel" style="padding: 30px; margin-bottom: 30px; background: #FFFFFF;">
+        <div class="card-header" style="border-bottom: 1.5px solid var(--color-border); margin-bottom: 20px; padding-bottom: 15px;">
+            <h3 class="card-title">Pending Account & Bank Proof Verifications</h3>
+        </div>
+        
+        <div class="grid-cols-2" id="adminApprovalsGrid" style="gap: 20px; margin-top: 10px;">
+            <!-- Filled dynamically by app.js -->
+        </div>
+    </div>
+
+    <!-- Pending Requests Approvals (Pre-Publication Review) -->
+    <div class="glass-panel" style="padding: 30px; background: #FFFFFF;">
+        <div class="card-header" style="border-bottom: 1.5px solid var(--color-border); margin-bottom: 20px; padding-bottom: 15px;">
+            <h3 class="card-title">Pending Request Approvals (Pre-Publication Review)</h3>
+        </div>
+        
+        <div class="grid-cols-2" id="adminRequestApprovalsGrid" style="gap: 20px; margin-top: 10px;">
+            <!-- Filled dynamically by app.js -->
+        </div>
+    </div>
+</div>
+
+<!-- 4. ANNOUNCEMENTS ARCHIVE -->
+<div id="announcements-panel" class="dashboard-view-panel" style="display: none;">
+    <div class="glass-panel" style="padding: 30px; background: #FFFFFF;">
+        <div class="card-header">
+            <h3 class="card-title">System Announcements Archive</h3>
+        </div>
+        <div id="announcementsContainer" style="max-height: 500px; overflow-y: auto; margin-top: 10px;">
+            <!-- Filled dynamically by app.js -->
+        </div>
+    </div>
+</div>
+
+<!-- 5. NOTIFICATIONS SECTION -->
+<div id="notifications-panel" class="dashboard-view-panel" style="display: none;">
+    <div class="glass-panel" style="padding: 30px; background: #FFFFFF;">
+        <div class="card-header">
+            <h3 class="card-title">My Alerts Log</h3>
+        </div>
+        <div id="notificationsListContainer" style="max-height: 500px; overflow-y: auto;">
+            <!-- Filled dynamically by app.js -->
+        </div>
+    </div>
+</div>
+
+<!-- 6. SYSTEM DIRECTORY SECTION -->
+<div id="system-directory-panel" class="dashboard-view-panel" style="display: none;">
+    <div class="glass-panel" style="padding: 30px; margin-bottom: 24px; background: #FFFFFF;">
+        <div class="card-header">
+            <h3 class="card-title">Audit All System Listings & Requests</h3>
+            <span style="font-size: 0.8rem; color: var(--color-primary); font-weight: 700;">ADMIN AUDIT</span>
+        </div>
+        
+        <div class="grid-cols-2" style="gap: 16px; margin-bottom: 20px;">
+            <div>
+                <label class="form-label">Search Donations</label>
+                <input type="text" id="searchAdminDonations" class="form-control" placeholder="Search all donations...">
+            </div>
+            <div>
+                <label class="form-label">Search Requests</label>
+                <input type="text" id="searchAdminRequests" class="form-control" placeholder="Search all requests...">
+            </div>
+        </div>
+
+        <div class="grid-cols-2" style="gap: 20px; margin-top: 10px;">
+            <div>
+                <h4 style="margin-bottom: 12px; color: var(--color-primary);">Donations Directory</h4>
+                <div id="adminDonationsGrid" style="display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto;">
+                    <!-- Filled dynamically by app.js -->
+                </div>
+            </div>
+            <div>
+                <h4 style="margin-bottom: 12px; color: var(--color-primary);">Material & Fund Requests</h4>
+                <div id="adminRequestsGrid" style="display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto;">
+                    <!-- Filled dynamically by app.js -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
