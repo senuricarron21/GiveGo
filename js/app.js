@@ -597,6 +597,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (reqType === 'physical') {
                 requestDoc.quantityRequired = parseInt(document.getElementById("reqQuantity")?.value) || 1;
+                requestDoc.unit = document.getElementById("reqUnit")?.value || "Units";
                 requestDoc.acceptableCondition = document.getElementById("reqCondition")?.value || "Good";
                 requestDoc.urgency = document.getElementById("reqUrgency")?.value || "Medium";
             } else if (reqType === 'monetary') {
@@ -639,10 +640,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const itemName = document.getElementById("donItemName").value.trim();
             const category = document.getElementById("donCategory").value;
             const quantity = parseInt(document.getElementById("donQuantity").value) || 1;
+            const unit = document.getElementById("donUnit")?.value || "Units";
             const condition = document.getElementById("donCondition").value;
             const photoUrl = document.getElementById("donPhotoUrl")?.value || "";
-            const availability = document.getElementById("donAvailability")?.value || "";
-            const deliveryMethod = document.getElementById("donDeliveryMethod").value;
             const description = document.getElementById("donDescription").value.trim();
 
             try {
@@ -655,10 +655,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     itemName,
                     category,
                     quantity,
+                    unit,
                     condition,
                     photoUrl,
-                    availability,
-                    deliveryMethod,
                     description,
                     status: "pending_admin",
                     createdAt: new Date().toISOString()
@@ -719,7 +718,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <td><img src="${d.photoUrl || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=80&q=80'}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;"></td>
                     <td><strong>${d.itemName}</strong></td>
                     <td>${d.category}</td>
-                    <td>${d.quantity} units</td>
+                    <td>${d.quantity} ${d.unit || 'units'}</td>
                     <td>${statusBadge}</td>
                     <td>
                         <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="deleteDonation('${d.id}')">Delete</button>
@@ -777,8 +776,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         body.innerHTML = myRequests.map(r => {
             let typeBadge = `<span class="badge badge-info">${(r.reqType || 'physical').toUpperCase()}</span>`;
-            let targetText = r.quantityRequired ? `${r.quantityRequired} units` : (r.amountRequired ? `LKR ${r.amountRequired}` : `${r.volunteersRequired || 0} volunteers`);
-            let fulfilledText = r.quantityReceived ? `${r.quantityReceived} units` : (r.amountReceived ? `LKR ${r.amountReceived}` : `${r.volunteersAssigned || 0} filled`);
+            let targetText = r.quantityRequired ? `${r.quantityRequired} ${r.unit || 'units'}` : (r.amountRequired ? `LKR ${r.amountRequired}` : `${r.volunteersRequired || 0} volunteers`);
+            let fulfilledText = r.quantityReceived ? `${r.quantityReceived} ${r.unit || 'units'}` : (r.amountReceived ? `LKR ${r.amountReceived}` : `${r.volunteersAssigned || 0} filled`);
 
             let statusBadge = `<span class="badge badge-warning">Pending Admin</span>`;
             if (r.status === 'published') statusBadge = `<span class="badge badge-success">Approved / Published</span>`;

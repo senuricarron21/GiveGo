@@ -156,18 +156,22 @@
                                     <input class="form-control" type="number" id="donQuantity" min="1" value="1" required>
                                 </div>
                                 <div class="form-group">
+                                    <label class="form-label">Unit of Measure</label>
+                                    <select class="form-control form-select" id="donUnit">
+                                        <option value="Units">Units / Pieces</option>
+                                        <option value="kg">Kilograms (kg)</option>
+                                        <option value="g">Grams (g)</option>
+                                        <option value="L">Liters (L)</option>
+                                        <option value="Packs">Packs / Bags</option>
+                                        <option value="Boxes">Boxes / Crates</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
                                     <label class="form-label">Condition</label>
                                     <select class="form-control form-select" id="donCondition">
                                         <option value="New">Brand New</option>
                                         <option value="Used - Good">Used - Good Condition</option>
                                         <option value="Used - Fair">Used - Fair Condition</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Delivery Mode</label>
-                                    <select class="form-control form-select" id="donDeliveryMethod">
-                                        <option value="Pickup">Donor Location Pickup</option>
-                                        <option value="Dropoff">Donor Delivery Drop-off</option>
                                     </select>
                                 </div>
                             </div>
@@ -290,8 +294,19 @@
                             <div id="secReqPhysical">
                                 <div class="grid-cols-3">
                                     <div class="form-group">
-                                        <label class="form-label">Required Quantity (Units)</label>
+                                        <label class="form-label">Required Quantity</label>
                                         <input type="number" class="form-control" id="reqQuantity" min="1" value="10">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Unit of Measure</label>
+                                        <select class="form-control form-select" id="reqUnit">
+                                            <option value="Units">Units / Pieces</option>
+                                            <option value="kg">Kilograms (kg)</option>
+                                            <option value="g">Grams (g)</option>
+                                            <option value="L">Liters (L)</option>
+                                            <option value="Packs">Packs / Bags</option>
+                                            <option value="Boxes">Boxes / Crates</option>
+                                        </select>
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Acceptable Condition</label>
@@ -299,14 +314,6 @@
                                             <option value="Brand New">Brand New Only</option>
                                             <option value="Gently Used">Gently Used / Good</option>
                                             <option value="Any Condition">Any Usable Condition</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label">Urgency Level</label>
-                                        <select class="form-control form-select" id="reqUrgency">
-                                            <option value="High">Emergency / High Priority</option>
-                                            <option value="Medium">Medium Priority</option>
-                                            <option value="Low">Low Priority</option>
                                         </select>
                                     </div>
                                 </div>
