@@ -411,6 +411,23 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    const reqTypeSelect = document.getElementById("reqType");
+    if (reqTypeSelect) {
+        const toggleReqTypeFields = () => {
+            const val = reqTypeSelect.value;
+            const secPhys = document.getElementById("secReqPhysical");
+            const secMon = document.getElementById("secReqMonetary");
+            const secVol = document.getElementById("secReqVolunteer");
+
+            if (secPhys) secPhys.style.display = val === 'physical' ? 'block' : 'none';
+            if (secMon) secMon.style.display = val === 'monetary' ? 'block' : 'none';
+            if (secVol) secVol.style.display = val === 'volunteer' ? 'block' : 'none';
+        };
+
+        reqTypeSelect.addEventListener("change", toggleReqTypeFields);
+        toggleReqTypeFields();
+    }
+
     const formRequestMaterials = document.getElementById("formRequestMaterials");
     if (formRequestMaterials) {
         formRequestMaterials.addEventListener("submit", async (e) => {

@@ -198,41 +198,93 @@
                             <div class="grid-cols-2">
                                 <div class="form-group">
                                     <label class="form-label">Request Type</label>
-                                    <select class="form-control form-select" id="reqType">
-                                        <option value="physical">Physical Material Supplies</option>
-                                        <option value="monetary">Monetary Funding (14-Day Evidence SLA)</option>
-                                        <option value="volunteer">Volunteer Shift Support</option>
+                                    <select class="form-control form-select" id="reqType" required style="font-weight: 700;">
+                                        <option value="physical">Physical Item Request</option>
+                                        <option value="monetary">Monetary Donation Request</option>
+                                        <option value="volunteer">Volunteer Support Request</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Item / Need Title</label>
-                                    <input class="form-control" type="text" id="reqItemName" placeholder="e.g. ICU Hospital Linens" required>
+                                    <input class="form-control" type="text" id="reqItemName" placeholder="e.g. ICU Hospital Linens / Rice Packs" required>
                                 </div>
                             </div>
-                            <div class="grid-cols-2">
-                                <div class="form-group">
-                                    <label class="form-label">Category</label>
-                                    <select class="form-control form-select" id="reqCategory">
-                                        <option value="Medical">Medical</option>
-                                        <option value="Food">Food Rations</option>
-                                        <option value="Monetary">Monetary Fund</option>
-                                        <option value="Volunteer Support">Volunteer Support</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">Urgency</label>
-                                    <select class="form-control form-select" id="reqUrgency">
-                                        <option value="High">High Urgency</option>
-                                        <option value="Medium">Medium</option>
-                                        <option value="Low">Low</option>
-                                    </select>
+
+                            <div class="form-group">
+                                <label class="form-label">Category</label>
+                                <select class="form-control form-select" id="reqCategory" required>
+                                    <option value="Medical">Medical / Health Supplies</option>
+                                    <option value="Food">Food Rations</option>
+                                    <option value="Clothing">Clothing / Apparel</option>
+                                    <option value="Books">Books / Learning Materials</option>
+                                    <option value="Monetary">Monetary Funding</option>
+                                    <option value="Volunteer Support">Volunteer Support</option>
+                                </select>
+                            </div>
+
+                            <!-- Physical Request Specific Fields -->
+                            <div id="secReqPhysical">
+                                <div class="grid-cols-3">
+                                    <div class="form-group">
+                                        <label class="form-label">Required Quantity (Units)</label>
+                                        <input type="number" class="form-control" id="reqQuantity" min="1" value="10">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Acceptable Condition</label>
+                                        <select class="form-control form-select" id="reqCondition">
+                                            <option value="Brand New">Brand New Only</option>
+                                            <option value="Gently Used">Gently Used / Good</option>
+                                            <option value="Any Condition">Any Usable Condition</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Urgency Level</label>
+                                        <select class="form-control form-select" id="reqUrgency">
+                                            <option value="High">Emergency / High Priority</option>
+                                            <option value="Medium">Medium Priority</option>
+                                            <option value="Low">Low Priority</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
+
+                            <!-- Monetary Request Specific Fields -->
+                            <div id="secReqMonetary" style="display: none;">
+                                <div class="grid-cols-2">
+                                    <div class="form-group">
+                                        <label class="form-label">Required Funding Goal (LKR)</label>
+                                        <input type="number" class="form-control" id="reqAmount" min="500" step="500" placeholder="e.g. 50000">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Target Deadline Date</label>
+                                        <input type="date" class="form-control" id="reqDeadline">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Volunteer Request Specific Fields -->
+                            <div id="secReqVolunteer" style="display: none;">
+                                <div class="grid-cols-3">
+                                    <div class="form-group">
+                                        <label class="form-label">Volunteers Needed (People)</label>
+                                        <input type="number" class="form-control" id="reqVolunteersCount" min="1" value="5">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Shift Date & Time</label>
+                                        <input type="datetime-local" class="form-control" id="reqVolDateTime">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Location / District</label>
+                                        <input type="text" class="form-control" id="reqVolLocation" placeholder="e.g. Colombo Premises">
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="form-group">
                                 <label class="form-label">Detailed Request Description</label>
                                 <textarea class="form-control" id="reqDescription" rows="2" placeholder="Explain the requirement..." required></textarea>
                             </div>
-                            <button class="btn btn-primary" type="submit">Submit Request for Admin Review</button>
+                            <button class="btn btn-primary" type="submit" style="width: 100%; font-size: 0.95rem; padding: 12px;">Submit Request for Admin Review</button>
                         </form>
                     </div>
 
