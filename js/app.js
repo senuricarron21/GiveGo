@@ -1213,11 +1213,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         grid.innerHTML = filtered.map(d => `
-            <div class="glass-panel" style="padding: 18px; background: #FFFFFF;">
-                <img src="${d.photoUrl || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=300&q=80'}" style="width: 100%; height: 140px; border-radius: var(--radius-sm); object-fit: cover; margin-bottom: 12px;">
-                <h4 style="font-size: 1rem; color: var(--color-primary); margin-bottom: 4px;">${d.itemName}</h4>
-                <div style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 6px;">Category: ${d.category} | Qty: ${d.quantity}</div>
-                <div style="font-size: 0.8rem; color: var(--color-secondary); font-weight:700;">Donor: ${d.donorName} (${d.district || 'Colombo'})</div>
+            <div class="glass-panel" style="padding: 12px; background: #FFFFFF; border-radius: 8px; border: 1px solid var(--color-border); display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <img src="${d.photoUrl || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=200&q=80'}" style="width: 100%; height: 95px; border-radius: 6px; object-fit: cover; margin-bottom: 8px;">
+                    <h4 style="font-size: 0.85rem; font-weight: 800; color: var(--color-teal-primary); margin-bottom: 4px; line-height: 1.2;">${d.itemName}</h4>
+                    <div style="font-size: 0.75rem; color: #5C6B5E; margin-bottom: 4px;">Category: <strong>${d.category}</strong></div>
+                    <div style="font-size: 0.75rem; color: #5C6B5E; margin-bottom: 6px;">Qty: <strong>${d.quantity} units</strong></div>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--color-secondary); font-weight: 700; border-top: 1px solid #F5EFE0; padding-top: 6px;">
+                    Donor: ${d.donorName} (${d.district || 'Colombo'})
+                </div>
             </div>
         `).join("");
     }

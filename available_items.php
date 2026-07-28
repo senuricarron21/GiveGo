@@ -10,7 +10,7 @@
             <input type="text" id="searchAllAvailableItems" class="form-control" placeholder="Search available materials by keyword, category, or donor..." style="max-width: 400px;">
         </div>
 
-        <div class="grid-cols-3" id="allAvailableItemsGrid" style="gap: 20px; margin-top: 10px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; margin-top: 10px;" id="allAvailableItemsGrid">
             <!-- Rendered dynamically by app.js -->
         </div>
     </div>
