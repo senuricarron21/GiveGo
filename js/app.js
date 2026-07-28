@@ -428,6 +428,19 @@ document.addEventListener("DOMContentLoaded", () => {
         toggleReqTypeFields();
     }
 
+    window.handleImageUpload = (fileInput, targetHiddenId) => {
+        if (!fileInput.files || !fileInput.files[0]) return;
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const base64Data = e.target.result;
+            const hiddenInput = document.getElementById(targetHiddenId);
+            if (hiddenInput) hiddenInput.value = base64Data;
+            showToast("Item image selected & ready for submission.", "info");
+        };
+        reader.readAsDataURL(file);
+    };
+
     const formRequestMaterials = document.getElementById("formRequestMaterials");
     if (formRequestMaterials) {
         formRequestMaterials.addEventListener("submit", async (e) => {
@@ -439,6 +452,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const itemName = document.getElementById("reqItemName").value.trim();
             const category = document.getElementById("reqCategory").value;
             const description = document.getElementById("reqDescription").value.trim();
+            const photoUrl = document.getElementById("reqPhotoUrl")?.value || "";
 
             if (!itemName || !category || !description) {
                 showToast("Please complete all required request fields.", "warning");
@@ -456,6 +470,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 itemName,
                 category,
                 description,
+                photoUrl,
                 status: "pending_admin",
                 quantityReceived: 0,
                 amountReceived: 0,
