@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GiveGo | From your hands to the hearts that need it</title>
+    <title>GiveGo | Donation Management Platform</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- External CSS -->
     <link rel="stylesheet" href="css/styles.css">
@@ -14,82 +19,343 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
-</head>
-<body style="background-color: var(--color-bg-base);">
+    
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #F5EFE0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 30px 20px;
+        }
 
-    <!-- Main Landing Layout -->
-    <div class="container" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 24px;">
-        <div class="grid-cols-2" style="align-items: center; width: 100%; max-width: 1050px; gap: 40px;">
-            
-            <!-- Left Side: Platform Mission Branding -->
-            <div style="padding-right: 10px;">
-                <div style="margin-bottom: 24px;">
-                    <img src="uploads/logo.png" alt="GiveGo - From your hands to the hearts that need it." style="max-height: 100px; width: auto; object-fit: contain;">
+        .login-wrapper {
+            width: 100%;
+            max-width: 1080px;
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 48px;
+            align-items: center;
+        }
+
+        @media (max-width: 900px) {
+            .login-wrapper {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+        }
+
+        /* Hero Styling */
+        .brand-logo-hero {
+            max-height: 90px;
+            width: auto;
+            object-fit: contain;
+            margin-bottom: 20px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #E4DCAE;
+            color: #0D7C7A;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 20px;
+            margin-bottom: 18px;
+            border: 1px solid #D8CE9C;
+        }
+
+        .hero-heading {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #0D7C7A;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+
+        .hero-subtext {
+            color: #4A574C;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 32px;
+            max-width: 490px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+        }
+
+        .stat-card-pill {
+            background: #FFFFFF;
+            border: 1px solid #D8CE9C;
+            border-radius: 12px;
+            padding: 14px 16px;
+            box-shadow: 0 4px 12px rgba(13, 124, 122, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        .stat-card-pill:hover {
+            transform: translateY(-2px);
+            border-color: #0D7C7A;
+        }
+
+        .stat-val {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #0D7C7A;
+            margin-bottom: 2px;
+        }
+
+        .stat-lbl {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #667067;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Login Card Styling */
+        .login-card {
+            background: #FFFFFF;
+            border-radius: 20px;
+            padding: 36px 32px;
+            border: 1px solid #D8CE9C;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+            position: relative;
+        }
+
+        .login-header {
+            margin-bottom: 24px;
+        }
+
+        .login-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #0D7C7A;
+            margin: 0 0 6px 0;
+        }
+
+        .login-subtitle {
+            font-size: 0.88rem;
+            color: #667067;
+            margin: 0;
+        }
+
+        .demo-roles-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 22px;
+            background: #F5EFE0;
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid #D8CE9C;
+        }
+
+        .demo-role-btn {
+            flex: 1;
+            padding: 7px 10px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            border: none;
+            background: transparent;
+            color: #0D7C7A;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .demo-role-btn.active, .demo-role-btn:hover {
+            background: #FFFFFF;
+            color: #0D7C7A;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+        }
+
+        .input-group-custom {
+            position: relative;
+            margin-bottom: 18px;
+        }
+
+        .input-group-custom label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #0D7C7A;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group-custom input {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 0.95rem;
+            border-radius: 10px;
+            border: 1.5px solid #D8CE9C;
+            background: #FFFFFF;
+            color: #1A2B1E;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        .input-group-custom input:focus {
+            border-color: #0D7C7A;
+            box-shadow: 0 0 0 3.5px rgba(13, 124, 122, 0.12);
+        }
+
+        .btn-submit-login {
+            width: 100%;
+            background: #0D7C7A;
+            color: #FFFFFF;
+            font-size: 1rem;
+            font-weight: 800;
+            padding: 14px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(13, 124, 122, 0.25);
+            margin-top: 6px;
+            margin-bottom: 20px;
+        }
+
+        .btn-submit-login:hover {
+            background: #095958;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(13, 124, 122, 0.35);
+        }
+
+        .register-footer {
+            text-align: center;
+            font-size: 0.88rem;
+            color: #667067;
+            padding-top: 16px;
+            border-top: 1px solid #EAE3CA;
+        }
+
+        .register-footer a {
+            color: #0D7C7A;
+            font-weight: 800;
+            text-decoration: none;
+            margin-left: 4px;
+        }
+
+        .register-footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-wrapper">
+        
+        <!-- Left Side: Hero Branding & Stats -->
+        <div>
+            <div class="hero-badge">
+                <span>✨</span> Sri Lanka's Verified Donation Network
+            </div>
+
+            <div>
+                <img src="uploads/logo.png" alt="GiveGo Logo" class="brand-logo-hero">
+            </div>
+
+            <h1 class="hero-heading">
+                Connecting generous donors with <span style="color: #095958;">verified receiver needs.</span>
+            </h1>
+
+            <p class="hero-subtext">
+                GiveGo is an intelligent, location-aware donation platform designed for transparent material support, monetary funding tracking with 14-day utilisation proof, and coordinated volunteer activities.
+            </p>
+
+            <!-- Quick Stats Pills -->
+            <div class="stats-grid">
+                <div class="stat-card-pill">
+                    <div class="stat-val">1,420+</div>
+                    <div class="stat-lbl">Matches Made</div>
                 </div>
-                
-                <h1 style="font-size: 2.6rem; line-height: 1.2; margin-bottom: 16px; color: var(--color-teal-primary); font-weight: 800;">
-                    Connecting generous donors with <span style="color: var(--color-teal-dark);">verified receiver needs.</span>
-                </h1>
-                
-                <p style="color: var(--color-text-muted); font-size: 1rem; margin-bottom: 28px; max-width: 480px; line-height: 1.6;">
-                    GiveGo is an intelligent, location-aware donation platform designed for transparent material support, monetary funding tracking with 14-day utilisation proof, and coordinated volunteer activities.
-                </p>
-                
-                <!-- Quick Stats -->
-                <div style="display: flex; gap: 36px; margin-top: 20px;">
-                    <div>
-                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--color-teal-primary);">1,420+</div>
-                        <div style="font-size: 0.75rem; color: var(--color-text-muted); font-weight: 800; text-transform: uppercase;">Matches Made</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--color-teal-dark);">890 kg+</div>
-                        <div style="font-size: 0.75rem; color: var(--color-text-muted); font-weight: 800; text-transform: uppercase;">Materials Distributed</div>
-                    </div>
-                    <div>
-                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--color-teal-primary);">99.4%</div>
-                        <div style="font-size: 0.75rem; color: var(--color-text-muted); font-weight: 800; text-transform: uppercase;">SLA Compliance</div>
-                    </div>
+                <div class="stat-card-pill">
+                    <div class="stat-val">890 kg+</div>
+                    <div class="stat-lbl">Materials Sent</div>
+                </div>
+                <div class="stat-card-pill">
+                    <div class="stat-val">99.4%</div>
+                    <div class="stat-lbl">SLA Verified</div>
                 </div>
             </div>
-            
-            <!-- Right Side: Login Panel -->
-            <div class="glass-panel" style="padding: 40px; border-radius: var(--radius-lg); background: #FFFFFF; border: 1px solid var(--color-border); box-shadow: var(--shadow-soft);">
-                <div>
-                    <h2 style="font-size: 1.8rem; color: var(--color-teal-primary); margin-bottom: 6px; font-weight: 800;">Welcome Back</h2>
-                    <p style="color: var(--color-text-muted); font-size: 0.9rem; margin-bottom: 24px;">Sign in to access your GiveGo donation dashboard.</p>
-                    
-                    <form id="loginForm">
-                        <div class="form-group">
-                            <label class="form-label" for="loginEmail">Email Address</label>
-                            <input class="form-control" type="email" id="loginEmail" placeholder="e.g. donor@givego.lk" required>
-                        </div>
-                        
-                        <div class="form-group" style="margin-bottom: 24px;">
-                            <label class="form-label" for="loginPassword">Password</label>
-                            <input class="form-control" type="password" id="loginPassword" placeholder="••••••••" required>
-                        </div>
-                        
-                        <button class="btn btn-primary" type="submit" style="width: 100%; margin-bottom: 20px; font-size: 0.95rem; padding: 12px; font-weight: 800;">
-                            Sign In
-                        </button>
-                    </form>
-                    
-                    <div style="text-align: center; font-size: 0.9rem; color: var(--color-text-muted);">
-                        New to GiveGo? 
-                        <a href="register.html" style="color: var(--color-teal-primary); text-decoration: none; font-weight: 800; margin-left: 4px;">
-                            Create an Account
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
         </div>
+
+        <!-- Right Side: Clean Login Card -->
+        <div class="login-card">
+            <div class="login-header">
+                <h2 class="login-title">Welcome Back</h2>
+                <p class="login-subtitle">Sign in to access your GiveGo donation dashboard.</p>
+            </div>
+
+            <!-- Fast Role Auto-Fill Tabs -->
+            <div class="demo-roles-bar">
+                <button type="button" class="demo-role-btn active" onclick="fillDemoCredentials('donor')">👤 Donor</button>
+                <button type="button" class="demo-role-btn" onclick="fillDemoCredentials('receiver')">🏥 Receiver</button>
+                <button type="button" class="demo-role-btn" onclick="fillDemoCredentials('admin')">🛡️ Admin</button>
+            </div>
+
+            <form id="loginForm">
+                <div class="input-group-custom">
+                    <label for="loginEmail">Email Address</label>
+                    <input type="email" id="loginEmail" placeholder="e.g. donor@givego.lk" required autocomplete="email">
+                </div>
+
+                <div class="input-group-custom">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+
+                <button class="btn-submit-login" type="submit">
+                    Sign In to Dashboard →
+                </button>
+            </form>
+
+            <div class="register-footer">
+                New to GiveGo? 
+                <a href="register.html">Create an Account</a>
+            </div>
+        </div>
+
     </div>
 
     <!-- Core Javascript Files -->
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
     <script>
+        function fillDemoCredentials(role) {
+            const emailInput = document.getElementById("loginEmail");
+            const passInput = document.getElementById("loginPassword");
+            const btns = document.querySelectorAll(".demo-role-btn");
+
+            btns.forEach(b => b.classList.remove("active"));
+            if (role === 'donor') {
+                if (btns[0]) btns[0].classList.add("active");
+                emailInput.value = "donor@givego.lk";
+                passInput.value = "donor123";
+            } else if (role === 'receiver') {
+                if (btns[1]) btns[1].classList.add("active");
+                emailInput.value = "receiver@givego.lk";
+                passInput.value = "receiver123";
+            } else if (role === 'admin') {
+                if (btns[2]) btns[2].classList.add("active");
+                emailInput.value = "admin@givego.lk";
+                passInput.value = "admin123";
+            }
+        }
+
         document.addEventListener("DOMContentLoaded", () => {
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
             if (helper && helper.auth()) {
