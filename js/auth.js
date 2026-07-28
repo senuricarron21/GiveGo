@@ -106,7 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (syncResult.success) {
                     showToast("Login successful. Redirecting...", "success");
                     setTimeout(() => {
-                        window.location.href = "dashboard.php";
+                        window.location.href = "dashboard.html";
                     }, 600);
                 } else {
                     throw new Error("PHP Session synchronization failed.");
@@ -223,7 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         showToast("Registration successful. Welcome to GiveGo.", "success");
                     }
                     setTimeout(() => {
-                        window.location.href = "dashboard.php";
+                        window.location.href = "dashboard.html";
                     }, 1000);
                 } else {
                     throw new Error("PHP Session synchronization failed.");
@@ -251,7 +251,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (syncResult.success) {
                     showToast("Logged out successfully.", "success");
                     setTimeout(() => {
-                        window.location.href = "index.php";
+                        window.location.href = "index.html";
                     }, 600);
                 }
             } catch (error) {

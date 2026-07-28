@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         auth.onAuthStateChanged(async (user) => {
             if (!user) {
-                window.location.href = "index.php";
+                window.location.href = "index.html";
                 return;
             }
             currentUser = user;
@@ -51,12 +51,39 @@ document.addEventListener("DOMContentLoaded", () => {
     function updateOverviewStats() {
         if (!currentUser) return;
 
+        updateUIProfileAndMenu();
+
         const roleStr = (currentUser.role || currentUser.accountType || "").toLowerCase();
         const emailStr = (currentUser.email || "").toLowerCase();
 
         const isAdmin = roleStr.includes("admin") || emailStr.includes("admin") || currentUser.uid === '9TVzT4p6IESEaalgHQ0xuptUqVk2';
         const isDonor = roleStr.includes("donor");
         const isReceiver = roleStr.includes("receiver");
+
+        const overviewGrid = document.getElementById("overviewStatsGrid");
+        if (overviewGrid && overviewGrid.children.length === 0) {
+            if (isAdmin) {
+                overviewGrid.innerHTML = `
+                    <div class="stat-card glass-panel"><div class="stat-title">Pending Approvals</div><div class="stat-number" id="statPendingApprovalsCount">0</div></div>
+                    <div class="stat-card glass-panel"><div class="stat-title">Total System Requests</div><div class="stat-number" id="statTotalRequests">0</div></div>
+                    <div class="stat-card glass-panel"><div class="stat-title">Match Allocation Rate</div><div class="stat-number" id="statMatchRate">0%</div></div>
+                    <div class="stat-card glass-panel"><div class="stat-title">Registered Users</div><div class="stat-number" id="statTotalUsers">0</div></div>
+                `;
+            } else if (isDonor) {
+                overviewGrid.innerHTML = `
+                    <div class="stat-card glass-panel"><div class="stat-title">My Physical Listings</div><div class="stat-number" id="statMyListings">0</div></div>
+                    <div class="stat-card glass-panel"><div class="stat-title">Active Matches</div><div class="stat-number" id="statMyMatches">0</div></div>
+                    <div class="stat-card glass-panel"><div class="stat-title">Completed Support</div><div class="stat-number" id="statCompletedDons">0</div></div>
+                `;
+            } else if (isReceiver) {
+                overviewGrid.innerHTML = `
+                    <div class="stat-card glass-panel"><div class="stat-title">My Requests</div><div class="stat-number" id="statMyRequests">0</div></div>
+                    <div class="stat-card glass-panel"><div class="stat-title">Matched Offers</div><div class="stat-number" id="statReceiverMatches">0</div></div>
+                    <div class="stat-card glass-panel"><div class="stat-title">Utilisation Pending</div><div class="stat-number" id="statPendingEvidence">0</div></div>
+                    <div class="stat-card glass-panel"><div class="stat-title">Fulfillment Rate</div><div class="stat-number" id="statFulfillRate">0%</div></div>
+                `;
+            }
+        }
 
         // --- 1. Admin Overview Metrics ---
         if (isAdmin) {
@@ -126,6 +153,54 @@ document.addEventListener("DOMContentLoaded", () => {
             const elRate = document.getElementById("statFulfillRate");
             if (elRate) elRate.textContent = `${fulfillRate}%`;
         }
+    }
+
+    function updateUIProfileAndMenu() {
+        if (!currentUser) return;
+        const nameEl = document.getElementById("profileDisplayName");
+        const roleEl = document.getElementById("profileDisplayRole");
+        const welcomeEl = document.getElementById("welcomeHeading");
+
+        if (nameEl) nameEl.textContent = currentUser.name || "User";
+        if (roleEl) roleEl.textContent = (currentUser.role || "member").toUpperCase();
+        if (welcomeEl) welcomeEl.textContent = `Hello, ${(currentUser.name || "User").split(" ")[0]}`;
+
+        const menuList = document.getElementById("sidebarMenuList");
+        if (!menuList) return;
+
+        const roleStr = (currentUser.role || "").toLowerCase();
+        const isAdmin = roleStr.includes("admin") || (currentUser.email && currentUser.email.includes("admin"));
+        const isDonor = roleStr.includes("donor");
+        const isReceiver = roleStr.includes("receiver");
+
+        let menuHTML = `<li class="menu-item active"><a href="#overview">Overview</a></li>`;
+
+        if (isAdmin) {
+            menuHTML += `
+                <li class="menu-item"><a href="#users">Accounts</a></li>
+                <li class="menu-item"><a href="#approvals">Approvals</a></li>
+            `;
+        } else if (isDonor) {
+            menuHTML += `
+                <li class="menu-item"><a href="#listings">My Donations</a></li>
+                <li class="menu-item"><a href="#needs-catalogue">Requests Catalogue</a></li>
+                <li class="menu-item"><a href="#matching">Smart Matches</a></li>
+                <li class="menu-item"><a href="#chat">Messages</a></li>
+            `;
+        } else if (isReceiver) {
+            menuHTML += `
+                <li class="menu-item"><a href="#requests">Material Requests</a></li>
+                <li class="menu-item"><a href="#matching">Smart Matches</a></li>
+                <li class="menu-item"><a href="#chat">Messages</a></li>
+            `;
+        }
+
+        menuHTML += `
+            <li class="menu-item"><a href="#available-items">Available Items</a></li>
+            <li class="menu-item"><a href="#history">History</a></li>
+        `;
+
+        menuList.innerHTML = menuHTML;
     }
 
     function setupDataSubscriptions() {
