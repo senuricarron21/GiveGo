@@ -466,6 +466,79 @@
         </div>
     </div>
 
+    <!-- Modal: Donor Offering to Receiver Need -->
+    <div class="modal" id="modalOfferDonation">
+        <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:520px; width:90%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--color-border); padding-bottom:10px;">
+                <h3 id="mdlOfferTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem;">Offer Donation</h3>
+                <button type="button" class="btn btn-secondary" style="padding:2px 8px; font-size:0.75rem;" onclick="document.getElementById('modalOfferDonation').classList.remove('active')">✕</button>
+            </div>
+            <form id="formSubmitOfferDonation">
+                <input type="hidden" id="mdlOfferRequestId">
+                <div class="form-group">
+                    <label class="form-label">Offered Quantity / Units</label>
+                    <input class="form-control" type="number" id="mdlOfferQty" min="1" value="1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Delivery Method</label>
+                    <select class="form-control form-select" id="mdlOfferDeliveryMethod" required style="font-weight:700;">
+                        <option value="self_delivery">Self Delivery (Donor Delivers to Receiver)</option>
+                        <option value="receiver_pickup">Receiver Pick Up (Receiver Schedules Pick Up)</option>
+                    </select>
+                </div>
+                <!-- Shown if Self Delivery chosen -->
+                <div class="form-group" id="groupDonorSchedule">
+                    <label class="form-label">Scheduled Delivery Date & Time</label>
+                    <input class="form-control" type="datetime-local" id="mdlOfferDateTime">
+                </div>
+                <div id="groupReceiverPickupNotice" style="display:none; background:#F5EFE0; padding:12px; border-radius:6px; font-size:0.8rem; color:var(--color-text-dark); margin-bottom:16px;">
+                    📌 Since you selected Receiver Pick Up, a notification will be sent to the receiver to pick their preferred date & time.
+                </div>
+                <button class="btn btn-primary" type="submit" style="width:100%; font-weight:800; padding:12px;">Confirm Offer & Send Dispatch Notice</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Receiver Requesting Available Item -->
+    <div class="modal" id="modalRequestAvailableItem">
+        <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:520px; width:90%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--color-border); padding-bottom:10px;">
+                <h3 id="mdlReqItemTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem;">Request Material Item</h3>
+                <button type="button" class="btn btn-secondary" style="padding:2px 8px; font-size:0.75rem;" onclick="document.getElementById('modalRequestAvailableItem').classList.remove('active')">✕</button>
+            </div>
+            <form id="formSubmitItemRequest">
+                <input type="hidden" id="mdlReqDonationId">
+                <div class="form-group">
+                    <label class="form-label">Delivery Method</label>
+                    <input class="form-control" type="text" value="Self Pick Up (Receiver Pick Up)" readonly style="font-weight:700; background:#F5EFE0; color:var(--color-teal-primary);">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Scheduled Pick Up Date & Time</label>
+                    <input class="form-control" type="datetime-local" id="mdlReqPickUpDateTime" required>
+                </div>
+                <button class="btn btn-primary" type="submit" style="width:100%; font-weight:800; padding:12px;">Confirm Pick Up Schedule & Notify Donor</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Receiver Scheduling Pick Up for Pending Offer -->
+    <div class="modal" id="modalScheduleReceiverPickup">
+        <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:500px; width:90%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--color-border); padding-bottom:10px;">
+                <h3 style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem;">Schedule Pick Up Date & Time</h3>
+                <button type="button" class="btn btn-secondary" style="padding:2px 8px; font-size:0.75rem;" onclick="document.getElementById('modalScheduleReceiverPickup').classList.remove('active')">✕</button>
+            </div>
+            <form id="formSubmitReceiverPickupSchedule">
+                <input type="hidden" id="mdlScheduleMatchId">
+                <div class="form-group">
+                    <label class="form-label">Select Pick Up Date & Time</label>
+                    <input class="form-control" type="datetime-local" id="mdlScheduleDateTime" required>
+                </div>
+                <button class="btn btn-primary" type="submit" style="width:100%; font-weight:800; padding:12px;">Schedule & Notify Donor</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Leaflet JS Map Script -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 

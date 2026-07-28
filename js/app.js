@@ -993,33 +993,203 @@ document.addEventListener("DOMContentLoaded", () => {
     if (filterReqCategory) filterReqCategory.addEventListener("change", renderDonorNeeds);
     if (sortCatalogueOrder) sortCatalogueOrder.addEventListener("change", renderDonorNeeds);
 
-    window.offerPhysicalDonation = async (requestId) => {
+    window.offerPhysicalDonation = (requestId) => {
         const req = requestsList.find(r => r.id === requestId);
         if (!req) return;
-        const offerQty = prompt(`How many units of "${req.itemName}" would you like to donate?`, "5");
-        if (!offerQty || isNaN(offerQty)) return;
 
-        try {
-            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-            await helper.db().collection("matches").add({
-                requestId: req.id,
-                requestName: req.itemName,
-                receiverId: req.receiverId,
-                receiverName: req.receiverName,
-                donorId: currentUser.uid,
-                donorName: currentUser.name,
-                type: "physical",
-                category: req.category,
-                quantity: parseInt(offerQty),
-                status: "pending_receiver",
-                createdAt: new Date().toISOString()
-            });
-            showToast("Physical donation offer submitted to receiver.", "success");
-            updateOverviewStats();
-        } catch (err) {
-            showToast("Failed to submit offer.", "danger");
+        document.getElementById("mdlOfferRequestId").value = req.id;
+        document.getElementById("mdlOfferTitle").textContent = `Offer Donation: ${req.itemName}`;
+        document.getElementById("mdlOfferQty").value = req.quantityRequired || 1;
+
+        const deliverySelect = document.getElementById("mdlOfferDeliveryMethod");
+        const donorSchedGroup = document.getElementById("groupDonorSchedule");
+        const recPickupNotice = document.getElementById("groupReceiverPickupNotice");
+
+        const toggleOfferDeliveryUI = () => {
+            const mode = deliverySelect.value;
+            if (mode === 'self_delivery') {
+                if (donorSchedGroup) donorSchedGroup.style.display = 'block';
+                if (recPickupNotice) recPickupNotice.style.display = 'none';
+            } else {
+                if (donorSchedGroup) donorSchedGroup.style.display = 'none';
+                if (recPickupNotice) recPickupNotice.style.display = 'block';
+            }
+        };
+
+        if (deliverySelect) {
+            deliverySelect.onchange = toggleOfferDeliveryUI;
+            toggleOfferDeliveryUI();
         }
+
+        const modal = document.getElementById("modalOfferDonation");
+        if (modal) modal.classList.add("active");
     };
+
+    const formSubmitOfferDonation = document.getElementById("formSubmitOfferDonation");
+    if (formSubmitOfferDonation) {
+        formSubmitOfferDonation.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const reqId = document.getElementById("mdlOfferRequestId").value;
+            const req = requestsList.find(r => r.id === reqId);
+            if (!req) return;
+
+            const qty = parseInt(document.getElementById("mdlOfferQty").value) || 1;
+            const deliveryMethod = document.getElementById("mdlOfferDeliveryMethod").value;
+            const scheduledDateTime = document.getElementById("mdlOfferDateTime").value;
+
+            try {
+                const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+                const db = helper.db();
+
+                const matchDoc = {
+                    requestId: req.id,
+                    requestName: req.itemName,
+                    receiverId: req.receiverId,
+                    receiverName: req.receiverName,
+                    donorId: currentUser.uid,
+                    donorName: currentUser.name,
+                    type: "physical",
+                    category: req.category,
+                    quantity: qty,
+                    deliveryMethod: deliveryMethod,
+                    scheduledDateTime: deliveryMethod === 'self_delivery' ? scheduledDateTime : "",
+                    schedulingStatus: deliveryMethod === 'self_delivery' ? "donor_scheduled" : "pending_receiver_schedule",
+                    status: "pending_receiver",
+                    createdAt: new Date().toISOString()
+                };
+
+                await db.collection("matches").add(matchDoc);
+
+                let notiMessage = `Donor ${currentUser.name} has offered ${qty} units of "${req.itemName}".`;
+                if (deliveryMethod === 'self_delivery') {
+                    notiMessage += ` Scheduled Self Delivery time: ${new Date(scheduledDateTime).toLocaleString()}`;
+                } else {
+                    notiMessage += ` Please open your dashboard to schedule your preferred Pick Up date & time.`;
+                }
+
+                await db.collection("notifications").add({
+                    userId: req.receiverId,
+                    message: notiMessage,
+                    read: false,
+                    createdAt: new Date().toISOString()
+                });
+
+                showToast("Donation offer submitted successfully.", "success");
+                document.getElementById("modalOfferDonation").classList.remove("active");
+                formSubmitOfferDonation.reset();
+                updateOverviewStats();
+            } catch (err) {
+                showToast("Failed to submit donation offer.", "danger");
+            }
+        });
+    }
+
+    window.openRequestAvailableItemModal = (donationId) => {
+        const item = donationsList.find(d => d.id === donationId);
+        if (!item) return;
+
+        document.getElementById("mdlReqDonationId").value = item.id;
+        document.getElementById("mdlReqItemTitle").textContent = `Request Item: ${item.itemName}`;
+
+        const modal = document.getElementById("modalRequestAvailableItem");
+        if (modal) modal.classList.add("active");
+    };
+
+    const formSubmitItemRequest = document.getElementById("formSubmitItemRequest");
+    if (formSubmitItemRequest) {
+        formSubmitItemRequest.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const donId = document.getElementById("mdlReqDonationId").value;
+            const item = donationsList.find(d => d.id === donId);
+            if (!item) return;
+
+            const pickUpDateTime = document.getElementById("mdlReqPickUpDateTime").value;
+            if (!pickUpDateTime) {
+                showToast("Please select your scheduled pick up date & time.", "warning");
+                return;
+            }
+
+            try {
+                const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+                const db = helper.db();
+
+                const matchDoc = {
+                    donationId: item.id,
+                    requestName: item.itemName,
+                    receiverId: currentUser.uid,
+                    receiverName: currentUser.name,
+                    donorId: item.donorId,
+                    donorName: item.donorName,
+                    type: "physical",
+                    category: item.category,
+                    quantity: item.quantity,
+                    deliveryMethod: "receiver_pickup",
+                    scheduledDateTime: pickUpDateTime,
+                    schedulingStatus: "receiver_scheduled",
+                    status: "pending_receiver",
+                    createdAt: new Date().toISOString()
+                };
+
+                await db.collection("matches").add(matchDoc);
+
+                await db.collection("notifications").add({
+                    userId: item.donorId,
+                    message: `Receiver ${currentUser.name} has requested "${item.itemName}" for Self Pick Up scheduled at ${new Date(pickUpDateTime).toLocaleString()}.`,
+                    read: false,
+                    createdAt: new Date().toISOString()
+                });
+
+                showToast("Pick Up request submitted to donor.", "success");
+                document.getElementById("modalRequestAvailableItem").classList.remove("active");
+                formSubmitItemRequest.reset();
+                updateOverviewStats();
+            } catch (err) {
+                showToast("Failed to submit pick up request.", "danger");
+            }
+        });
+    }
+
+    window.openScheduleReceiverPickupModal = (matchId) => {
+        document.getElementById("mdlScheduleMatchId").value = matchId;
+        const modal = document.getElementById("modalScheduleReceiverPickup");
+        if (modal) modal.classList.add("active");
+    };
+
+    const formSubmitReceiverPickupSchedule = document.getElementById("formSubmitReceiverPickupSchedule");
+    if (formSubmitReceiverPickupSchedule) {
+        formSubmitReceiverPickupSchedule.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const matchId = document.getElementById("mdlScheduleMatchId").value;
+            const match = matchesList.find(m => m.id === matchId);
+            if (!match) return;
+
+            const schedDateTime = document.getElementById("mdlScheduleDateTime").value;
+
+            try {
+                const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+                const db = helper.db();
+
+                await db.collection("matches").doc(matchId).update({
+                    scheduledDateTime: schedDateTime,
+                    schedulingStatus: "receiver_scheduled"
+                });
+
+                await db.collection("notifications").add({
+                    userId: match.donorId,
+                    message: `Receiver ${currentUser.name} has scheduled Pick Up for "${match.requestName}" at ${new Date(schedDateTime).toLocaleString()}.`,
+                    read: false,
+                    createdAt: new Date().toISOString()
+                });
+
+                showToast("Pick Up date & time scheduled.", "success");
+                document.getElementById("modalScheduleReceiverPickup").classList.remove("active");
+                formSubmitReceiverPickupSchedule.reset();
+                updateOverviewStats();
+            } catch (err) {
+                showToast("Failed to schedule pick up.", "danger");
+            }
+        });
+    }
 
     window.openMonetaryModal = (requestId) => {
         const req = requestsList.find(r => r.id === requestId);
@@ -1218,6 +1388,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 details = `Amount: <strong>LKR ${m.amount}</strong> | Ref: ${m.referenceNumber} | <a href="${m.receiptUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700;">View Receipt</a>`;
             }
 
+            let scheduleInfo = '';
+            if (m.deliveryMethod === 'self_delivery' && m.scheduledDateTime) {
+                scheduleInfo = `<div style="font-size:0.8rem; color:var(--color-teal-primary); font-weight:700; margin-top:4px; margin-bottom:6px;">🚚 Scheduled Donor Self-Delivery: ${new Date(m.scheduledDateTime).toLocaleString()}</div>`;
+            } else if (m.deliveryMethod === 'receiver_pickup') {
+                if (m.scheduledDateTime) {
+                    scheduleInfo = `<div style="font-size:0.8rem; color:var(--color-secondary); font-weight:700; margin-top:4px; margin-bottom:6px;">📍 Scheduled Pick Up Date/Time: ${new Date(m.scheduledDateTime).toLocaleString()}</div>`;
+                } else {
+                    scheduleInfo = `<div style="font-size:0.8rem; color:#856404; font-weight:700; margin-top:4px; margin-bottom:6px;">⚠️ Pick Up Date & Time Required</div>`;
+                }
+            }
+
+            let scheduleBtn = '';
+            if (m.deliveryMethod === 'receiver_pickup' && !m.scheduledDateTime) {
+                scheduleBtn = `<button class="btn btn-warning" style="padding:4px 8px; font-size:0.75rem;" onclick="openScheduleReceiverPickupModal('${m.id}')">Schedule Pick Up Date & Time</button>`;
+            }
+
             let evidenceBtn = '';
             if (m.type === 'monetary') {
                 if (m.evidenceSubmitted) {
@@ -1234,12 +1420,14 @@ document.addEventListener("DOMContentLoaded", () => {
                         ${statusBadge}
                     </div>
                     <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 6px;">From Donor: <strong>${m.donorName}</strong></div>
-                    <div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 12px;">${details}</div>
+                    <div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 8px;">${details}</div>
+                    ${scheduleInfo}
 
-                    <div style="display:flex; gap:8px; align-items:center;">
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px;">
                         ${m.status === 'pending_receiver' ? `
                             <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem;" onclick="confirmOffer('${m.id}')">Accept & Confirm Receipt</button>
                         ` : ''}
+                        ${scheduleBtn}
                         ${evidenceBtn}
                     </div>
                 </div>
