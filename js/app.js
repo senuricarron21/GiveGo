@@ -627,8 +627,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.approveRequest = async (reqId) => {
         try {
+            const req = requestsList.find(r => r.id === reqId);
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-            await helper.db().collection("requests").doc(reqId).update({ status: "published" });
+            const db = helper.db();
+            await db.collection("requests").doc(reqId).update({ status: "published" });
+
+            if (req && req.receiverId) {
+                await db.collection("notifications").add({
+                    userId: req.receiverId,
+                    message: `Great news! Your request "${req.itemName}" has been approved by Admin and is now published to donors.`,
+                    read: false,
+                    createdAt: new Date().toISOString()
+                });
+            }
+
             showToast("Request approved and published to Donors.", "success");
             updateOverviewStats();
         } catch (err) {
@@ -638,9 +650,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.rejectRequest = async (reqId) => {
         try {
+            const req = requestsList.find(r => r.id === reqId);
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-            await helper.db().collection("requests").doc(reqId).update({ status: "rejected" });
-            showToast("Request rejected.", "info");
+            const db = helper.db();
+            await db.collection("requests").doc(reqId).update({ status: "rejected" });
+
+            if (req && req.receiverId) {
+                await db.collection("notifications").add({
+                    userId: req.receiverId,
+                    message: `Notice: Your support request "${req.itemName}" was reviewed and rejected by Admin.`,
+                    read: false,
+                    createdAt: new Date().toISOString()
+                });
+            }
+
+            showToast("Request rejected. Notification sent to receiver.", "info");
             updateOverviewStats();
         } catch (err) {
             showToast("Failed to reject request.", "danger");
@@ -649,8 +673,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.approveDonationListing = async (donId) => {
         try {
+            const don = donationsList.find(d => d.id === donId);
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-            await helper.db().collection("donations").doc(donId).update({ status: "available" });
+            const db = helper.db();
+            await db.collection("donations").doc(donId).update({ status: "available" });
+
+            if (don && don.donorId) {
+                await db.collection("notifications").add({
+                    userId: don.donorId,
+                    message: `Your material listing "${don.itemName}" has been approved by Admin and is now available to receivers.`,
+                    read: false,
+                    createdAt: new Date().toISOString()
+                });
+            }
+
             showToast("Donor surplus listing approved and published to Available Items.", "success");
             updateOverviewStats();
         } catch (err) {
@@ -660,8 +696,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.rejectDonationListing = async (donId) => {
         try {
+            const don = donationsList.find(d => d.id === donId);
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-            await helper.db().collection("donations").doc(donId).update({ status: "rejected" });
+            const db = helper.db();
+            await db.collection("donations").doc(donId).update({ status: "rejected" });
+
+            if (don && don.donorId) {
+                await db.collection("notifications").add({
+                    userId: don.donorId,
+                    message: `Notice: Your material listing "${don.itemName}" was reviewed and rejected by Admin.`,
+                    read: false,
+                    createdAt: new Date().toISOString()
+                });
+            }
+
             showToast("Donor listing rejected.", "info");
             updateOverviewStats();
         } catch (err) {
@@ -686,7 +734,8 @@ document.addEventListener("DOMContentLoaded", () => {
             let fulfilledText = r.quantityReceived ? `${r.quantityReceived} units` : (r.amountReceived ? `LKR ${r.amountReceived}` : `${r.volunteersAssigned || 0} filled`);
 
             let statusBadge = `<span class="badge badge-warning">Pending Admin</span>`;
-            if (r.status === 'published') statusBadge = `<span class="badge badge-success">Published</span>`;
+            if (r.status === 'published') statusBadge = `<span class="badge badge-success">Approved / Published</span>`;
+            else if (r.status === 'rejected') statusBadge = `<span class="badge badge-danger">Rejected by Admin</span>`;
             else if (r.status === 'fulfilled') statusBadge = `<span class="badge badge-info">Completed</span>`;
             else if (r.status === 'suspended') statusBadge = `<span class="badge badge-danger">Suspended</span>`;
 
