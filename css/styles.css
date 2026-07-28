@@ -1,26 +1,23 @@
-/* GiveGo Main Application Design Tokens & Global CSS */
+/* GiveGo Design Tokens & Global CSS - Screenshot Parity */
 :root {
-    --color-bg-base: #FBF5DD;
-    --color-border: #E7E1B1;
-    --color-border-dark: #D9D29F;
-    --color-secondary: #306D29;
-    --color-primary: #0D530E;
+    --color-bg-base: #F5EFE0;
+    --color-border: #D8CE9C;
+    --color-border-dark: #C9BE8B;
+    
+    --color-teal-primary: #0D7C7A;
+    --color-teal-dark: #095958;
+    --color-teal-muted: #1E6B69;
     
     --color-surface: #FFFFFF;
-    --color-text-body: #2C3E50;
-    --color-text-muted: #5C6B5E;
+    --color-text-dark: #1A2B1E;
+    --color-text-muted: #667067;
     
-    --color-success: #155724;
-    --color-warning: #856404;
-    --color-danger: #721C24;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
     
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 18px;
-    
-    --shadow-soft: 0 4px 20px rgba(13, 83, 14, 0.06);
-    --shadow-hover: 0 8px 25px rgba(13, 83, 14, 0.12);
-    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.03);
+    --transition-smooth: all 0.2s ease;
 }
 
 * {
@@ -31,7 +28,7 @@
 
 body {
     background-color: var(--color-bg-base);
-    color: var(--color-text-body);
+    color: var(--color-text-dark);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     line-height: 1.5;
 }
@@ -41,27 +38,20 @@ body {
     margin: 0 auto;
 }
 
-/* Glass & White Card Panels */
 .glass-panel {
     background: #FFFFFF;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-soft);
-    transition: var(--transition-smooth);
 }
 
-.glass-panel:hover {
-    border-color: var(--color-border-dark);
-}
-
-/* Typography Gradients */
 .gradient-text {
-    color: var(--color-primary);
+    color: var(--color-teal-primary);
     font-weight: 800;
 }
 
 .gradient-accent-text {
-    color: var(--color-secondary);
+    color: var(--color-teal-dark);
     font-weight: 800;
 }
 
@@ -72,33 +62,31 @@ body {
     justify-content: center;
     font-weight: 700;
     border-radius: var(--radius-sm);
-    padding: 10px 20px;
+    padding: 10px 18px;
     cursor: pointer;
     border: none;
     transition: var(--transition-smooth);
     text-decoration: none;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 
 .btn-primary {
-    background-color: var(--color-primary);
+    background-color: var(--color-teal-primary);
     color: #FFFFFF;
 }
 
 .btn-primary:hover {
-    background-color: var(--color-secondary);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(13, 83, 14, 0.25);
+    background-color: var(--color-teal-dark);
 }
 
 .btn-secondary {
-    background-color: var(--color-border);
-    color: var(--color-primary);
-    border: 1px solid var(--color-border-dark);
+    background-color: #E4DCAE;
+    color: var(--color-teal-primary);
+    border: 1px solid var(--color-border);
 }
 
 .btn-secondary:hover {
-    background-color: #D9D29F;
+    background-color: #D8CE9C;
 }
 
 .btn-danger {
@@ -106,54 +94,46 @@ body {
     color: #FFFFFF;
 }
 
-.btn-danger:hover {
-    background-color: #BD2130;
-}
-
 .btn-warning {
     background-color: #FFC107;
     color: #212529;
 }
 
-.btn-warning:hover {
-    background-color: #E0A800;
-}
-
 /* Forms */
 .form-group {
-    margin-bottom: 18px;
+    margin-bottom: 16px;
 }
 
 .form-label {
     display: block;
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--color-primary);
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--color-teal-primary);
     margin-bottom: 6px;
     text-transform: uppercase;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.5px;
 }
 
 .form-control {
     width: 100%;
-    padding: 12px 16px;
+    padding: 10px 14px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--color-border-dark);
+    border: 1px solid var(--color-border);
     background-color: #FFFFFF;
-    color: var(--color-text-body);
-    font-size: 0.95rem;
+    color: var(--color-text-dark);
+    font-size: 0.9rem;
     outline: none;
     transition: var(--transition-smooth);
 }
 
 .form-control:focus {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(13, 83, 14, 0.12);
+    border-color: var(--color-teal-primary);
+    box-shadow: 0 0 0 3px rgba(13, 124, 122, 0.12);
 }
 
 .form-select {
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%230D530E' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%230D7C7A' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 14px center;
     padding-right: 36px;
@@ -172,17 +152,11 @@ body {
 }
 
 .toast {
-    padding: 14px 18px;
+    padding: 12px 16px;
     border-radius: var(--radius-sm);
     background: #FFFFFF;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-    animation: slideIn 0.3s ease;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
     transition: var(--transition-smooth);
-}
-
-@keyframes slideIn {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
 }
 
 /* Modal */
@@ -210,33 +184,30 @@ body {
     border: 1px solid var(--color-border);
     margin-bottom: 8px;
     cursor: pointer;
-    transition: var(--transition-smooth);
 }
 
 .chat-item:hover, .chat-item.active {
     background-color: var(--color-bg-base);
-    border-color: var(--color-primary);
+    border-color: var(--color-teal-primary);
 }
 
 .message-bubble {
     padding: 10px 14px;
-    border-radius: 12px;
+    border-radius: 10px;
     margin-bottom: 8px;
     max-width: 80%;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     line-height: 1.4;
 }
 
 .message-bubble.outgoing {
-    background-color: var(--color-primary);
+    background-color: var(--color-teal-primary);
     color: #FFFFFF;
     margin-left: auto;
-    border-bottom-right-radius: 2px;
 }
 
 .message-bubble.incoming {
-    background-color: var(--color-border);
-    color: var(--color-primary);
+    background-color: #E4DCAE;
+    color: var(--color-teal-primary);
     margin-right: auto;
-    border-bottom-left-radius: 2px;
 }
