@@ -460,14 +460,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
 
-            const roleStr = (currentUser.role || "").toLowerCase();
+            if (checkIsAdmin()) {
+                renderAdminUsers();
+                renderAdminApprovals();
+                renderAdminRequestApprovals();
+                renderAdminDirectory();
+                renderAdminActiveMatchesTable();
+            }
 
             if (hash === '#chat') {
                 renderChatMatchesList();
                 renderChatMessages();
-            } else if (hash === '#system-directory' || hash === '#users') {
-                renderAdminUsers();
-                renderAdminDirectory();
             } else if (hash === '#needs-catalogue') {
                 renderDonorNeeds();
             } else if (hash === '#available-items') {
@@ -477,6 +480,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } else if (hash === '#notifications') {
                 renderNotifications();
             } else if (hash === '#matching') {
+                const roleStr = ((currentUser.role) || (currentUser.accountType) || "").toLowerCase();
                 if (roleStr.includes('donor')) renderDonorMatches();
                 else if (roleStr.includes('receiver')) renderReceiverMatches();
                 initLeafletMap();
@@ -1808,6 +1812,121 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             `;
         }).join("");
+    }
+
+    function checkIsAdmin() {
+        if (!currentUser) return false;
+        const roleStr = ((currentUser.role) || (currentUser.accountType) || "").toLowerCase();
+        const emailStr = ((currentUser.email) || "").toLowerCase();
+        return (
+            roleStr.includes("admin") ||
+            emailStr.includes("admin") ||
+            currentUser.uid === '9TVzT4p6IESEaalgHQ0xuptUqVk2' ||
+            currentUser.isAdmin === true
+        );
+    }
+
+    function setupRealtimeListeners() {
+        if (!currentUser) return;
+        const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+        const db = helper.db();
+
+        clearSnapshotListeners();
+
+        const unsubUsers = db.collection("users").onSnapshot(snapshot => {
+            usersList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const fullProfile = usersList.find(u => u.uid === currentUser.uid || u.id === currentUser.uid);
+            if (fullProfile) currentUser = { ...currentUser, ...fullProfile };
+
+            if (checkIsAdmin()) {
+                renderAdminUsers();
+                renderAdminApprovals();
+                renderAdminRequestApprovals();
+                renderAdminDirectory();
+                renderAdminActiveMatchesTable();
+            }
+            updateOverviewStats();
+        });
+        unsubscribes.push(unsubUsers);
+
+        const unsubDonations = db.collection("donations").onSnapshot(snapshot => {
+            donationsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const roleStr = ((currentUser.role) || (currentUser.accountType) || "").toLowerCase();
+
+            if (roleStr.includes('donor')) {
+                renderDonorListings();
+                renderDonorNeeds();
+            }
+            if (checkIsAdmin()) {
+                renderAdminApprovals();
+                renderAdminRequestApprovals();
+                renderAdminDirectory();
+                renderAdminActiveMatchesTable();
+            }
+            renderAllAvailableItems();
+            renderChatMatchesList();
+            updateOverviewStats();
+        });
+        unsubscribes.push(unsubDonations);
+
+        const unsubRequests = db.collection("requests").onSnapshot(snapshot => {
+            requestsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const roleStr = ((currentUser.role) || (currentUser.accountType) || "").toLowerCase();
+
+            if (roleStr.includes('receiver')) renderReceiverRequests();
+            else if (roleStr.includes('donor')) renderDonorNeeds();
+            if (checkIsAdmin()) {
+                renderAdminApprovals();
+                renderAdminRequestApprovals();
+                renderAdminDirectory();
+                renderAdminActiveMatchesTable();
+            }
+            renderHistory();
+            renderChatMatchesList();
+            checkMonetaryEvidenceSLAs();
+            updateOverviewStats();
+        });
+        unsubscribes.push(unsubRequests);
+
+        const unsubAnnouncements = db.collection("announcements").onSnapshot(snapshot => {
+            announcementsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderAnnouncements();
+        });
+        unsubscribes.push(unsubAnnouncements);
+
+        const unsubNotifications = db.collection("notifications").onSnapshot(snapshot => {
+            notificationsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                                           .filter(n => n.userId === currentUser.uid);
+            renderNotifications();
+        });
+        unsubscribes.push(unsubNotifications);
+
+        const unsubMatches = db.collection("matches").onSnapshot(snapshot => {
+            matchesList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const roleStr = ((currentUser.role) || (currentUser.accountType) || "").toLowerCase();
+
+            if (roleStr.includes('donor')) renderDonorMatches();
+            else if (roleStr.includes('receiver')) renderReceiverMatches();
+            if (checkIsAdmin()) {
+                renderAdminDirectory();
+                renderAdminActiveMatchesTable();
+            }
+            if (activeChatMatchId) {
+                const match = matchesList.find(m => m.id === activeChatMatchId);
+                if (match) renderTrackingTimeline(match);
+            }
+            renderHistory();
+            renderChatMatchesList();
+            checkMonetaryEvidenceSLAs();
+            updateOverviewStats();
+        });
+        unsubscribes.push(unsubMatches);
+
+        const unsubMessages = db.collection("messages").onSnapshot(snapshot => {
+            messagesList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            if (activeChatMatchId) renderChatMessages();
+        });
+        unsubscribes.push(unsubMessages);
     }
 
     async function checkMonetaryEvidenceSLAs() {
