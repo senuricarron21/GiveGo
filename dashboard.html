@@ -534,7 +534,8 @@
                 <input type="hidden" id="mdlOfferRequestId">
                 <div class="form-group">
                     <label class="form-label">Offered Quantity / Units</label>
-                    <input class="form-control" type="number" id="mdlOfferQty" min="1" value="1" required>
+                    <input class="form-control" type="number" id="mdlOfferQty" min="1" value="1" required style="font-weight:700;">
+                    <div id="lblOfferMaxNotice" style="font-size:0.75rem; color:var(--color-teal-primary); font-weight:700; margin-top:4px;"></div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Item Condition / Notes (Optional)</label>
@@ -557,6 +558,11 @@
             </div>
             <form id="formSubmitItemRequest">
                 <input type="hidden" id="mdlReqDonationId">
+                <div class="form-group">
+                    <label class="form-label">Requested Quantity / Units</label>
+                    <input class="form-control" type="number" id="mdlReqItemQty" min="1" value="1" required style="font-weight:700;">
+                    <div id="lblReqItemMaxNotice" style="font-size:0.75rem; color:var(--color-teal-primary); font-weight:700; margin-top:4px;"></div>
+                </div>
                 <div class="form-group">
                     <label class="form-label">Delivery Method</label>
                     <input class="form-control" type="text" value="Self Pick Up (Receiver Pick Up)" readonly style="font-weight:800; background:#F5EFE0; color:var(--color-teal-primary);">

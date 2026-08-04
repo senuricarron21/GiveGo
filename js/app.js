@@ -1129,7 +1129,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.getElementById("mdlOfferRequestId").value = req.id;
         document.getElementById("mdlOfferTitle").textContent = `Offer Donation: ${req.itemName}`;
-        document.getElementById("mdlOfferQty").value = req.quantityRequired || 1;
+        
+        const qtyInput = document.getElementById("mdlOfferQty");
+        const maxNotice = document.getElementById("lblOfferMaxNotice");
+        
+        const maxRequired = parseInt(req.quantityRequired) || 1;
+        if (qtyInput) {
+            qtyInput.max = maxRequired;
+            qtyInput.value = maxRequired;
+        }
+        if (maxNotice) {
+            maxNotice.textContent = `📌 Max Limit: ${maxRequired} ${req.unit || 'units'} (Receiver requested ${maxRequired} ${req.unit || 'units'})`;
+        }
 
         const modal = document.getElementById("modalOfferDonation");
         if (modal) modal.classList.add("active");
@@ -1145,6 +1156,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const qty = parseInt(document.getElementById("mdlOfferQty").value) || 1;
             const notes = document.getElementById("mdlOfferNotes")?.value.trim() || "";
+            const maxAllowed = parseInt(req.quantityRequired) || 1;
+
+            if (qty > maxAllowed) {
+                showToast(`Illogical Quantity! You cannot offer ${qty} units when the receiver only requested ${maxAllowed} ${req.unit || 'units'}.`, "warning");
+                return;
+            }
+
+            if (qty <= 0) {
+                showToast("Offered quantity must be at least 1 unit.", "warning");
+                return;
+            }
 
             try {
                 const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
@@ -1330,6 +1352,18 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("mdlReqDonationId").value = item.id;
         document.getElementById("mdlReqItemTitle").textContent = `Request Item: ${item.itemName}`;
 
+        const qtyInput = document.getElementById("mdlReqItemQty");
+        const maxNotice = document.getElementById("lblReqItemMaxNotice");
+        
+        const maxAvail = parseInt(item.quantity) || 1;
+        if (qtyInput) {
+            qtyInput.max = maxAvail;
+            qtyInput.value = maxAvail;
+        }
+        if (maxNotice) {
+            maxNotice.textContent = `📌 Max Stock Available: ${maxAvail} ${item.unit || 'units'}`;
+        }
+
         const modal = document.getElementById("modalRequestAvailableItem");
         if (modal) modal.classList.add("active");
     };
@@ -1341,6 +1375,19 @@ document.addEventListener("DOMContentLoaded", () => {
             const donId = document.getElementById("mdlReqDonationId").value;
             const item = donationsList.find(d => d.id === donId);
             if (!item) return;
+
+            const reqQty = parseInt(document.getElementById("mdlReqItemQty")?.value) || 1;
+            const maxAvail = parseInt(item.quantity) || 1;
+
+            if (reqQty > maxAvail) {
+                showToast(`Illogical Quantity! You cannot request ${reqQty} units when the donor only has ${maxAvail} ${item.unit || 'units'} available.`, "warning");
+                return;
+            }
+
+            if (reqQty <= 0) {
+                showToast("Requested quantity must be at least 1 unit.", "warning");
+                return;
+            }
 
             try {
                 const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
@@ -1355,7 +1402,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     donorName: item.donorName,
                     type: "physical",
                     category: item.category,
-                    quantity: item.quantity,
+                    quantity: reqQty,
                     unit: item.unit || "Units",
                     initiator: "receiver",
                     status: "pending_donor_approval",
@@ -1366,7 +1413,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 await db.collection("notifications").add({
                     userId: item.donorId,
-                    message: `📌 Receiver ${currentUser.name} requested your available item "${item.itemName}". Please Accept or Reject this request in your dashboard.`,
+                    message: `📌 Receiver ${currentUser.name} requested ${reqQty} ${item.unit || 'units'} of your available item "${item.itemName}". Please Accept or Reject this request in your dashboard.`,
                     read: false,
                     createdAt: new Date().toISOString()
                 });
