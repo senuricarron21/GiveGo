@@ -211,3 +211,64 @@ body {
     color: var(--color-teal-primary);
     margin-right: auto;
 }
+
+/* Uber / PickMe Style Live Radar Dispatch Animations */
+.radar-sweep-box {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    margin: 0 auto 16px auto;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(13, 124, 122, 0.15) 0%, rgba(13, 124, 122, 0.03) 70%);
+    border: 2px solid var(--color-teal-primary);
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(13, 124, 122, 0.2);
+}
+
+.radar-sweep-line {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 50%;
+    height: 50%;
+    background: linear-gradient(135deg, rgba(13, 124, 122, 0.6) 0%, rgba(13, 124, 122, 0) 70%);
+    transform-origin: top left;
+    animation: radarSweep 2s linear infinite;
+    border-radius: 0 100% 0 0;
+}
+
+@keyframes radarSweep {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.radar-ping-dot {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #0D7C7A;
+    border-radius: 50%;
+    top: 35%;
+    left: 60%;
+    box-shadow: 0 0 10px #0D7C7A;
+    animation: pingPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pingPulse {
+    0% { transform: scale(0.8); opacity: 0.5; }
+    50% { transform: scale(1.4); opacity: 1; }
+    100% { transform: scale(0.8); opacity: 0.5; }
+}
+
+.telemetry-pill {
+    background: #F5EFE0;
+    border: 1px solid #D8CE9C;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-teal-primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}

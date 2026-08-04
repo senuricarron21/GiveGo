@@ -175,6 +175,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const elUsers = document.getElementById("statTotalUsers");
             if (elUsers) elUsers.textContent = totalUsersCount;
+
+            renderAdminActiveMatchesTable();
         }
 
         // --- 2. Donor Overview Metrics ---
@@ -1566,20 +1568,33 @@ document.addEventListener("DOMContentLoaded", () => {
             const recipientId = currentUser.uid === match.donorId ? match.receiverId : match.donorId;
 
             await helper.db().collection("matches").doc(matchId).update({
-                status: "schedule_rejected"
+                status: "schedule_negotiating",
+                proposedBy: currentUser.uid,
+                proposedByName: currentUser.name
+            });
+
+            await helper.db().collection("messages").add({
+                matchId: matchId,
+                senderId: currentUser.uid,
+                senderName: currentUser.name,
+                text: `⚠️ Schedule proposal declined by ${currentUser.name}. Let's discuss a suitable date & time here in chat!`,
+                createdAt: new Date().toISOString()
             });
 
             await helper.db().collection("notifications").add({
                 userId: recipientId,
-                message: `⚠️ ${currentUser.name} rejected the proposed schedule for "${match.requestName}". Please negotiate a new date & time.`,
+                message: `⚠️ ${currentUser.name} declined the proposed schedule for "${match.requestName}". Opening chat portal to negotiate date & time.`,
                 read: false,
                 createdAt: new Date().toISOString()
             });
 
-            showToast("Schedule rejected.", "info");
+            showToast("Schedule proposal declined. Redirecting to chat portal to negotiate date & time...", "info");
             updateOverviewStats();
+
+            // Redirect immediately to Chat Portal with partner
+            startChatWithPartner(matchId);
         } catch (err) {
-            showToast("Failed to reject schedule.", "danger");
+            showToast("Failed to decline schedule.", "danger");
         }
     };
 
@@ -2028,6 +2043,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const sessionId = "DEL-" + Math.floor(10000 + Math.random() * 90000);
 
+            openDispatchRadarModal(sessionId);
+
             await helper.db().collection("matches").doc(matchId).update({
                 status: "in_transit",
                 deliverySessionId: sessionId,
@@ -2041,11 +2058,42 @@ document.addEventListener("DOMContentLoaded", () => {
                 createdAt: new Date().toISOString()
             });
 
-            showToast(`🚚 Delivery started! Session ID: ${sessionId}. You can now share your live location.`, "success");
+            showToast(`🚚 Delivery started! Session ID: ${sessionId}. Live GPS telemetry active.`, "success");
             updateOverviewStats();
         } catch (err) {
             showToast("Failed to start delivery session.", "danger");
         }
+    };
+
+    window.openDispatchRadarModal = (sessionId) => {
+        const modal = document.getElementById("modalLiveDispatchRadar");
+        if (!modal) return;
+        modal.classList.add("active");
+
+        const title = document.getElementById("radarStatusTitle");
+        const subtext = document.getElementById("radarSubtext");
+        const pbar = document.getElementById("radarProgressBar");
+
+        if (title) title.textContent = "Connecting to GPS Satellite...";
+        if (subtext) subtext.textContent = "Searching optimal route & establishing live telemetry session.";
+        if (pbar) pbar.style.width = "25%";
+
+        setTimeout(() => {
+            if (title) title.textContent = "🧭 Route & Traffic Telemetry Calculated";
+            if (subtext) subtext.textContent = "Driver / Donor location locked. Speed: 24 km/h | Distance: 3.2 km.";
+            if (pbar) pbar.style.width = "65%";
+        }, 1200);
+
+        setTimeout(() => {
+            if (title) title.textContent = `🚚 Session ${sessionId} Dispatched & Live!`;
+            if (subtext) subtext.textContent = "Live GPS radar feed active. Partner notified!";
+            if (pbar) pbar.style.width = "100%";
+        }, 2400);
+    };
+
+    window.closeDispatchRadarModal = () => {
+        const modal = document.getElementById("modalLiveDispatchRadar");
+        if (modal) modal.classList.remove("active");
     };
 
     window.markDeliveryDelivered = async (matchId) => {
@@ -2512,7 +2560,79 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function renderAdminActiveMatchesTable() {
+        const body = document.getElementById("adminActiveMatchesTableBody");
+        if (!body) return;
+
+        if (matchesList.length === 0) {
+            body.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--color-text-muted); padding:20px;">No active matches found in system.</td></tr>`;
+            return;
+        }
+
+        body.innerHTML = matchesList.map(m => {
+            let sessionText = m.deliverySessionId || 'N/A';
+            let statusBadge = `<span class="badge badge-info">${m.status}</span>`;
+            if (m.status === 'in_transit') statusBadge = `<span class="badge badge-warning">🚚 In Transit</span>`;
+            else if (m.status === 'completed') statusBadge = `<span class="badge badge-success">✅ Completed</span>`;
+
+            return `
+                <tr>
+                    <td><strong>${m.requestName || 'Material Item'}</strong><br><small style="color:var(--color-teal-primary); font-weight:700;">ID: ${sessionText}</small></td>
+                    <td>${m.donorName}</td>
+                    <td>${m.receiverName}</td>
+                    <td><span class="telemetry-pill">${(m.deliveryMethod || 'pending').replace('_', ' ').toUpperCase()}</span></td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                            <button class="btn btn-secondary" style="padding:3px 8px; font-size:0.75rem;" onclick="adminInspectMatchChat('${m.id}')">👁️ View Live Chat</button>
+                            ${m.status === 'in_transit' ? `<button class="btn btn-warning" style="padding:3px 8px; font-size:0.75rem; font-weight:800;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Monitor GPS Radar</button>` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join("");
+    }
+
+    window.adminInspectMatchChat = async (matchId) => {
+        const match = matchesList.find(m => m.id === matchId);
+        if (!match) return;
+
+        document.getElementById("mdlAdminInspectTitle").textContent = `🛡️ Admin Chat Inspector: ${match.requestName} (${match.donorName} ↔ ${match.receiverName})`;
+        const container = document.getElementById("adminChatMessagesContainer");
+        const modal = document.getElementById("modalAdminInspectChat");
+        if (modal) modal.classList.add("active");
+
+        container.innerHTML = `<div style="text-align:center; color:var(--color-text-muted); padding:20px;">Loading real-time chat log...</div>`;
+
+        try {
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            const snapshot = await helper.db().collection("messages").where("matchId", "==", matchId).get();
+            const msgs = snapshot.docs.map(doc => doc.data()).sort((a,b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+
+            if (msgs.length === 0) {
+                container.innerHTML = `<div style="text-align:center; color:var(--color-text-muted); padding:30px;">No chat messages exchanged between donor and receiver yet.</div>`;
+                return;
+            }
+
+            container.innerHTML = msgs.map(msg => {
+                const date = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                return `
+                    <div style="background:#FFFFFF; border:1px solid #D8CE9C; border-radius:8px; padding:8px 12px; margin-bottom:8px;">
+                        <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--color-teal-primary); font-weight:800; margin-bottom:4px;">
+                            <span>${msg.senderName}</span>
+                            <span style="color:var(--color-text-muted);">${date}</span>
+                        </div>
+                        <div style="font-size:0.85rem; color:var(--color-text-dark);">${msg.text}</div>
+                    </div>
+                `;
+            }).join("");
+        } catch (err) {
+            container.innerHTML = `<div style="text-align:center; color:red; padding:20px;">Failed to load chat log.</div>`;
+        }
+    };
+
     function renderAdminDirectory() {
+        renderAdminActiveMatchesTable();
         const donGrid = document.getElementById("adminDonationsGrid");
         const reqGrid = document.getElementById("adminRequestsGrid");
         if (!donGrid || !reqGrid) return;

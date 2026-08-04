@@ -431,7 +431,10 @@
                     <div class="grid-cols-2">
                         <div class="glass-panel" style="padding:20px; background:#FFFFFF;" id="chatMatchesList"></div>
                         <div class="glass-panel" style="padding:20px; background:#FFFFFF;">
-                            <h4 id="chatPeerName" style="color:var(--color-primary); margin-bottom:10px;">Select a conversation</h4>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                <h4 id="chatPeerName" style="color:var(--color-primary); margin:0;">Select a conversation</h4>
+                                <button id="btnChatProposeSchedule" class="btn btn-warning" style="display:none; padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openNegotiateFromChat()">📅 Propose New Date & Time</button>
+                            </div>
                             <div id="trackingStatusTimeline"></div>
                             <div id="chatMessagesContainer" style="height:250px; overflow-y:auto; border:1px solid var(--color-border); padding:10px; border-radius:4px; margin-bottom:10px;"></div>
                             <div style="display:flex; gap:8px;">
@@ -478,17 +481,57 @@
                 <div class="dashboard-view-panel" id="history-panel" style="display:none;">
                     <h3 class="section-title">Transaction History Archive</h3>
                     <div class="glass-panel" style="padding:20px; background:#FFFFFF;">
-                        <table class="table">
-                            <thead id="historyTableHeader"></thead>
+                        <table class="table" style="width:100%;">
+                            <thead>
+                                <tr id="historyTableHeader"></tr>
+                            </thead>
                             <tbody id="historyTableBody"></tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- System Directory Panel (Admin Only) -->
+                <div class="dashboard-view-panel" id="system-directory-panel" style="display:none;">
+                    <h3 class="section-title">🛡️ Admin Directory & Live System Oversight</h3>
+                    
+                    <div style="margin-bottom: 24px;">
+                        <h4 style="color:var(--color-teal-primary); font-weight:800; margin-bottom:10px;">⚡ Live Active Matches & Real-Time Telemetry Oversight</h4>
+                        <div class="glass-panel" style="padding:16px; background:#FFFFFF;">
+                            <table class="table" style="width:100%; font-size:0.85rem;">
+                                <thead>
+                                    <tr>
+                                        <th>Item / Session</th>
+                                        <th>Donor</th>
+                                        <th>Receiver</th>
+                                        <th>Delivery Method</th>
+                                        <th>Status</th>
+                                        <th>Admin Real-Time Controls</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminActiveMatchesTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="grid-cols-2">
+                        <div class="glass-panel" style="padding:20px; background:#FFFFFF;">
+                            <h4 style="color:var(--color-teal-primary); font-weight:800; margin-bottom:10px;">Available Surplus Donations</h4>
+                            <input class="form-control" type="text" id="searchAdminDonations" placeholder="Filter donations..." style="margin-bottom:12px;">
+                            <div id="adminDonationsGrid" style="max-height:300px; overflow-y:auto;"></div>
+                        </div>
+
+                        <div class="glass-panel" style="padding:20px; background:#FFFFFF;">
+                            <h4 style="color:var(--color-teal-primary); font-weight:800; margin-bottom:10px;">Published Material Requests</h4>
+                            <input class="form-control" type="text" id="searchAdminRequests" placeholder="Filter requests..." style="margin-bottom:12px;">
+                            <div id="adminRequestsGrid" style="max-height:300px; overflow-y:auto;"></div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Notifications Panel -->
                 <div class="dashboard-view-panel" id="notifications-panel" style="display:none;">
                     <h3 class="section-title">System Alerts & Notifications</h3>
-                    <div id="notificationsListContainer"></div>
+                    <div id="notificationsContainer"></div>
                 </div>
             </div>
 
@@ -590,7 +633,7 @@
                 <input type="hidden" id="mdlScheduleMatchId">
                 <div class="form-group">
                     <label class="form-label">Select Pick Up Date & Time</label>
-                    <input class="form-control" type="datetime-local" id="mdlScheduleDateTime" required>
+                    <input class="form-control" type="datetime-local" id="mdlScheduleDateTime" required style="font-weight:700;">
                 </div>
                 <button class="btn btn-primary" type="submit" style="width:100%; font-weight:800; padding:12px;">Schedule & Notify Donor</button>
             </form>
@@ -644,6 +687,66 @@
                 </div>
                 <button class="btn btn-primary" type="submit" style="width:100%; font-weight:800; padding:12px;">Send Proposed Schedule</button>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal: Uber / PickMe Animated Dispatch Radar -->
+    <div class="modal" id="modalLiveDispatchRadar">
+        <div class="modal-content glass-panel" style="padding:28px; background:#FFFFFF; max-width:480px; width:90%; text-align:center;">
+            <div style="font-size:0.8rem; font-weight:800; color:var(--color-teal-primary); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">
+                ⚡ UBER-STYLE DISPATCH TELEMETRY
+            </div>
+            
+            <div class="radar-sweep-box">
+                <div class="radar-sweep-line"></div>
+                <div class="radar-ping-dot"></div>
+            </div>
+
+            <h3 id="radarStatusTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.2rem; margin-bottom:6px;">
+                Connecting to GPS Satellite...
+            </h3>
+            <p id="radarSubtext" style="font-size:0.85rem; color:var(--color-text-muted); margin-bottom:18px;">
+                Searching optimal route & establishing live telemetry session.
+            </p>
+
+            <div style="background:#F5EFE0; border:1px solid #D8CE9C; border-radius:10px; padding:12px; margin-bottom:18px;">
+                <div style="display:flex; justify-content:space-around; text-align:center;">
+                    <div>
+                        <div style="font-size:0.72rem; color:var(--color-text-muted); font-weight:700;">SPEED</div>
+                        <div style="font-size:1.1rem; font-weight:800; color:var(--color-teal-primary);" id="radarSpeed">24 km/h</div>
+                    </div>
+                    <div style="border-left:1px solid #D8CE9C; border-right:1px solid #D8CE9C; padding:0 12px;">
+                        <div style="font-size:0.72rem; color:var(--color-text-muted); font-weight:700;">EST. ETA</div>
+                        <div style="font-size:1.1rem; font-weight:800; color:var(--color-teal-dark);" id="radarETA">~14 Mins</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem; color:var(--color-text-muted); font-weight:700;">DISTANCE</div>
+                        <div style="font-size:1.1rem; font-weight:800; color:var(--color-teal-primary);" id="radarDist">3.2 km</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="width:100%; background:#E4DCAE; height:8px; border-radius:4px; overflow:hidden; margin-bottom:18px;">
+                <div id="radarProgressBar" style="width:20%; height:100%; background:var(--color-teal-primary); transition:width 0.4s ease;"></div>
+            </div>
+
+            <button type="button" class="btn btn-secondary" style="width:100%; font-weight:700;" onclick="closeDispatchRadarModal()">
+                Dismiss Dispatch Radar
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal: Admin Real-Time Chat Log Inspector -->
+    <div class="modal" id="modalAdminInspectChat">
+        <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:620px; width:92%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--color-border); padding-bottom:10px;">
+                <h3 id="mdlAdminInspectTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem;">🛡️ Admin Chat Inspector</h3>
+                <button type="button" class="btn btn-secondary" style="padding:2px 8px; font-size:0.75rem;" onclick="document.getElementById('modalAdminInspectChat').classList.remove('active')">✕</button>
+            </div>
+            <div id="adminChatMessagesContainer" style="height:320px; overflow-y:auto; border:1px solid var(--color-border); padding:12px; border-radius:6px; background:#FBF5DD; margin-bottom:12px;"></div>
+            <div style="font-size:0.78rem; color:var(--color-text-muted); text-align:center;">
+                🔒 Read-only view for system compliance & dispute resolution monitoring.
+            </div>
         </div>
     </div>
 
