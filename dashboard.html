@@ -88,6 +88,47 @@
                         <!-- Stat Cards rendered dynamically -->
                     </div>
 
+                    <!-- Admin Executive Overview Section (Visible for Admin) -->
+                    <div id="adminExecutiveOverviewSection" style="display:none; margin-top:24px;">
+                        <h3 class="section-title" style="color:var(--color-teal-primary); font-weight:800;">🛡️ Executive Admin Command Center Overview</h3>
+                        
+                        <!-- Live Active Matches & Real-Time Controls -->
+                        <div class="glass-panel" style="padding:20px; background:#FFFFFF; margin-bottom:24px;">
+                            <h4 style="color:var(--color-teal-primary); font-weight:800; margin-bottom:12px;">⚡ Live Active Matches & GPS Telemetry Oversight</h4>
+                            <table class="table" style="width:100%; font-size:0.85rem;">
+                                <thead>
+                                    <tr>
+                                        <th>Item / Session</th>
+                                        <th>Donor</th>
+                                        <th>Receiver</th>
+                                        <th>Delivery Method</th>
+                                        <th>Status</th>
+                                        <th>Admin Real-Time Controls</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminOverviewMatchesBody"></tbody>
+                            </table>
+                        </div>
+
+                        <!-- 14-Day Monetary Evidence SLA Monitor -->
+                        <div class="glass-panel" style="padding:20px; background:#FFFFFF; margin-bottom:24px;">
+                            <h4 style="color:var(--color-teal-primary); font-weight:800; margin-bottom:12px;">💰 Monetary Transfers & 14-Day Utilisation SLA Monitor</h4>
+                            <table class="table" style="width:100%; font-size:0.85rem;">
+                                <thead>
+                                    <tr>
+                                        <th>Request / Receiver</th>
+                                        <th>Donor</th>
+                                        <th>Amount</th>
+                                        <th>Transfer Date</th>
+                                        <th>Receipt Proof</th>
+                                        <th>14-Day Evidence SLA</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminMonetarySLABody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
                     <!-- Smart Matches Panel -->
                     <div style="margin-top: 24px;">
                         <h3 class="section-title" style="display:flex; align-items:center; gap:8px;">

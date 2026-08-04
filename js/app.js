@@ -489,7 +489,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function renderNotifications() {
-        const container = document.getElementById("notificationsListContainer");
+        const container = document.getElementById("notificationsContainer") || document.getElementById("notificationsListContainer");
         const dot = document.getElementById("notiDot");
         
         const unread = notificationsList.filter(n => !n.read);
@@ -2561,15 +2561,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function renderAdminActiveMatchesTable() {
-        const body = document.getElementById("adminActiveMatchesTableBody");
-        if (!body) return;
+        const body1 = document.getElementById("adminActiveMatchesTableBody");
+        const body2 = document.getElementById("adminOverviewMatchesBody");
+        const execSec = document.getElementById("adminExecutiveOverviewSection");
 
-        if (matchesList.length === 0) {
-            body.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--color-text-muted); padding:20px;">No active matches found in system.</td></tr>`;
-            return;
-        }
+        const roleStr = ((currentUser && currentUser.role) || (currentUser && currentUser.accountType) || "").toLowerCase();
+        const emailStr = ((currentUser && currentUser.email) || "").toLowerCase();
+        const isAdmin = roleStr.includes("admin") || emailStr.includes("admin") || (currentUser && currentUser.uid === '9TVzT4p6IESEaalgHQ0xuptUqVk2');
 
-        body.innerHTML = matchesList.map(m => {
+        if (execSec) execSec.style.display = isAdmin ? "block" : "none";
+
+        const content = matchesList.length === 0 ? `<tr><td colspan="6" style="text-align:center; color:var(--color-text-muted); padding:20px;">No active matches found in system.</td></tr>` :
+        matchesList.map(m => {
             let sessionText = m.deliverySessionId || 'N/A';
             let statusBadge = `<span class="badge badge-info">${m.status}</span>`;
             if (m.status === 'in_transit') statusBadge = `<span class="badge badge-warning">🚚 In Transit</span>`;
@@ -2588,6 +2591,44 @@ document.addEventListener("DOMContentLoaded", () => {
                             ${m.status === 'in_transit' ? `<button class="btn btn-warning" style="padding:3px 8px; font-size:0.75rem; font-weight:800;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Monitor GPS Radar</button>` : ''}
                         </div>
                     </td>
+                </tr>
+            `;
+        }).join("");
+
+        if (body1) body1.innerHTML = content;
+        if (body2) body2.innerHTML = content;
+
+        renderAdminMonetarySLAMonitor();
+    }
+
+    function renderAdminMonetarySLAMonitor() {
+        const body = document.getElementById("adminMonetarySLABody");
+        if (!body) return;
+
+        const monetaryList = matchesList.filter(m => m.type === 'monetary' || m.amount);
+
+        if (monetaryList.length === 0) {
+            body.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--color-text-muted); padding:20px;">No monetary funding transfers recorded.</td></tr>`;
+            return;
+        }
+
+        body.innerHTML = monetaryList.map(m => {
+            const transferDate = m.transferDate || (m.createdAt ? new Date(m.createdAt).toLocaleDateString() : 'N/A');
+            const receiptLink = m.receiptUrl ? `<a href="${m.receiptUrl}" target="_blank" class="btn btn-secondary" style="padding:2px 6px; font-size:0.75rem;">View Receipt</a>` : 'N/A';
+            let slaStatus = `<span class="badge badge-warning">14-Day SLA Active</span>`;
+
+            if (m.evidenceSubmitted) {
+                slaStatus = `<span class="badge badge-success">✅ Evidence Verified</span>`;
+            }
+
+            return `
+                <tr>
+                    <td><strong>${m.requestName || 'Monetary Grant'}</strong><br><small style="color:var(--color-text-muted);">${m.receiverName}</small></td>
+                    <td>${m.donorName}</td>
+                    <td><strong style="color:var(--color-teal-primary);">LKR ${(m.amount || 0).toLocaleString()}</strong></td>
+                    <td>${transferDate}</td>
+                    <td>${receiptLink}</td>
+                    <td>${slaStatus}</td>
                 </tr>
             `;
         }).join("");
