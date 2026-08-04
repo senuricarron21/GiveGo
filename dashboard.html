@@ -537,21 +537,13 @@
                     <input class="form-control" type="number" id="mdlOfferQty" min="1" value="1" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Delivery Method</label>
-                    <select class="form-control form-select" id="mdlOfferDeliveryMethod" required style="font-weight:700;">
-                        <option value="self_delivery">Self Delivery (Donor Delivers to Receiver)</option>
-                        <option value="receiver_pickup">Receiver Pick Up (Receiver Schedules Pick Up)</option>
-                    </select>
+                    <label class="form-label">Item Condition / Notes (Optional)</label>
+                    <textarea class="form-control" id="mdlOfferNotes" rows="2" placeholder="e.g. Brand new items in original sealed packaging"></textarea>
                 </div>
-                <!-- Shown if Self Delivery chosen -->
-                <div class="form-group" id="groupDonorSchedule">
-                    <label class="form-label">Scheduled Delivery Date & Time</label>
-                    <input class="form-control" type="datetime-local" id="mdlOfferDateTime">
+                <div style="background:#F5EFE0; padding:12px; border-radius:6px; font-size:0.8rem; color:var(--color-text-dark); margin-bottom:16px; line-height:1.4;">
+                    📌 <strong>Workflow Note:</strong> Once the receiver accepts your donation offer, you will be notified to select your Delivery Method (Self Delivery with Date & Time selection OR Receiver Pick Up).
                 </div>
-                <div id="groupReceiverPickupNotice" style="display:none; background:#F5EFE0; padding:12px; border-radius:6px; font-size:0.8rem; color:var(--color-text-dark); margin-bottom:16px;">
-                    📌 Since you selected Receiver Pick Up, a notification will be sent to the receiver to pick their preferred date & time.
-                </div>
-                <button class="btn btn-primary" type="submit" style="width:100%; font-weight:800; padding:12px;">Confirm Offer & Send Dispatch Notice</button>
+                <button class="btn btn-primary" type="submit" style="width:100%; font-weight:800; padding:12px;">Send Donation Offer to Receiver</button>
             </form>
         </div>
     </div>

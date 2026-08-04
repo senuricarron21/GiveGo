@@ -1144,6 +1144,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!req) return;
 
             const qty = parseInt(document.getElementById("mdlOfferQty").value) || 1;
+            const notes = document.getElementById("mdlOfferNotes")?.value.trim() || "";
 
             try {
                 const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
@@ -1160,6 +1161,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     category: req.category,
                     quantity: qty,
                     unit: req.unit || "Units",
+                    notes: notes,
                     initiator: "donor",
                     status: "pending_receiver_approval",
                     createdAt: new Date().toISOString()
