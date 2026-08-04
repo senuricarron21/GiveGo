@@ -2017,7 +2017,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             let liveLocBtn = '';
-            if (m.status === 'in_transit' || m.status === 'delivered') {
+            if (m.status === 'in_transit') {
                 if (m.deliveryMethod === 'self_delivery') {
                     liveLocBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Track Donor Delivery Live</button>`;
                 } else if (m.deliveryMethod === 'receiver_pickup') {
@@ -2246,6 +2246,12 @@ document.addEventListener("DOMContentLoaded", () => {
     let activeWatchPositionId = null;
 
     window.startSharingLiveLocation = (matchId) => {
+        const match = matchesList.find(m => m.id === matchId);
+        if (!match || match.status !== 'in_transit') {
+            showToast("⚠️ Live GPS location sharing is ONLY active after starting delivery journey (In Transit).", "warning");
+            return;
+        }
+
         if (!navigator.geolocation) {
             showToast("Geolocation is not supported by your browser.", "warning");
             return;
@@ -2293,6 +2299,11 @@ document.addEventListener("DOMContentLoaded", () => {
     window.openLiveTrackingMapModal = (matchId) => {
         const match = matchesList.find(m => m.id === matchId);
         if (!match) return;
+
+        if (match.status !== 'in_transit') {
+            showToast("⚠️ Live GPS tracking is ONLY available while delivery is actively in transit.", "warning");
+            return;
+        }
 
         const modal = document.getElementById("modalLiveLocationTracker");
         if (modal) modal.classList.add("active");
