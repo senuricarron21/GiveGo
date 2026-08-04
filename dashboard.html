@@ -731,51 +731,7 @@
         </div>
     </div>
 
-    <!-- Modal: Uber / PickMe Animated Dispatch Radar -->
-    <div class="modal" id="modalLiveDispatchRadar">
-        <div class="modal-content glass-panel" style="padding:28px; background:#FFFFFF; max-width:480px; width:90%; text-align:center;">
-            <div style="font-size:0.8rem; font-weight:800; color:var(--color-teal-primary); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">
-                ⚡ UBER-STYLE DISPATCH TELEMETRY
-            </div>
-            
-            <div class="radar-sweep-box">
-                <div class="radar-sweep-line"></div>
-                <div class="radar-ping-dot"></div>
-            </div>
 
-            <h3 id="radarStatusTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.2rem; margin-bottom:6px;">
-                Connecting to GPS Satellite...
-            </h3>
-            <p id="radarSubtext" style="font-size:0.85rem; color:var(--color-text-muted); margin-bottom:18px;">
-                Searching optimal route & establishing live telemetry session.
-            </p>
-
-            <div style="background:#F5EFE0; border:1px solid #D8CE9C; border-radius:10px; padding:12px; margin-bottom:18px;">
-                <div style="display:flex; justify-content:space-around; text-align:center;">
-                    <div>
-                        <div style="font-size:0.72rem; color:var(--color-text-muted); font-weight:700;">SPEED</div>
-                        <div style="font-size:1.1rem; font-weight:800; color:var(--color-teal-primary);" id="radarSpeed">24 km/h</div>
-                    </div>
-                    <div style="border-left:1px solid #D8CE9C; border-right:1px solid #D8CE9C; padding:0 12px;">
-                        <div style="font-size:0.72rem; color:var(--color-text-muted); font-weight:700;">EST. ETA</div>
-                        <div style="font-size:1.1rem; font-weight:800; color:var(--color-teal-dark);" id="radarETA">~14 Mins</div>
-                    </div>
-                    <div>
-                        <div style="font-size:0.72rem; color:var(--color-text-muted); font-weight:700;">DISTANCE</div>
-                        <div style="font-size:1.1rem; font-weight:800; color:var(--color-teal-primary);" id="radarDist">3.2 km</div>
-                    </div>
-                </div>
-            </div>
-
-            <div style="width:100%; background:#E4DCAE; height:8px; border-radius:4px; overflow:hidden; margin-bottom:18px;">
-                <div id="radarProgressBar" style="width:20%; height:100%; background:var(--color-teal-primary); transition:width 0.4s ease;"></div>
-            </div>
-
-            <button type="button" class="btn btn-secondary" style="width:100%; font-weight:700;" onclick="closeDispatchRadarModal()">
-                Dismiss Dispatch Radar
-            </button>
-        </div>
-    </div>
 
     <!-- Modal: Admin Real-Time Chat Log Inspector -->
     <div class="modal" id="modalAdminInspectChat">

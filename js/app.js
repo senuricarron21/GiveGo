@@ -2117,18 +2117,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (m.status === 'confirmed' || m.status === 'donor_scheduled_delivery') {
                 actionButtonsHtml += `
-                    <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startDeliverySession('${m.id}')">🚚 Start Delivery (In Transit)</button>
+                    <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startDeliverySession('${m.id}')">🚚 Start Delivery Journey</button>
                 `;
             } else if (m.status === 'in_transit') {
                 actionButtonsHtml += `
-                    <button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="markDeliveryDelivered('${m.id}')">📦 Mark Delivered</button>
+                    <button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="markDeliveryDelivered('${m.id}')">📦 Mark Package Handed Over</button>
                 `;
             }
 
             let liveLocBtn = '';
             if (m.status === 'in_transit') {
                 if (m.deliveryMethod === 'self_delivery') {
-                    liveLocBtn = `<button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startSharingLiveLocation('${m.id}')">📡 Share My Live Delivery Location</button>`;
+                    liveLocBtn = `<button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startSharingLiveLocation('${m.id}')">📡 Stream My Live Location</button>`;
                 } else if (m.deliveryMethod === 'receiver_pickup') {
                     liveLocBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Track Receiver Pick-Up Live</button>`;
                 }
@@ -2161,8 +2161,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!match) return;
 
             const sessionId = "DEL-" + Math.floor(10000 + Math.random() * 90000);
-
-            openDispatchRadarModal(sessionId);
+            const recipientId = currentUser.uid === match.donorId ? match.receiverId : match.donorId;
 
             await helper.db().collection("matches").doc(matchId).update({
                 status: "in_transit",
@@ -2171,48 +2170,17 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             await helper.db().collection("notifications").add({
-                userId: match.receiverId,
-                message: `🚚 Donor ${currentUser.name} has started delivery for "${match.requestName}" (Session ID: ${sessionId}). Tracking is now live!`,
+                userId: recipientId,
+                message: `🚚 ${currentUser.name} has started the delivery journey for "${match.requestName}" (Session ID: ${sessionId}). Live GPS location map is active!`,
                 read: false,
                 createdAt: new Date().toISOString()
             });
 
-            showToast(`🚚 Delivery started! Session ID: ${sessionId}. Live GPS telemetry active.`, "success");
+            showToast(`🚚 Delivery journey started! Session ID: ${sessionId}. Click "Stream My Live Location" to stream GPS coordinates.`, "success");
             updateOverviewStats();
         } catch (err) {
             showToast("Failed to start delivery session.", "danger");
         }
-    };
-
-    window.openDispatchRadarModal = (sessionId) => {
-        const modal = document.getElementById("modalLiveDispatchRadar");
-        if (!modal) return;
-        modal.classList.add("active");
-
-        const title = document.getElementById("radarStatusTitle");
-        const subtext = document.getElementById("radarSubtext");
-        const pbar = document.getElementById("radarProgressBar");
-
-        if (title) title.textContent = "Connecting to GPS Satellite...";
-        if (subtext) subtext.textContent = "Searching optimal route & establishing live telemetry session.";
-        if (pbar) pbar.style.width = "25%";
-
-        setTimeout(() => {
-            if (title) title.textContent = "🧭 Route & Traffic Telemetry Calculated";
-            if (subtext) subtext.textContent = "Driver / Donor location locked. Speed: 24 km/h | Distance: 3.2 km.";
-            if (pbar) pbar.style.width = "65%";
-        }, 1200);
-
-        setTimeout(() => {
-            if (title) title.textContent = `🚚 Session ${sessionId} Dispatched & Live!`;
-            if (subtext) subtext.textContent = "Live GPS radar feed active. Partner notified!";
-            if (pbar) pbar.style.width = "100%";
-        }, 2400);
-    };
-
-    window.closeDispatchRadarModal = () => {
-        const modal = document.getElementById("modalLiveDispatchRadar");
-        if (modal) modal.classList.remove("active");
     };
 
     window.markDeliveryDelivered = async (matchId) => {
@@ -2221,24 +2189,28 @@ document.addEventListener("DOMContentLoaded", () => {
             const match = matchesList.find(m => m.id === matchId);
             if (!match) return;
 
+            const recipientId = currentUser.uid === match.donorId ? match.receiverId : match.donorId;
+
             await helper.db().collection("matches").doc(matchId).update({
                 status: "delivered",
                 deliveredAt: new Date().toISOString()
             });
 
             await helper.db().collection("notifications").add({
-                userId: match.receiverId,
-                message: `📦 Donor ${currentUser.name} marked "${match.requestName}" as Delivered. Please confirm receipt on your dashboard.`,
+                userId: recipientId,
+                message: `📦 ${currentUser.name} marked "${match.requestName}" as handed over / delivered. Please confirm receipt to complete match.`,
                 read: false,
                 createdAt: new Date().toISOString()
             });
 
-            showToast("Marked as Delivered. Waiting for receiver confirmation.", "success");
+            showToast("📦 Package marked as handed over/delivered. Awaiting partner receipt confirmation.", "success");
             updateOverviewStats();
         } catch (err) {
-            showToast("Failed to update delivery status.", "danger");
+            showToast("Failed to update status.", "danger");
         }
     };
+
+
 
     let liveTrackerMap = null;
     let liveTrackerMarker = null;
