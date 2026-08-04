@@ -1883,10 +1883,12 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             let liveLocBtn = '';
-            if (m.deliveryMethod === 'self_delivery') {
-                liveLocBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Track Donor Delivery Live</button>`;
-            } else if (m.deliveryMethod === 'receiver_pickup') {
-                liveLocBtn = `<button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startSharingLiveLocation('${m.id}')">📡 Share My Live Pick-Up Location</button>`;
+            if (m.status === 'in_transit' || m.status === 'delivered') {
+                if (m.deliveryMethod === 'self_delivery') {
+                    liveLocBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Track Donor Delivery Live</button>`;
+                } else if (m.deliveryMethod === 'receiver_pickup') {
+                    liveLocBtn = `<button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startSharingLiveLocation('${m.id}')">📡 Share My Live Pick-Up Location</button>`;
+                }
             }
 
             let evidenceBtn = '';
@@ -1990,10 +1992,12 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             let liveLocBtn = '';
-            if (m.deliveryMethod === 'self_delivery') {
-                liveLocBtn = `<button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startSharingLiveLocation('${m.id}')">📡 Share My Live Delivery Location</button>`;
-            } else if (m.deliveryMethod === 'receiver_pickup') {
-                liveLocBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Track Receiver Pick-Up Live</button>`;
+            if (m.status === 'in_transit') {
+                if (m.deliveryMethod === 'self_delivery') {
+                    liveLocBtn = `<button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startSharingLiveLocation('${m.id}')">📡 Share My Live Delivery Location</button>`;
+                } else if (m.deliveryMethod === 'receiver_pickup') {
+                    liveLocBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Track Receiver Pick-Up Live</button>`;
+                }
             }
 
             return `
@@ -2015,6 +2019,59 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
         }).join("");
     }
+
+    window.startDeliverySession = async (matchId) => {
+        try {
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            const match = matchesList.find(m => m.id === matchId);
+            if (!match) return;
+
+            const sessionId = "DEL-" + Math.floor(10000 + Math.random() * 90000);
+
+            await helper.db().collection("matches").doc(matchId).update({
+                status: "in_transit",
+                deliverySessionId: sessionId,
+                deliveryStartedAt: new Date().toISOString()
+            });
+
+            await helper.db().collection("notifications").add({
+                userId: match.receiverId,
+                message: `🚚 Donor ${currentUser.name} has started delivery for "${match.requestName}" (Session ID: ${sessionId}). Tracking is now live!`,
+                read: false,
+                createdAt: new Date().toISOString()
+            });
+
+            showToast(`🚚 Delivery started! Session ID: ${sessionId}. You can now share your live location.`, "success");
+            updateOverviewStats();
+        } catch (err) {
+            showToast("Failed to start delivery session.", "danger");
+        }
+    };
+
+    window.markDeliveryDelivered = async (matchId) => {
+        try {
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            const match = matchesList.find(m => m.id === matchId);
+            if (!match) return;
+
+            await helper.db().collection("matches").doc(matchId).update({
+                status: "delivered",
+                deliveredAt: new Date().toISOString()
+            });
+
+            await helper.db().collection("notifications").add({
+                userId: match.receiverId,
+                message: `📦 Donor ${currentUser.name} marked "${match.requestName}" as Delivered. Please confirm receipt on your dashboard.`,
+                read: false,
+                createdAt: new Date().toISOString()
+            });
+
+            showToast("Marked as Delivered. Waiting for receiver confirmation.", "success");
+            updateOverviewStats();
+        } catch (err) {
+            showToast("Failed to update delivery status.", "danger");
+        }
+    };
 
     let liveTrackerMap = null;
     let liveTrackerMarker = null;
