@@ -185,8 +185,33 @@
     <div class="glass-panel" style="padding: 30px; margin-bottom: 24px; background: #FFFFFF;">
         <div class="card-header">
             <h3 class="card-title">Manage Published & Pending Requests</h3>
+        <!-- Receiver Filter Bar -->
+        <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+            <input class="form-control" type="text" id="filterReceiverSearch" oninput="window.renderReceiverRequests && window.renderReceiverRequests()" placeholder="Search my requests..." style="max-width: 200px;">
+            <select class="form-control form-select" id="filterReceiverStatus" onchange="window.renderReceiverRequests && window.renderReceiverRequests()" style="max-width: 180px;">
+                <option value="all">All Statuses</option>
+                <option value="pending_admin">Pending Admin</option>
+                <option value="published">Approved / Published</option>
+                <option value="rejected">Rejected by Admin</option>
+                <option value="fulfilled">Completed</option>
+            </select>
+            <select class="form-control form-select" id="filterReceiverCategory" onchange="window.renderReceiverRequests && window.renderReceiverRequests()" style="max-width: 220px;">
+                <option value="all">All Categories</option>
+                <option value="Education Supplies">📚 Education Supplies</option>
+                <option value="Medical Supplies">🏥 Medical Supplies</option>
+                <option value="Food & Nutrition">📦 Food & Nutrition</option>
+                <option value="Furniture">🪑 Furniture</option>
+                <option value="Electronics & IT Equipment">💻 Electronics & IT Equipment</option>
+                <option value="Clothing & Personal Care">👕 Clothing & Personal Care</option>
+                <option value="Household Essentials">🏠 Household Essentials</option>
+                <option value="Other Supplies">🧩 Other Supplies</option>
+            </select>
+            <select class="form-control form-select" id="sortReceiverOrder" onchange="window.renderReceiverRequests && window.renderReceiverRequests()" style="max-width: 180px; font-weight:700;">
+                <option value="latest">Latest Added First</option>
+                <option value="oldest">Oldest First</option>
+            </select>
         </div>
-        
+
         <div style="overflow-x: auto;">
             <table class="data-table">
                 <thead>

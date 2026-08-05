@@ -266,7 +266,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function cleanCatString(str) {
         if (!str) return "";
-        return str.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').toLowerCase().trim();
+        return str.replace(/[^\w\s&]/gi, '').toLowerCase().trim();
     }
 
     function isCategoryMatch(itemCategory, filterCategory) {
@@ -794,7 +794,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const catFilter = document.getElementById("filterReceiverCategory")?.value || "all";
         const sortOrder = document.getElementById("sortReceiverOrder")?.value || "latest";
 
-        let myRequests = requestsList.filter(r => r.receiverId === currentUser.uid);
+        let myRequests = requestsList.filter(r => 
+            r.receiverId === currentUser.uid || 
+            (currentUser.name && r.receiverName === currentUser.name) || 
+            (currentUser.email && r.receiverEmail === currentUser.email)
+        );
 
         if (sortOrder === "latest") {
             myRequests.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
@@ -814,7 +818,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (catFilter !== 'all') {
-            myRequests = myRequests.filter(r => isCategoryMatch(r.category, catFilter));
+            myRequests = myRequests.filter(r => isCategoryMatch(r.category, catFilter) || isCategoryMatch(r.receiverCategory, catFilter));
         }
 
         if (myRequests.length === 0) {
