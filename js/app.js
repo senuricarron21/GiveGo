@@ -264,12 +264,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    function cleanCatString(str) {
+        if (!str) return "";
+        return str.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').toLowerCase().trim();
+    }
+
     function isCategoryMatch(itemCategory, filterCategory) {
         if (!filterCategory || filterCategory === 'all') return true;
         if (!itemCategory) return false;
 
-        const c = itemCategory.toLowerCase().trim();
-        const f = filterCategory.toLowerCase().trim();
+        const c = cleanCatString(itemCategory);
+        const f = cleanCatString(filterCategory);
 
         if (c === f || c.includes(f) || f.includes(c)) return true;
 
@@ -2439,27 +2444,26 @@ document.addEventListener("DOMContentLoaded", () => {
         }).join("");
     }
 
+    window.renderAllAvailableItems = renderAllAvailableItems;
+    window.renderDonorNeeds = renderDonorNeeds;
+    window.renderDonorListings = renderDonorListings;
+    window.renderReceiverRequests = renderReceiverRequests;
+
     // Global Event Delegation for Live Instant Filtering across all inputs & selects
     document.addEventListener("change", (e) => {
         if (!e.target) return;
-        const id = e.target.id || "";
-        if (id.startsWith("filter") || id.startsWith("sort") || id.includes("Category") || id.includes("District")) {
-            renderAllAvailableItems();
-            renderDonorNeeds();
-            renderDonorListings();
-            renderReceiverRequests();
-        }
+        renderAllAvailableItems();
+        renderDonorNeeds();
+        renderDonorListings();
+        renderReceiverRequests();
     });
 
     document.addEventListener("input", (e) => {
         if (!e.target) return;
-        const id = e.target.id || "";
-        if (id.startsWith("search") || id.startsWith("filter")) {
-            renderAllAvailableItems();
-            renderDonorNeeds();
-            renderDonorListings();
-            renderReceiverRequests();
-        }
+        renderAllAvailableItems();
+        renderDonorNeeds();
+        renderDonorListings();
+        renderReceiverRequests();
     });
 
     function renderHistory() {

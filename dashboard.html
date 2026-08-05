@@ -238,14 +238,14 @@
                     <div class="glass-panel" style="padding:20px; background:#FFFFFF;">
                         <!-- Donor Filter Bar -->
                         <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
-                            <input class="form-control" type="text" id="filterDonorSearch" placeholder="Search my listings..." style="max-width: 200px;">
-                            <select class="form-control form-select" id="filterDonorStatus" style="max-width: 180px;">
+                            <input class="form-control" type="text" id="filterDonorSearch" oninput="window.renderDonorListings && window.renderDonorListings()" placeholder="Search my listings..." style="max-width: 200px;">
+                            <select class="form-control form-select" id="filterDonorStatus" onchange="window.renderDonorListings && window.renderDonorListings()" style="max-width: 180px;">
                                 <option value="all">All Statuses</option>
                                 <option value="pending_admin">Pending Admin</option>
                                 <option value="available">Approved / Available</option>
                                 <option value="rejected">Rejected by Admin</option>
                             </select>
-                            <select class="form-control form-select" id="filterDonorCategory" style="max-width: 220px;">
+                            <select class="form-control form-select" id="filterDonorCategory" onchange="window.renderDonorListings && window.renderDonorListings()" style="max-width: 220px;">
                                 <option value="all">All Categories</option>
                                 <option value="Education Supplies">📚 Education Supplies</option>
                                 <option value="Medical Supplies">🏥 Medical Supplies</option>
@@ -256,7 +256,7 @@
                                 <option value="Household Essentials">🏠 Household Essentials</option>
                                 <option value="Other Supplies">🧩 Other Supplies</option>
                             </select>
-                            <select class="form-control form-select" id="sortDonorOrder" style="max-width: 180px; font-weight:700;">
+                            <select class="form-control form-select" id="sortDonorOrder" onchange="window.renderDonorListings && window.renderDonorListings()" style="max-width: 180px; font-weight:700;">
                                 <option value="latest">Latest Added First</option>
                                 <option value="oldest">Oldest First</option>
                             </select>
@@ -429,15 +429,15 @@
                     <div class="glass-panel" style="padding:20px; background:#FFFFFF;">
                         <!-- Receiver Filter Bar -->
                         <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
-                            <input class="form-control" type="text" id="filterReceiverSearch" placeholder="Search my requests..." style="max-width: 200px;">
-                            <select class="form-control form-select" id="filterReceiverStatus" style="max-width: 180px;">
+                            <input class="form-control" type="text" id="filterReceiverSearch" oninput="window.renderReceiverRequests && window.renderReceiverRequests()" placeholder="Search my requests..." style="max-width: 200px;">
+                            <select class="form-control form-select" id="filterReceiverStatus" onchange="window.renderReceiverRequests && window.renderReceiverRequests()" style="max-width: 180px;">
                                 <option value="all">All Statuses</option>
                                 <option value="pending_admin">Pending Admin</option>
                                 <option value="published">Approved / Published</option>
                                 <option value="rejected">Rejected by Admin</option>
                                 <option value="fulfilled">Completed</option>
                             </select>
-                            <select class="form-control form-select" id="filterReceiverCategory" style="max-width: 220px;">
+                            <select class="form-control form-select" id="filterReceiverCategory" onchange="window.renderReceiverRequests && window.renderReceiverRequests()" style="max-width: 220px;">
                                 <option value="all">All Categories</option>
                                 <option value="Education Supplies">📚 Education Supplies</option>
                                 <option value="Medical Supplies">🏥 Medical Supplies</option>
@@ -448,7 +448,7 @@
                                 <option value="Household Essentials">🏠 Household Essentials</option>
                                 <option value="Other Supplies">🧩 Other Supplies</option>
                             </select>
-                            <select class="form-control form-select" id="sortReceiverOrder" style="max-width: 180px; font-weight:700;">
+                            <select class="form-control form-select" id="sortReceiverOrder" onchange="window.renderReceiverRequests && window.renderReceiverRequests()" style="max-width: 180px; font-weight:700;">
                                 <option value="latest">Latest Added First</option>
                                 <option value="oldest">Oldest First</option>
                             </select>
@@ -500,8 +500,8 @@
                     <h3 class="section-title">Approved Available Material Donations</h3>
                     <div class="glass-panel" style="padding:16px; margin-bottom:20px; background:#FFFFFF;">
                         <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                            <input class="form-control" type="text" id="searchAllAvailableItems" placeholder="Search available items or donor..." style="max-width: 220px;">
-                            <select class="form-control form-select" id="filterAvailableCategory" style="max-width: 220px;">
+                            <input class="form-control" type="text" id="searchAllAvailableItems" oninput="window.renderAllAvailableItems && window.renderAllAvailableItems()" placeholder="Search available items or donor..." style="max-width: 220px;">
+                            <select class="form-control form-select" id="filterAvailableCategory" onchange="window.renderAllAvailableItems && window.renderAllAvailableItems()" style="max-width: 220px;">
                                 <option value="all">All Categories</option>
                                 <option value="Education Supplies">📚 Education Supplies</option>
                                 <option value="Medical Supplies">🏥 Medical Supplies</option>
@@ -512,7 +512,7 @@
                                 <option value="Household Essentials">🏠 Household Essentials</option>
                                 <option value="Other Supplies">🧩 Other Supplies</option>
                             </select>
-                            <select class="form-control form-select" id="filterAvailableDistrict" style="max-width: 180px;">
+                            <select class="form-control form-select" id="filterAvailableDistrict" onchange="window.renderAllAvailableItems && window.renderAllAvailableItems()" style="max-width: 180px;">
                                 <option value="all">All Districts (25)</option>
                                 <option value="Ampara">Ampara</option>
                                 <option value="Anuradhapura">Anuradhapura</option>
@@ -540,7 +540,7 @@
                                 <option value="Trincomalee">Trincomalee</option>
                                 <option value="Vavuniya">Vavuniya</option>
                             </select>
-                            <select class="form-control form-select" id="sortAvailableItemsOrder" style="max-width: 180px; font-weight:700;">
+                            <select class="form-control form-select" id="sortAvailableItemsOrder" onchange="window.renderAllAvailableItems && window.renderAllAvailableItems()" style="max-width: 180px; font-weight:700;">
                                 <option value="latest">Latest Added First</option>
                                 <option value="oldest">Oldest First</option>
                             </select>
