@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us | GiveGo Donation Platform</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #F5EFE0;
+            margin: 0;
+            padding: 0;
+            color: #2D3748;
+            min-height: 100vh;
+        }
+
+        .header-nav {
+            background: #FFFFFF;
+            padding: 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--color-border);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+
+        .brand-logo-nav {
+            height: 42px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--color-text-dark);
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: color 0.2s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--color-teal-primary);
+        }
+
+        .contact-container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .hero-banner {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .hero-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #E6F4F1;
+            color: var(--color-teal-primary);
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            margin-bottom: 16px;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--color-teal-primary);
+            margin-bottom: 12px;
+        }
+
+        .hero-subtitle {
+            font-size: 1.05rem;
+            color: #4A5568;
+            max-width: 650px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 32px;
+            margin-bottom: 50px;
+        }
+
+        @media (max-width: 850px) {
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .info-card {
+            background: #FFFFFF;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border: 1px solid var(--color-border);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .info-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            background: #E6F4F1;
+            color: var(--color-teal-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .info-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--color-teal-primary);
+            margin-bottom: 4px;
+        }
+
+        .info-text {
+            font-size: 0.9rem;
+            color: #4A5568;
+            line-height: 1.5;
+        }
+
+        .contact-form-card {
+            background: #FFFFFF;
+            border-radius: 12px;
+            padding: 36px;
+            border: 1px solid var(--color-border);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        }
+
+        .faq-section {
+            background: #FFFFFF;
+            border-radius: 12px;
+            padding: 36px;
+            margin-bottom: 50px;
+            border: 1px solid var(--color-border);
+        }
+
+        .faq-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--color-teal-primary);
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .faq-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .faq-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .faq-item {
+            background: #F9FBF8;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .faq-q {
+            font-weight: 800;
+            color: var(--color-teal-primary);
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
+        .faq-a {
+            font-size: 0.88rem;
+            color: #4A5568;
+            line-height: 1.5;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 24px;
+            font-size: 0.85rem;
+            color: #718096;
+            border-top: 1px solid var(--color-border);
+            background: #FFFFFF;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="header-nav">
+        <a href="index.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
+            <img src="https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=120&q=80" alt="GiveGo Logo" class="brand-logo-nav" style="border-radius: 6px;">
+            <span style="font-size: 1.4rem; font-weight: 800; color: var(--color-teal-primary);">GiveGo</span>
+        </a>
+        <nav class="nav-links">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="contact.html" class="nav-link" style="color: var(--color-teal-primary);">Contact Us</a>
+            <a href="index.html" class="btn btn-primary" style="padding: 8px 18px; font-size: 0.88rem;">Sign In / Register</a>
+        </nav>
+    </header>
+
+    <!-- Main Container -->
+    <main class="contact-container">
+
+        <!-- Hero Section -->
+        <div class="hero-banner">
+            <div class="hero-pill">
+                💬 24/7 HELPDESK & SUPPORT
+            </div>
+            <h1 class="hero-title">Get in Touch with GiveGo</h1>
+            <p class="hero-subtitle">Have questions about donation handovers, verified receiver requests, or system partnerships? Our support team is here to assist you.</p>
+        </div>
+
+        <!-- Contact Grid -->
+        <div class="contact-grid">
+            <!-- Left: Contact Details Cards -->
+            <div>
+                <div class="info-card">
+                    <div class="info-icon">📍</div>
+                    <div>
+                        <div class="info-title">Headquarters Office</div>
+                        <div class="info-text">GiveGo Foundation, No. 123 Humanitarian Drive, Colombo 03, Sri Lanka.</div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-icon">📞</div>
+                    <div>
+                        <div class="info-title">Direct Phone & Hotline</div>
+                        <div class="info-text">
+                            <strong>Hotline:</strong> +94 11 234 5678<br>
+                            <strong>Support Desk:</strong> +94 77 123 4567 (Mon - Sat, 8:00 AM - 8:00 PM)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-icon">✉️</div>
+                    <div>
+                        <div class="info-title">Email Helpdesk</div>
+                        <div class="info-text">
+                            <strong>General Inquiries:</strong> info@givego.org<br>
+                            <strong>Receiver Verification:</strong> verify@givego.org
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card" style="background: #FAF5E8; border-color: #E2D6B5;">
+                    <div class="info-icon" style="background: #F3E5C8;">⚡</div>
+                    <div>
+                        <div class="info-title">Real-Time Dispatch Emergency</div>
+                        <div class="info-text">For emergency delivery or pickup assistance during active dispatch journeys, contact our live dispatch coordinator via chat or hotline.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Contact Form -->
+            <div class="contact-form-card">
+                <h3 style="font-size: 1.3rem; font-weight: 800; color: var(--color-teal-primary); margin-bottom: 8px;">Send Us a Direct Message</h3>
+                <p style="font-size: 0.88rem; color: #4A5568; margin-bottom: 24px;">Fill out the form below and our team will get back to you within 24 hours.</p>
+
+                <form id="formContactUs">
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 700;">Your Full Name</label>
+                        <input type="text" class="form-control" id="contactName" placeholder="e.g. John Doe" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 700;">Your Email Address</label>
+                        <input type="email" class="form-control" id="contactEmail" placeholder="e.g. john@example.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 700;">Inquiry Topic</label>
+                        <select class="form-control form-select" id="contactTopic" required>
+                            <option value="General Inquiry">General Question / Information</option>
+                            <option value="Donation Listing Assistance">Donation Listing Assistance</option>
+                            <option value="Receiver Registration Verification">Receiver Registration / Verification</option>
+                            <option value="Dispatch & Pick Up Support">Dispatch & Pick Up Support</option>
+                            <option value="Technical Bug / Feedback">Technical Support / Platform Feedback</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 700;">Message / Details</label>
+                        <textarea class="form-control" id="contactMessage" rows="4" placeholder="How can we assist you today?" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 1rem; font-weight: 800;">
+                        📤 Send Inquiry Message
+                    </button>
+                </form>
+
+                <div id="contactSuccessMsg" style="display: none; margin-top: 16px; padding: 14px; background: #E6F4F1; border-radius: 8px; color: var(--color-teal-primary); font-weight: 700; font-size: 0.9rem; text-align: center;">
+                    ✅ Thank you! Your message has been submitted. Our support team will reach out to you shortly.
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ Section -->
+        <div class="faq-section">
+            <h2 class="faq-title">Frequently Asked Questions</h2>
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <div class="faq-q">❓ How does GiveGo verify receiver organizations?</div>
+                    <div class="faq-a">Every school, hospital, or NGO submitting support requests is thoroughly vetted by our Admin team before their requests are published to donors.</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">📦 How do physical donation handovers work?</div>
+                    <div class="faq-a">Donors can choose between self-delivering items to receivers or offering self-pickup. Live GPS tracking stream is active during delivery.</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">⚡ How does the Smart AI Match Engine work?</div>
+                    <div class="faq-a">Our algorithm automatically pairs donor surplus listings with receiver requests based on item title keywords, category, and district proximity.</div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-q">🔒 Is my personal contact information protected?</div>
+                    <div class="faq-a">Yes. Your contact information is kept private and is only shared with verified partners once a donation handover request is confirmed.</div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>© 2026 GiveGo Donation Management Platform. All rights reserved. | <a href="index.html" style="color: var(--color-teal-primary); font-weight: 700; text-decoration: none;">Home</a> | <a href="contact.html" style="color: var(--color-teal-primary); font-weight: 700; text-decoration: none;">Contact Us</a></p>
+    </footer>
+
+    <!-- Form Handler Script -->
+    <script>
+        document.getElementById("formContactUs")?.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const name = document.getElementById("contactName").value;
+            const email = document.getElementById("contactEmail").value;
+            const topic = document.getElementById("contactTopic").value;
+            const message = document.getElementById("contactMessage").value;
+
+            try {
+                const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+                if (helper) {
+                    await helper.db().collection("inquiries").add({
+                        name,
+                        email,
+                        topic,
+                        message,
+                        status: "new",
+                        createdAt: new Date().toISOString()
+                    });
+                }
+            } catch(err) {
+                console.log("Submitted inquiry locally:", { name, email, topic, message });
+            }
+
+            document.getElementById("formContactUs").reset();
+            const successEl = document.getElementById("contactSuccessMsg");
+            if (successEl) {
+                successEl.style.display = "block";
+                setTimeout(() => successEl.style.display = "none", 5000);
+            }
+        });
+    </script>
+</body>
+</html>

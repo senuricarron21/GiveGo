@@ -250,16 +250,16 @@
             <!-- Quick Stats Pills -->
             <div class="stats-grid">
                 <div class="stat-card-pill">
-                    <div class="stat-val">1,420+</div>
+                    <div class="stat-val" id="landingStatMatches">0</div>
                     <div class="stat-lbl">Matches Made</div>
                 </div>
                 <div class="stat-card-pill">
-                    <div class="stat-val">890 kg+</div>
-                    <div class="stat-lbl">Materials Sent</div>
+                    <div class="stat-val" id="landingStatDonations">0</div>
+                    <div class="stat-lbl">Materials Listed</div>
                 </div>
                 <div class="stat-card-pill">
-                    <div class="stat-val">99.4%</div>
-                    <div class="stat-lbl">SLA Verified</div>
+                    <div class="stat-val" id="landingStatRequests">0</div>
+                    <div class="stat-lbl">Verified Needs</div>
                 </div>
             </div>
         </div>
@@ -301,12 +301,29 @@
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-            if (helper && helper.auth()) {
-                helper.auth().onAuthStateChanged(user => {
-                    if (user) {
-                        window.location.href = "dashboard.html";
-                    }
-                });
+            if (helper) {
+                if (helper.auth()) {
+                    helper.auth().onAuthStateChanged(user => {
+                        if (user) {
+                            window.location.href = "dashboard.html";
+                        }
+                    });
+                }
+                if (helper.db()) {
+                    const db = helper.db();
+                    db.collection("matches").onSnapshot(snap => {
+                        const el = document.getElementById("landingStatMatches");
+                        if (el) el.textContent = snap.size;
+                    });
+                    db.collection("donations").onSnapshot(snap => {
+                        const el = document.getElementById("landingStatDonations");
+                        if (el) el.textContent = snap.size;
+                    });
+                    db.collection("requests").onSnapshot(snap => {
+                        const el = document.getElementById("landingStatRequests");
+                        if (el) el.textContent = snap.size;
+                    });
+                }
             }
         });
     </script>

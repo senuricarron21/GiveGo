@@ -45,16 +45,16 @@ if (isset($_SESSION['user'])) {
                 <!-- Quick Stats -->
                 <div style="display: flex; gap: 40px; margin-top: 20px;">
                     <div>
-                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--color-primary);">1,420+</div>
+                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--color-primary);" id="landingStatMatches">0</div>
                         <div style="font-size: 0.8rem; color: var(--color-text-muted); font-weight: 700; text-transform: uppercase;">Matches Made</div>
                     </div>
                     <div>
-                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--color-secondary);">890 kg+</div>
-                        <div style="font-size: 0.8rem; color: var(--color-text-muted); font-weight: 700; text-transform: uppercase;">Materials Distributed</div>
+                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--color-secondary);" id="landingStatDonations">0</div>
+                        <div style="font-size: 0.8rem; color: var(--color-text-muted); font-weight: 700; text-transform: uppercase;">Materials Listed</div>
                     </div>
                     <div>
-                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--color-primary);">99.4%</div>
-                        <div style="font-size: 0.8rem; color: var(--color-text-muted); font-weight: 700; text-transform: uppercase;">SLA Compliance</div>
+                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--color-primary);" id="landingStatRequests">0</div>
+                        <div style="font-size: 0.8rem; color: var(--color-text-muted); font-weight: 700; text-transform: uppercase;">Verified Needs</div>
                     </div>
                 </div>
             </div>
@@ -96,5 +96,25 @@ if (isset($_SESSION['user'])) {
     <!-- Core Javascript Files -->
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            if (helper && helper.db()) {
+                const db = helper.db();
+                db.collection("matches").onSnapshot(snap => {
+                    const el = document.getElementById("landingStatMatches");
+                    if (el) el.textContent = snap.size;
+                });
+                db.collection("donations").onSnapshot(snap => {
+                    const el = document.getElementById("landingStatDonations");
+                    if (el) el.textContent = snap.size;
+                });
+                db.collection("requests").onSnapshot(snap => {
+                    const el = document.getElementById("landingStatRequests");
+                    if (el) el.textContent = snap.size;
+                });
+            }
+        });
+    </script>
 </body>
 </html>

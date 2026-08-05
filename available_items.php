@@ -10,11 +10,14 @@
             <input type="text" id="searchAllAvailableItems" class="form-control" placeholder="Search available materials or donor..." style="max-width: 220px;">
             <select class="form-control form-select" id="filterAvailableCategory" style="max-width: 160px;">
                 <option value="all">All Categories</option>
-                <option value="Food">Food Rations</option>
-                <option value="Clothing">Clothing</option>
-                <option value="Books">Books</option>
-                <option value="Medical">Medical</option>
-                <option value="Furniture">Furniture</option>
+                <option value="Education Supplies">📚 Education Supplies</option>
+                <option value="Medical Supplies">🏥 Medical Supplies</option>
+                <option value="Food & Nutrition">📦 Food & Nutrition</option>
+                <option value="Furniture">🪑 Furniture</option>
+                <option value="Electronics & IT Equipment">💻 Electronics & IT Equipment</option>
+                <option value="Clothing & Personal Care">👕 Clothing & Personal Care</option>
+                <option value="Household Essentials">🏠 Household Essentials</option>
+                <option value="Other Supplies">🧩 Other Supplies</option>
             </select>
             <select class="form-control form-select" id="filterAvailableDistrict" style="max-width: 160px;">
                 <option value="all">All Districts</option>

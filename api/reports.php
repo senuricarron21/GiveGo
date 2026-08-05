@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['download'])) {
     
     // Master Donations Record Table
     fputcsv($output, ["--- MASTER DONATIONS LIST ---"]);
-    fputcsv($output, ["Donation ID", "Item Name", "Category", "Quantity", "Condition", "Urgency", "Donor Name", "Status", "Created At"]);
+    fputcsv($output, ["Donation ID", "Item Name", "Category", "Quantity", "Condition", "Donor Name", "Status", "Created At"]);
     
     if (isset($data['rawDonations']) && is_array($data['rawDonations'])) {
         foreach ($data['rawDonations'] as $d) {
@@ -52,7 +52,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['download'])) {
                 $d['category'] ?? '',
                 $d['quantity'] ?? '',
                 $d['condition'] ?? '',
-                $d['urgency'] ?? '',
                 $d['donorName'] ?? '',
                 $d['status'] ?? '',
                 $d['createdAt'] ?? ''

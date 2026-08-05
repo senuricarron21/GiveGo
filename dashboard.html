@@ -88,6 +88,23 @@
                         <!-- Stat Cards rendered dynamically -->
                     </div>
 
+                    <!-- Receiver Quick Navigation Hub (Visible for Receiver) -->
+                    <div id="receiverOverviewSection" style="display:none; margin-top:24px;">
+                        <h3 class="section-title" style="color:var(--color-teal-primary); font-weight:800;">📍 Receiver Control Hub</h3>
+                        <div class="grid-cols-2" style="gap:20px;">
+                            <div class="glass-panel" style="padding:24px; background:#FFFFFF; border-left:5px solid var(--color-teal-primary);">
+                                <h4 style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin-bottom:8px;">📋 Dashboard 1: My Submitted Needs & Items</h4>
+                                <p style="color:var(--color-text-muted); font-size:0.9rem; margin-bottom:16px;">View, manage, and track all requests and material items you have submitted for donor support.</p>
+                                <a href="#requests" class="btn btn-primary" style="display:inline-block; padding:8px 16px; font-size:0.85rem;">Manage My Submitted Items →</a>
+                            </div>
+                            <div class="glass-panel" style="padding:24px; background:#FFFFFF; border-left:5px solid #2D6A4F;">
+                                <h4 style="color:#2D6A4F; font-weight:800; font-size:1.1rem; margin-bottom:8px;">🎁 Dashboard 2: Donor Surplus Items Directory</h4>
+                                <p style="color:var(--color-text-muted); font-size:0.9rem; margin-bottom:16px;">Browse surplus material items offered by donors and request items for pickup.</p>
+                                <a href="#available-items" class="btn btn-primary" style="display:inline-block; background:#2D6A4F; border-color:#2D6A4F; padding:8px 16px; font-size:0.85rem;">Browse Donor Items →</a>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Admin Executive Overview Section (Visible for Admin) -->
                     <div id="adminExecutiveOverviewSection" style="display:none; margin-top:24px;">
                         <h3 class="section-title" style="color:var(--color-teal-primary); font-weight:800;">🛡️ Executive Admin Command Center Overview</h3>
@@ -183,11 +200,14 @@
                                 <div class="form-group">
                                     <label class="form-label">Category</label>
                                     <select class="form-control form-select" id="donCategory" required>
-                                        <option value="Food">Food / Rations</option>
-                                        <option value="Clothing">Clothing</option>
-                                        <option value="Books">Books / Stationery</option>
-                                        <option value="Medical">Medical Supplies</option>
-                                        <option value="Furniture">Furniture</option>
+                                        <option value="Education Supplies">📚 Education Supplies</option>
+                                        <option value="Medical Supplies">🏥 Medical Supplies</option>
+                                        <option value="Food & Nutrition">📦 Food & Nutrition</option>
+                                        <option value="Furniture">🪑 Furniture</option>
+                                        <option value="Electronics & IT Equipment">💻 Electronics & IT Equipment</option>
+                                        <option value="Clothing & Personal Care">👕 Clothing & Personal Care</option>
+                                        <option value="Household Essentials">🏠 Household Essentials</option>
+                                        <option value="Other Supplies">🧩 Other Supplies</option>
                                     </select>
                                 </div>
                             </div>
@@ -244,11 +264,14 @@
                             </select>
                             <select class="form-control form-select" id="filterDonorCategory" style="max-width: 180px;">
                                 <option value="all">All Categories</option>
-                                <option value="Food">Food Rations</option>
-                                <option value="Clothing">Clothing</option>
-                                <option value="Books">Books</option>
-                                <option value="Medical">Medical</option>
-                                <option value="Furniture">Furniture</option>
+                                <option value="Education Supplies">📚 Education Supplies</option>
+                                <option value="Medical Supplies">🏥 Medical Supplies</option>
+                                <option value="Food & Nutrition">📦 Food & Nutrition</option>
+                                <option value="Furniture">🪑 Furniture</option>
+                                <option value="Electronics & IT Equipment">💻 Electronics & IT Equipment</option>
+                                <option value="Clothing & Personal Care">👕 Clothing & Personal Care</option>
+                                <option value="Household Essentials">🏠 Household Essentials</option>
+                                <option value="Other Supplies">🧩 Other Supplies</option>
                             </select>
                             <select class="form-control form-select" id="sortDonorOrder" style="max-width: 180px; font-weight:700;">
                                 <option value="latest">Latest Added First</option>
@@ -301,12 +324,6 @@
                                 <option value="Elder Care Homes">Elder Care Homes</option>
                                 <option value="Disaster Relief Organization">Disaster Relief Organization</option>
                             </select>
-                            <select class="form-control form-select" id="filterReqPriority" style="max-width: 140px;">
-                                <option value="all">All Priorities</option>
-                                <option value="High">High</option>
-                                <option value="Medium">Medium</option>
-                                <option value="Low">Low</option>
-                            </select>
                             <select class="form-control form-select" id="sortCatalogueOrder" style="max-width: 160px; font-weight:700;">
                                 <option value="latest">Latest Added First</option>
                                 <option value="oldest">Oldest First</option>
@@ -339,14 +356,14 @@
                             <div class="form-group">
                                 <label class="form-label">Category</label>
                                 <select class="form-control form-select" id="reqCategory" required>
-                                    <option value="Education Supplies">Education Supplies</option>
-                                    <option value="Medical Supplies">Medical Supplies</option>
-                                    <option value="Food & Nutrition">Food & Nutrition</option>
-                                    <option value="Furniture">Furniture</option>
-                                    <option value="Electronics & IT Equipment">Electronics & IT Equipment</option>
-                                    <option value="Clothing & Personal Care">Clothing & Personal Care</option>
-                                    <option value="Household Essentials">Household Essentials</option>
-                                    <option value="Other Supplies">Other Supplies</option>
+                                    <option value="Education Supplies">📚 Education Supplies</option>
+                                    <option value="Medical Supplies">🏥 Medical Supplies</option>
+                                    <option value="Food & Nutrition">📦 Food & Nutrition</option>
+                                    <option value="Furniture">🪑 Furniture</option>
+                                    <option value="Electronics & IT Equipment">💻 Electronics & IT Equipment</option>
+                                    <option value="Clothing & Personal Care">👕 Clothing & Personal Care</option>
+                                    <option value="Household Essentials">🏠 Household Essentials</option>
+                                    <option value="Other Supplies">🧩 Other Supplies</option>
                                 </select>
                             </div>
 
@@ -419,31 +436,39 @@
                         </form>
                     </div>
 
-                    <h3 class="section-title">My Submitted Requests</h3>
+                    <h3 class="section-title">📋 Dashboard 1: My Submitted Needs & Items</h3>
                     <div class="glass-panel" style="padding:20px; background:#FFFFFF;">
                         <!-- Receiver Filter Bar -->
                         <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
-                            <input class="form-control" type="text" id="filterReceiverSearch" placeholder="Search my requests..." style="max-width: 200px;">
+                            <input class="form-control" type="text" id="filterReceiverSearch" placeholder="Search my submitted items..." style="max-width: 220px;">
                             <select class="form-control form-select" id="filterReceiverStatus" style="max-width: 180px;">
-                                <option value="all">All Statuses</option>
-                                <option value="pending_admin">Pending Admin</option>
-                                <option value="published">Approved / Published</option>
+                                <option value="all">All Approval States</option>
+                                <option value="pending_admin">Pending Admin Review</option>
+                                <option value="published">Approved & Published</option>
                                 <option value="rejected">Rejected by Admin</option>
                                 <option value="fulfilled">Completed</option>
                             </select>
                             <select class="form-control form-select" id="filterReceiverCategory" style="max-width: 180px;">
                                 <option value="all">All Categories</option>
-                                <option value="Medical">Medical</option>
-                                <option value="Food">Food Rations</option>
-                                <option value="Clothing">Clothing</option>
-                                <option value="Books">Books</option>
-                                <option value="General">General</option>
+                                <option value="Education Supplies">📚 Education Supplies</option>
+                                <option value="Medical Supplies">🏥 Medical Supplies</option>
+                                <option value="Food & Nutrition">📦 Food & Nutrition</option>
+                                <option value="Furniture">🪑 Furniture</option>
+                                <option value="Electronics & IT Equipment">💻 Electronics & IT Equipment</option>
+                                <option value="Clothing & Personal Care">👕 Clothing & Personal Care</option>
+                                <option value="Household Essentials">🏠 Household Essentials</option>
+                                <option value="Other Supplies">🧩 Other Supplies</option>
                             </select>
                             <select class="form-control form-select" id="sortReceiverOrder" style="max-width: 180px; font-weight:700;">
                                 <option value="latest">Latest Added First</option>
                                 <option value="oldest">Oldest First</option>
                             </select>
                         </div>
+
+                        <!-- Cards View Grid for Receiver's Submitted Items -->
+                        <div class="grid-cols-3" id="receiverRequestsCardsGrid" style="gap: 20px; margin-bottom: 24px;"></div>
+
+                        <h4 style="font-size:0.95rem; font-weight:800; color:var(--color-teal-primary); margin-bottom:10px;">Detailed Requests Table View</h4>
                         <table class="table">
                             <thead>
                                 <tr>
@@ -462,7 +487,13 @@
                 </div>
 
                 <div class="dashboard-view-panel" id="matching-panel" style="display:none;">
-                    <h3 class="section-title">Smart Matches & Connection Offers</h3>
+                    <h3 class="section-title">⚡ Smart Matches & Real-Time Connection Offers</h3>
+                    <div class="glass-panel" style="padding: 24px; margin-bottom: 24px; background: #FFFFFF;">
+                        <h4 style="font-weight: 800; color: var(--color-teal-primary); margin-bottom: 12px;">⚡ AI Recommended Smart Matches</h4>
+                        <div id="aiSmartMatchesContainer"></div>
+                    </div>
+
+                    <h4 style="font-weight: 800; color: var(--color-teal-primary); margin-bottom: 12px;">📦 Active Handover & Delivery Sessions</h4>
                     <div id="receiverMatchesContainer"></div>
                     <div id="donorMatchesContainer"></div>
                 </div>
@@ -494,11 +525,14 @@
                             <input class="form-control" type="text" id="searchAllAvailableItems" placeholder="Search available items or donor..." style="max-width: 220px;">
                             <select class="form-control form-select" id="filterAvailableCategory" style="max-width: 160px;">
                                 <option value="all">All Categories</option>
-                                <option value="Food">Food Rations</option>
-                                <option value="Clothing">Clothing</option>
-                                <option value="Books">Books</option>
-                                <option value="Medical">Medical</option>
-                                <option value="Furniture">Furniture</option>
+                                <option value="Education Supplies">📚 Education Supplies</option>
+                                <option value="Medical Supplies">🏥 Medical Supplies</option>
+                                <option value="Food & Nutrition">📦 Food & Nutrition</option>
+                                <option value="Furniture">🪑 Furniture</option>
+                                <option value="Electronics & IT Equipment">💻 Electronics & IT Equipment</option>
+                                <option value="Clothing & Personal Care">👕 Clothing & Personal Care</option>
+                                <option value="Household Essentials">🏠 Household Essentials</option>
+                                <option value="Other Supplies">🧩 Other Supplies</option>
                             </select>
                             <select class="form-control form-select" id="filterAvailableDistrict" style="max-width: 160px;">
                                 <option value="all">All Districts</option>
@@ -573,6 +607,47 @@
                 <div class="dashboard-view-panel" id="notifications-panel" style="display:none;">
                     <h3 class="section-title">System Alerts & Notifications</h3>
                     <div id="notificationsContainer"></div>
+                <!-- Contact Us Panel -->
+                <div class="dashboard-view-panel" id="contact-panel" style="display:none;">
+                    <h3 class="section-title">📞 Contact Support & Inquiries</h3>
+                    <div class="grid-cols-2" style="gap:24px;">
+                        <div class="glass-panel" style="padding:24px; background:#FFFFFF;">
+                            <h4 style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin-bottom:12px;">Get in Touch</h4>
+                            <div style="font-size:0.9rem; color:#4A5568; line-height:1.6; margin-bottom:16px;">
+                                📍 <strong>Headquarters:</strong> No. 123 Humanitarian Drive, Colombo 03<br>
+                                📞 <strong>Hotline:</strong> +94 11 234 5678 / +94 77 123 4567<br>
+                                ✉️ <strong>Support Email:</strong> support@givego.org<br>
+                                🕒 <strong>Hours:</strong> Mon - Sat, 8:00 AM - 8:00 PM
+                            </div>
+                            <div style="background:#E6F4F1; padding:14px; border-radius:8px; font-size:0.85rem; color:var(--color-teal-primary); font-weight:700;">
+                                ⚡ Dispatch Emergency? Our support live coordinators are active 24/7 during active delivery journeys.
+                            </div>
+                        </div>
+
+                        <div class="glass-panel" style="padding:24px; background:#FFFFFF;">
+                            <h4 style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin-bottom:12px;">Send Us a Message</h4>
+                            <form id="formDashboardContact">
+                                <div class="form-group">
+                                    <label class="form-label">Inquiry Topic</label>
+                                    <select class="form-control form-select" id="dashContactTopic" required>
+                                        <option value="General Question">General Question</option>
+                                        <option value="Donation Support">Donation Listing Support</option>
+                                        <option value="Receiver Verification">Receiver Verification</option>
+                                        <option value="Dispatch Assistance">Dispatch & Logistics Support</option>
+                                        <option value="Technical Issue">Technical Bug / Issue</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Message Details</label>
+                                    <textarea class="form-control" id="dashContactMessage" rows="3" placeholder="Describe your question or issue..." required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="width:100%; padding:10px; font-weight:800;">Send Support Inquiry</button>
+                            </form>
+                            <div id="dashContactSuccessMsg" style="display:none; margin-top:12px; padding:10px; background:#E6F4F1; border-radius:6px; color:var(--color-teal-primary); font-size:0.85rem; font-weight:700; text-align:center;">
+                                ✅ Message sent! Support team will reach out to you shortly.
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

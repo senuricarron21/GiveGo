@@ -88,16 +88,17 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
         } else if (isReceiver) {
             menuHTML += `
-                <li class="menu-item"><a href="#requests">Material Requests</a></li>
-                <li class="menu-item"><a href="#matching">Smart Matches</a></li>
-                <li class="menu-item"><a href="#chat">Messages</a></li>
+                <li class="menu-item"><a href="#requests">📋 My Submitted Items</a></li>
+                <li class="menu-item"><a href="#available-items">🎁 Donor Items Catalogue</a></li>
+                <li class="menu-item"><a href="#matching">⚡ Smart Matches</a></li>
+                <li class="menu-item"><a href="#chat">💬 Messages</a></li>
             `;
         }
 
         menuHTML += `
-            <li class="menu-item"><a href="#available-items">Available Items</a></li>
-            <li class="menu-item"><a href="#history">History</a></li>
-            <li class="menu-item"><a href="#notifications">Notifications ${unreadBadgeHTML}</a></li>
+            <li class="menu-item"><a href="#history">📜 History</a></li>
+            <li class="menu-item"><a href="#notifications">🔔 Notifications ${unreadBadgeHTML}</a></li>
+            <li class="menu-item"><a href="#contact">📞 Contact Us</a></li>
         `;
 
         menuList.innerHTML = menuHTML;
@@ -198,9 +199,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // --- 3. Receiver Overview Metrics ---
         if (isReceiver) {
+            const receiverSec = document.getElementById("receiverOverviewSection");
+            if (receiverSec) receiverSec.style.display = "block";
+
             const myReqs = requestsList.filter(r => r.receiverId === currentUser.uid);
             const myMatches = matchesList.filter(m => m.receiverId === currentUser.uid);
             const myConfirmedMatches = myMatches.filter(m => m.status === 'confirmed').length;
+            const availDonorItems = donationsList.filter(d => d.status === 'available').length;
             
             const pendingEvidenceMatches = myMatches.filter(m => 
                 m.type === 'monetary' && 
@@ -220,6 +225,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const elRate = document.getElementById("statFulfillRate");
             if (elRate) elRate.textContent = `${fulfillRate}%`;
+        } else {
+            const receiverSec = document.getElementById("receiverOverviewSection");
+            if (receiverSec) receiverSec.style.display = "none";
         }
 
         renderSmartMatches();
@@ -264,81 +272,137 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    function renderSmartMatches() {
-        const container = document.getElementById("smartMatchesContainer");
-        if (!container) return;
+    function isCategoryMatch(itemCategory, filterCategory) {
+        if (!filterCategory || filterCategory === 'all') return true;
+        if (!itemCategory) return false;
 
-        const publishedReqs = requestsList.filter(r => r.status === 'published' || r.status === 'pending_admin');
+        const c = itemCategory.toLowerCase().trim();
+        const f = filterCategory.toLowerCase().trim();
+
+        if (c === f || c.includes(f) || f.includes(c)) return true;
+
+        if ((f.includes('food') || f.includes('nutrition')) && (c.includes('food') || c.includes('ration') || c.includes('nutrition'))) return true;
+        if ((f.includes('education') || f.includes('book') || f.includes('school')) && (c.includes('book') || c.includes('education') || c.includes('stationery') || c.includes('school'))) return true;
+        if (f.includes('medical') && (c.includes('medical') || c.includes('health') || c.includes('first aid'))) return true;
+        if (f.includes('clothing') && (c.includes('cloth') || c.includes('apparel') || c.includes('personal'))) return true;
+        if (f.includes('furniture') && c.includes('furniture')) return true;
+        if ((f.includes('electronic') || f.includes('it')) && (c.includes('electronic') || c.includes('it') || c.includes('tech'))) return true;
+        if (f.includes('household') && (c.includes('house') || c.includes('shelter') || c.includes('home'))) return true;
+
+        return false;
+    }
+
+    function renderSmartMatches() {
+        const containers = [
+            document.getElementById("smartMatchesContainer"),
+            document.getElementById("aiSmartMatchesContainer")
+        ].filter(Boolean);
+
+        if (containers.length === 0) return;
+
+        const publishedReqs = requestsList.filter(r => r.status === 'published' || r.status === 'pending_admin' || r.status === 'available');
         const availDonations = donationsList.filter(d => d.status === 'available' || d.status === 'pending_admin');
 
         const smartMatches = [];
 
         for (let req of publishedReqs) {
             const reqTitle = (req.itemName || "").toLowerCase().trim();
-            if (!reqTitle) continue;
-            const reqWords = reqTitle.split(/\s+/).filter(w => w.length > 2);
+            const reqCat = (req.category || "").toLowerCase().trim();
+            const reqDist = (req.district || "Colombo").toLowerCase().trim();
+            const reqWords = reqTitle.split(/\s+/).filter(w => w.length > 1);
 
             for (let don of availDonations) {
+                if (req.receiverId && don.donorId && req.receiverId === don.donorId) continue;
+
                 const donTitle = (don.itemName || "").toLowerCase().trim();
-                if (!donTitle) continue;
-                const donWords = donTitle.split(/\s+/).filter(w => w.length > 2);
+                const donCat = (don.category || "").toLowerCase().trim();
+                const donDist = (don.district || "Colombo").toLowerCase().trim();
+                const donWords = donTitle.split(/\s+/).filter(w => w.length > 1);
 
-                // Match strictly by Item Name / Title words (e.g., umbrella === umbrella)
                 const matchedWord = reqWords.find(rw => donWords.some(dw => dw.includes(rw) || rw.includes(dw)));
-                const hasItemNameMatch = !!matchedWord || (reqTitle.length > 2 && donTitle.length > 2 && (reqTitle.includes(donTitle) || donTitle.includes(reqTitle)));
+                const isTitleMatch = !!matchedWord || (reqTitle.length > 1 && donTitle.length > 1 && (reqTitle.includes(donTitle) || donTitle.includes(reqTitle)));
+                const isCategoryMatch = reqCat && donCat && (reqCat === donCat || reqCat.includes(donCat) || donCat.includes(reqCat));
+                const isDistrictMatch = reqDist && donDist && reqDist === donDist;
 
-                if (hasItemNameMatch) {
+                if (isTitleMatch || isCategoryMatch || (isDistrictMatch && reqCat === donCat)) {
+                    let matchLabel = "";
+                    let scoreBadge = "badge-success";
+
+                    if (isTitleMatch) {
+                        matchLabel = `🎯 Direct Item Match (${matchedWord || req.itemName})`;
+                    } else if (isCategoryMatch && isDistrictMatch) {
+                        matchLabel = `⚡ Category & District Match (${don.category} - ${don.district})`;
+                    } else if (isCategoryMatch) {
+                        matchLabel = `💡 Category Match (${don.category})`;
+                    } else {
+                        matchLabel = `📍 District Location Match (${don.district})`;
+                        scoreBadge = "badge-info";
+                    }
+
                     smartMatches.push({
                         requestId: req.id,
                         requestName: req.itemName,
                         receiverId: req.receiverId,
-                        receiverName: req.receiverName,
+                        receiverName: req.receiverName || "Receiver",
                         donationId: don.id,
                         donationName: don.itemName,
                         donorId: don.donorId,
-                        donorName: don.donorName,
-                        category: don.category,
-                        matchedWord: matchedWord || req.itemName,
-                        matchType: 'Item Name Match: ' + (matchedWord || req.itemName)
+                        donorName: don.donorName || "Donor",
+                        category: don.category || "General",
+                        district: don.district || "Colombo",
+                        matchLabel: matchLabel,
+                        scoreBadge: scoreBadge
                     });
                 }
             }
         }
 
-        if (smartMatches.length === 0) {
-            container.innerHTML = `<div style="text-align: center; color: var(--color-text-muted); padding: 20px; font-size: 0.85rem;">No active item name matches detected yet. When a receiver requests an item (e.g. "Umbrella") and a donor posts an item with the same name, it will automatically match here!</div>`;
-            return;
-        }
-
-        container.innerHTML = smartMatches.map(m => {
-            const isUserAdmin = currentUser.role === 'admin';
-            const isUserDonor = currentUser.uid === m.donorId;
-            const isUserReceiver = currentUser.uid === m.receiverId;
-
-            let actionBtn = '';
-            if (isUserAdmin) {
-                actionBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="autoConnectSmartMatch('${m.requestId}', '${m.donationId}')">⚡ Auto Connect Pair</button>`;
-            } else if (isUserDonor) {
-                actionBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="offerPhysicalDonation('${m.requestId}')">Offer Item to Receiver</button>`;
-            } else if (isUserReceiver) {
-                actionBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openRequestAvailableItemModal('${m.donationId}')">Request This Surplus Item</button>`;
+        const renderHTML = (containerEl) => {
+            if (smartMatches.length === 0) {
+                containerEl.innerHTML = `<div style="text-align: center; color: var(--color-text-muted); padding: 24px; font-size: 0.85rem; background:#FAF8F5; border-radius:8px; border:1px dashed var(--color-border);">⚡ Smart Match Engine active. No items match active requests right now. As soon as a donor posts items matching receiver needs or categories, smart matches will automatically display here live!</div>`;
+                return;
             }
 
-            return `
-                <div style="background:#FBF5DD; border-left:4px solid var(--color-teal-primary); padding:14px; border-radius:6px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                    <div>
-                        <div style="display:flex; gap:8px; align-items:center; margin-bottom:4px;">
-                            <span class="badge badge-success" style="font-size:0.7rem; font-weight:800;">⚡ SMART MATCH</span>
-                            <span style="font-size:0.75rem; font-weight:700; color:var(--color-teal-primary);">${m.matchType}</span>
+            containerEl.innerHTML = smartMatches.map(m => {
+                const isUserAdmin = currentUser && (currentUser.role === 'admin' || (currentUser.email && currentUser.email.includes("admin")));
+                const isUserDonor = currentUser && currentUser.uid === m.donorId;
+                const isUserReceiver = currentUser && currentUser.uid === m.receiverId;
+
+                let actionBtn = '';
+                if (isUserAdmin) {
+                    actionBtn = `<button class="btn btn-primary" style="padding:5px 12px; font-size:0.75rem; font-weight:800; border-radius:6px;" onclick="autoConnectSmartMatch('${m.requestId}', '${m.donationId}')">⚡ Auto-Connect Pair</button>`;
+                } else if (isUserDonor) {
+                    actionBtn = `<button class="btn btn-primary" style="padding:5px 12px; font-size:0.75rem; font-weight:800; border-radius:6px;" onclick="offerPhysicalDonation('${m.requestId}')">Offer Item to Receiver</button>`;
+                } else if (isUserReceiver) {
+                    actionBtn = `<button class="btn btn-primary" style="padding:5px 12px; font-size:0.75rem; font-weight:800; border-radius:6px;" onclick="openRequestAvailableItemModal('${m.donationId}')">Request Surplus Item</button>`;
+                } else {
+                    actionBtn = `<button class="btn btn-primary" style="padding:5px 12px; font-size:0.75rem; font-weight:800; border-radius:6px;" onclick="openRequestAvailableItemModal('${m.donationId}')">Connect Item</button>`;
+                }
+
+                return `
+                    <div style="background:#FFFFFF; border-left:4px solid var(--color-teal-primary); border-radius:8px; border-top:1px solid #E2E8F0; border-right:1px solid #E2E8F0; border-bottom:1px solid #E2E8F0; padding:14px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; box-shadow:0 2px 6px rgba(0,0,0,0.03);">
+                        <div>
+                            <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
+                                <span class="badge ${m.scoreBadge}" style="font-size:0.7rem; font-weight:800; padding:3px 8px;">⚡ SMART MATCH</span>
+                                <span style="font-size:0.75rem; font-weight:700; color:var(--color-teal-primary);">${m.matchLabel}</span>
+                                <span class="badge badge-warning" style="font-size:0.7rem;">📍 ${m.district}</span>
+                            </div>
+                            <div style="font-weight:800; color:var(--color-text-dark); font-size:0.9rem; margin-bottom:4px;">
+                                Receiver Request: <strong style="color:var(--color-teal-primary);">"${m.requestName}"</strong> (${m.receiverName})
+                            </div>
+                            <div style="font-size:0.85rem; color:#4A5568;">
+                                Donor Available Surplus: <strong>"${m.donationName}"</strong> offered by <strong>${m.donorName}</strong> (${m.category})
+                            </div>
                         </div>
-                        <div style="font-weight:800; color:var(--color-text-dark); font-size:0.9rem;">
-                            Need: <strong>"${m.requestName}"</strong> (${m.receiverName}) ↔ Surplus: <strong>"${m.donationName}"</strong> (${m.donorName})
+                        <div>
+                            ${actionBtn}
                         </div>
                     </div>
-                    <div>${actionBtn}</div>
-                </div>
-            `;
-        }).join("");
+                `;
+            }).join("");
+        };
+
+        containers.forEach(c => renderHTML(c));
     }
 
     function setupDataSubscriptions() {
@@ -365,34 +429,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const unsubDonations = db.collection("donations").onSnapshot(snapshot => {
             donationsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            const roleStr = (currentUser.role || "").toLowerCase();
-
-            if (roleStr.includes('donor')) {
-                renderDonorListings();
-                renderDonorNeeds();
-            }
-            if (roleStr.includes('admin') || currentUser.email.includes("admin")) {
-                renderAdminRequestApprovals();
-                renderAdminDirectory();
-            }
+            renderDonorListings();
+            renderDonorNeeds();
             renderAllAvailableItems();
+            renderAdminRequestApprovals();
+            renderAdminDirectory();
             renderChatMatchesList();
+            renderSmartMatches();
             updateOverviewStats();
         });
         unsubscribes.push(unsubDonations);
 
         const unsubRequests = db.collection("requests").onSnapshot(snapshot => {
             requestsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            const roleStr = (currentUser.role || "").toLowerCase();
-
-            if (roleStr.includes('receiver')) renderReceiverRequests();
-            else if (roleStr.includes('donor')) renderDonorNeeds();
-            if (roleStr.includes('admin') || currentUser.email.includes("admin")) {
-                renderAdminRequestApprovals();
-                renderAdminDirectory();
-            }
+            renderReceiverRequests();
+            renderDonorNeeds();
+            renderAllAvailableItems();
+            renderAdminRequestApprovals();
+            renderAdminDirectory();
             renderHistory();
             renderChatMatchesList();
+            renderSmartMatches();
             checkMonetaryEvidenceSLAs();
             updateOverviewStats();
         });
@@ -604,7 +661,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 requestDoc.quantityRequired = parseInt(document.getElementById("reqQuantity")?.value) || 1;
                 requestDoc.unit = document.getElementById("reqUnit")?.value || "Units";
                 requestDoc.acceptableCondition = document.getElementById("reqCondition")?.value || "Good";
-                requestDoc.urgency = document.getElementById("reqUrgency")?.value || "Medium";
             } else if (reqType === 'monetary') {
                 requestDoc.amountRequired = parseFloat(document.getElementById("reqAmount")?.value) || 10000;
                 requestDoc.deadline = document.getElementById("reqDeadline")?.value || "";
@@ -705,7 +761,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (catFilter !== 'all') {
-            myDonations = myDonations.filter(d => d.category === catFilter);
+            myDonations = myDonations.filter(d => isCategoryMatch(d.category, catFilter));
         }
 
         if (myDonations.length === 0) {
@@ -771,9 +827,50 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (catFilter !== 'all') {
-            myRequests = myRequests.filter(r => r.category === catFilter);
+            myRequests = myRequests.filter(r => isCategoryMatch(r.category, catFilter));
         }
 
+        // Populate Cards View for Receiver's Submitted Items
+        const cardsGrid = document.getElementById("receiverRequestsCardsGrid");
+        if (cardsGrid) {
+            if (myRequests.length === 0) {
+                cardsGrid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--color-text-muted); padding: 30px; background:#FAF8F5; border-radius:8px; border:1px dashed var(--color-border);">You have not added any requests matching your filters yet.</div>`;
+            } else {
+                cardsGrid.innerHTML = myRequests.map(r => {
+                    let typeBadge = `<span class="badge badge-info">${(r.reqType || 'physical').toUpperCase()}</span>`;
+                    let targetText = r.quantityRequired ? `${r.quantityRequired} ${r.unit || 'units'}` : (r.amountRequired ? `LKR ${r.amountRequired}` : `${r.volunteersRequired || 0} volunteers`);
+                    let fulfilledText = r.quantityReceived ? `${r.quantityReceived} ${r.unit || 'units'}` : (r.amountReceived ? `LKR ${r.amountReceived}` : `${r.volunteersAssigned || 0} filled`);
+
+                    let statusBadge = `<span class="badge badge-warning">Pending Admin Review</span>`;
+                    if (r.status === 'published') statusBadge = `<span class="badge badge-success">✅ Approved & Published</span>`;
+                    else if (r.status === 'rejected') statusBadge = `<span class="badge badge-danger">Rejected by Admin</span>`;
+                    else if (r.status === 'fulfilled') statusBadge = `<span class="badge badge-info">Completed</span>`;
+
+                    return `
+                        <div class="glass-panel" style="padding: 20px; background: #FFFFFF; border-radius: 8px; border: 1px solid var(--color-border); display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    ${typeBadge}
+                                    ${statusBadge}
+                                </div>
+                                <h4 style="font-size: 1.05rem; font-weight: 800; color: var(--color-teal-primary); margin-bottom: 6px;">${r.itemName}</h4>
+                                <div style="font-size: 0.8rem; color: var(--color-teal-muted); font-weight:700; margin-bottom: 8px;">Category: ${r.category}</div>
+                                <p style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 12px; line-height:1.3;">${r.description || ''}</p>
+                                <div style="font-size: 0.8rem; color: var(--color-text-muted); background:#F9FBF8; padding:8px 10px; border-radius:6px; margin-bottom:12px;">
+                                    Target Goal: <strong>${targetText}</strong><br>
+                                    Progress Fulfilled: <strong>${fulfilledText}</strong>
+                                </div>
+                            </div>
+                            <div>
+                                <button class="btn btn-secondary" style="width:100%; font-size: 0.75rem; padding: 6px;" onclick="deleteRequest('${r.id}')">Delete My Request</button>
+                            </div>
+                        </div>
+                    `;
+                }).join("");
+            }
+        }
+
+        // Populate Table View
         if (myRequests.length === 0) {
             body.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--color-text-muted); padding: 30px;">No requests match the selected filters.</td></tr>`;
             return;
@@ -834,55 +931,121 @@ document.addEventListener("DOMContentLoaded", () => {
         const pendingReqs = requestsList.filter(r => r.status === 'pending_admin');
         const pendingDons = donationsList.filter(d => d.status === 'pending_admin');
 
-        if (pendingReqs.length === 0 && pendingDons.length === 0) {
-            grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--color-text-muted); padding: 30px;">No pending requests or listings requiring pre-publication review.</div>`;
-            return;
-        }
+        const approvedReqs = requestsList.filter(r => r.status === 'published' || r.status === 'partially_fulfilled');
+        const approvedDons = donationsList.filter(d => d.status === 'available');
 
         let html = "";
 
-        html += pendingReqs.map(r => {
-            const isHospitalVol = (r.receiverCategory === 'Hospital' && r.reqType === 'volunteer');
-            return `
-                <div class="glass-panel" style="padding: 20px; background: #FFFFFF; border-left: 4px solid var(--color-teal-primary);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <span class="badge badge-info">RECEIVER REQUEST: ${(r.reqType || 'physical').toUpperCase()}</span>
-                        <span class="badge badge-warning">${r.district || 'Colombo'}</span>
+        // --- 1. Pending Review Queue ---
+        html += `
+            <div style="grid-column: 1 / -1; margin-bottom: 12px;">
+                <h4 style="color:var(--color-teal-primary); font-weight:800; font-size:1.05rem; display:flex; align-items:center; gap:10px;">
+                    <span>⏳ Pending Review Queue</span>
+                    <span class="badge badge-warning" style="font-size:0.8rem; font-weight:800;">${pendingReqs.length + pendingDons.length} Pending Approval</span>
+                </h4>
+            </div>
+        `;
+
+        if (pendingReqs.length === 0 && pendingDons.length === 0) {
+            html += `<div style="grid-column: 1 / -1; text-align: center; color: var(--color-text-muted); background:#FAF8F5; padding: 24px; border-radius:8px; border:1px dashed var(--color-border); margin-bottom:20px;">No pending requests or listings requiring review right now.</div>`;
+        } else {
+            html += pendingReqs.map(r => {
+                const isHospitalVol = (r.receiverCategory === 'Hospital' && r.reqType === 'volunteer');
+                return `
+                    <div class="glass-panel" style="padding: 20px; background: #FFFFFF; border-left: 4px solid var(--color-teal-primary); margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <span class="badge badge-info">RECEIVER NEED: ${(r.reqType || 'physical').toUpperCase()}</span>
+                            <span class="badge badge-warning">${r.district || 'Colombo'}</span>
+                        </div>
+
+                        ${isHospitalVol ? `<div class="badge badge-warning" style="width:100%; margin-bottom:10px;">Hospital Non-Clinical Support Approval Required</div>` : ''}
+
+                        <h4 style="font-size: 1.1rem; color: var(--color-teal-primary); margin-bottom: 4px;">${r.itemName}</h4>
+                        <div style="font-size: 0.85rem; color: var(--color-teal-muted); font-weight:700; margin-bottom: 8px;">Receiver: ${r.receiverName} (${r.receiverCategory || 'Receiver'})</div>
+                        <p style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 12px;">${r.description || ''}</p>
+
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn btn-primary" style="flex-grow:1; font-size:0.8rem;" onclick="approveRequest('${r.id}')">Approve & Publish Request</button>
+                            <button class="btn btn-danger" style="font-size:0.8rem;" onclick="rejectRequest('${r.id}')">Reject</button>
+                        </div>
                     </div>
+                `;
+            }).join("");
 
-                    ${isHospitalVol ? `<div class="badge badge-warning" style="width:100%; margin-bottom:10px;">Hospital Non-Clinical Support Approval Required</div>` : ''}
+            html += pendingDons.map(d => {
+                return `
+                    <div class="glass-panel" style="padding: 20px; background: #FFFFFF; border-left: 4px solid #306D29; margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <span class="badge badge-success">DONOR SURPLUS ITEM LISTING</span>
+                            <span class="badge badge-warning">${d.district || 'Colombo'}</span>
+                        </div>
 
-                    <h4 style="font-size: 1.1rem; color: var(--color-teal-primary); margin-bottom: 4px;">${r.itemName}</h4>
-                    <div style="font-size: 0.85rem; color: var(--color-teal-muted); font-weight:700; margin-bottom: 8px;">Receiver: ${r.receiverName} (${r.receiverCategory || 'Receiver'})</div>
-                    <p style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 12px;">${r.description}</p>
+                        <h4 style="font-size: 1.1rem; color: var(--color-teal-primary); margin-bottom: 4px;">${d.itemName}</h4>
+                        <div style="font-size: 0.85rem; color: var(--color-teal-muted); font-weight:700; margin-bottom: 8px;">Donor: ${d.donorName} | Category: ${d.category}</div>
+                        <p style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 12px;">Qty: <strong>${d.quantity} ${d.unit || 'units'}</strong> | Condition: ${d.condition || 'Good'}</p>
 
-                    <div style="display:flex; gap:10px;">
-                        <button class="btn btn-primary" style="flex-grow:1; font-size:0.8rem;" onclick="approveRequest('${r.id}')">Approve & Publish Request</button>
-                        <button class="btn btn-danger" style="font-size:0.8rem;" onclick="rejectRequest('${r.id}')">Reject</button>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn btn-primary" style="flex-grow:1; font-size:0.8rem;" onclick="approveDonationListing('${d.id}')">Approve & Publish to Directory</button>
+                            <button class="btn btn-danger" style="font-size:0.8rem;" onclick="rejectDonationListing('${d.id}')">Reject</button>
+                        </div>
                     </div>
-                </div>
-            `;
-        }).join("");
+                `;
+            }).join("");
+        }
 
-        html += pendingDons.map(d => {
-            return `
-                <div class="glass-panel" style="padding: 20px; background: #FFFFFF; border-left: 4px solid #306D29;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <span class="badge badge-success">DONOR SURPLUS ITEM LISTING</span>
-                        <span class="badge badge-warning">${d.district || 'Colombo'}</span>
+        // --- 2. Approved & Published Queue ---
+        html += `
+            <div style="grid-column: 1 / -1; margin-top: 24px; margin-bottom: 12px;">
+                <h4 style="color:#2D6A4F; font-weight:800; font-size:1.05rem; display:flex; align-items:center; gap:10px;">
+                    <span>✅ Approved & Published Items</span>
+                    <span class="badge badge-success" style="font-size:0.8rem; font-weight:800;">${approvedReqs.length + approvedDons.length} Live Items</span>
+                </h4>
+            </div>
+        `;
+
+        if (approvedReqs.length === 0 && approvedDons.length === 0) {
+            html += `<div style="grid-column: 1 / -1; text-align: center; color: var(--color-text-muted); background:#FAF8F5; padding: 24px; border-radius:8px; border:1px dashed var(--color-border);">No items approved yet. Approved items will appear here immediately after approval.</div>`;
+        } else {
+            html += approvedReqs.map(r => {
+                return `
+                    <div class="glass-panel" style="padding: 20px; background: #FFFFFF; border-left: 4px solid #2D6A4F; margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <span class="badge badge-success">✅ APPROVED RECEIVER NEED</span>
+                            <span class="badge badge-info">${r.district || 'Colombo'}</span>
+                        </div>
+
+                        <h4 style="font-size: 1.1rem; color: var(--color-teal-primary); margin-bottom: 4px;">${r.itemName}</h4>
+                        <div style="font-size: 0.85rem; color: var(--color-teal-muted); font-weight:700; margin-bottom: 8px;">Receiver: ${r.receiverName} (${r.receiverCategory || 'Receiver'})</div>
+                        <p style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 12px;">${r.description || ''}</p>
+
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn btn-secondary" style="flex-grow:1; font-size:0.75rem;" onclick="rejectRequest('${r.id}')">Revoke Approval / Unpublish</button>
+                            <button class="btn btn-danger" style="font-size:0.75rem;" onclick="deleteRequest('${r.id}')">Delete</button>
+                        </div>
                     </div>
+                `;
+            }).join("");
 
-                    <h4 style="font-size: 1.1rem; color: var(--color-teal-primary); margin-bottom: 4px;">${d.itemName}</h4>
-                    <div style="font-size: 0.85rem; color: var(--color-teal-muted); font-weight:700; margin-bottom: 8px;">Donor: ${d.donorName} | Category: ${d.category}</div>
-                    <p style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 12px;">Qty: <strong>${d.quantity} units</strong> | Condition: ${d.condition || 'Good'}</p>
+            html += approvedDons.map(d => {
+                return `
+                    <div class="glass-panel" style="padding: 20px; background: #FFFFFF; border-left: 4px solid #2D6A4F; margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <span class="badge badge-success">✅ APPROVED DONATION LISTING</span>
+                            <span class="badge badge-info">${d.district || 'Colombo'}</span>
+                        </div>
 
-                    <div style="display:flex; gap:10px;">
-                        <button class="btn btn-primary" style="flex-grow:1; font-size:0.8rem;" onclick="approveDonationListing('${d.id}')">Approve & Publish to Directory</button>
-                        <button class="btn btn-danger" style="font-size:0.8rem;" onclick="rejectDonationListing('${d.id}')">Reject</button>
+                        <h4 style="font-size: 1.1rem; color: var(--color-teal-primary); margin-bottom: 4px;">${d.itemName}</h4>
+                        <div style="font-size: 0.85rem; color: var(--color-teal-muted); font-weight:700; margin-bottom: 8px;">Donor: ${d.donorName} | Category: ${d.category}</div>
+                        <p style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 12px;">Qty: <strong>${d.quantity} ${d.unit || 'units'}</strong> | Condition: ${d.condition || 'Good'}</p>
+
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn btn-secondary" style="flex-grow:1; font-size:0.75rem;" onclick="rejectDonationListing('${d.id}')">Revoke Approval / Unpublish</button>
+                            <button class="btn btn-danger" style="font-size:0.75rem;" onclick="deleteDonation('${d.id}')">Delete</button>
+                        </div>
                     </div>
-                </div>
-            `;
-        }).join("");
+                `;
+            }).join("");
+        }
 
         grid.innerHTML = html;
     }
@@ -1037,7 +1200,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const reqTypeFilter = document.getElementById("filterReqType")?.value || "all";
         const catFilter = document.getElementById("filterReqCategory")?.value || "all";
         const receiverCatFilter = document.getElementById("filterReceiverCategory")?.value || "all";
-        const priorityFilter = document.getElementById("filterReqPriority")?.value || "all";
         const districtFilter = document.getElementById("filterReqDistrict")?.value || "all";
 
         let filtered = requestsList.filter(r => r.status === 'published' || r.status === 'partially_fulfilled');
@@ -1052,9 +1214,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (reqTypeFilter !== 'all') filtered = filtered.filter(r => (r.reqType || 'physical') === reqTypeFilter);
-        if (catFilter !== 'all') filtered = filtered.filter(r => r.category === catFilter);
+        if (catFilter !== 'all') filtered = filtered.filter(r => isCategoryMatch(r.category, catFilter));
         if (receiverCatFilter !== 'all') filtered = filtered.filter(r => r.receiverCategory === receiverCatFilter);
-        if (priorityFilter !== 'all') filtered = filtered.filter(r => (r.priorityLevel || 'Medium') === priorityFilter);
         if (districtFilter !== 'all') filtered = filtered.filter(r => r.district === districtFilter);
 
         // Sort: Donor's local district first, then by date order
@@ -1083,37 +1244,38 @@ document.addEventListener("DOMContentLoaded", () => {
             let actionBtn = '';
             
             if (reqType === 'physical') {
-                actionBtn = `<button class="btn btn-primary" style="width:100%; font-size:0.85rem;" onclick="offerPhysicalDonation('${r.id}')">Offer Physical Donation</button>`;
+                actionBtn = `<button class="btn btn-primary" style="width:100%; font-size:0.8rem; padding: 6px 12px; border-radius:6px; font-weight:800;" onclick="offerPhysicalDonation('${r.id}')">Offer Physical Donation</button>`;
             } else if (reqType === 'monetary') {
-                actionBtn = `<button class="btn btn-primary" style="width:100%; font-size:0.85rem;" onclick="openMonetaryModal('${r.id}')">Make Monetary Transfer</button>`;
+                actionBtn = `<button class="btn btn-primary" style="width:100%; font-size:0.8rem; padding: 6px 12px; border-radius:6px; font-weight:800;" onclick="openMonetaryModal('${r.id}')">Make Monetary Transfer</button>`;
             } else if (reqType === 'volunteer') {
-                actionBtn = `<button class="btn btn-primary" style="width:100%; font-size:0.85rem;" onclick="openVolunteerModal('${r.id}')">Volunteer for Shift</button>`;
+                actionBtn = `<button class="btn btn-primary" style="width:100%; font-size:0.8rem; padding: 6px 12px; border-radius:6px; font-weight:800;" onclick="openVolunteerModal('${r.id}')">Volunteer for Shift</button>`;
             }
 
             return `
-                <div class="glass-panel" style="padding: 20px; background: #FFFFFF; display: flex; flex-direction: column; justify-content: space-between;">
+                <div style="background: #FFFFFF; border-radius: 8px; border: 1px solid #E2E8F0; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
                     <div>
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-                            <span class="badge badge-info">${reqType.toUpperCase()}</span>
-                            <span class="badge badge-warning">${r.district || 'Colombo'}</span>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span class="badge badge-info" style="font-size:0.7rem; padding: 3px 8px; font-weight:800;">${reqType.toUpperCase()}</span>
+                            <span class="badge badge-warning" style="font-size:0.7rem; padding: 3px 8px;">📍 ${r.district || 'Colombo'}</span>
                         </div>
 
-                        <h4 style="font-size: 1.1rem; color: var(--color-teal-primary); margin-bottom: 4px;">${r.itemName}</h4>
-                        <div style="font-size: 0.8rem; color: var(--color-teal-muted); font-weight: 700; margin-bottom: 8px;">${r.receiverName} (${r.receiverCategory || 'Receiver'})</div>
-                        <p style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 14px; line-height: 1.4;">${r.description}</p>
+                        <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--color-teal-primary); margin-bottom: 4px; line-height: 1.25;">${r.itemName}</h4>
+                        <div style="font-size: 0.75rem; color: var(--color-teal-muted); font-weight: 700; margin-bottom: 6px;">${r.receiverName} (${r.receiverCategory || 'Receiver'})</div>
+                        <p style="font-size: 0.8rem; color: #4A5568; margin-bottom: 10px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${r.description || ''}</p>
 
                         ${reqType === 'physical' ? `
-                            <div style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 12px;">Required: <strong>${r.quantityRequired} units</strong> (Condition: ${r.acceptableCondition || 'Any'})</div>
+                            <div style="font-size: 0.75rem; color: #2D3748; background: #F7FAFC; padding: 6px 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #EDF2F7;">Needed: <strong>${r.quantityRequired} ${r.unit || 'units'}</strong> | Condition: <strong>${r.acceptableCondition || 'Good'}</strong></div>
                         ` : ''}
                         ${reqType === 'monetary' ? `
-                            <div style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 12px;">Target Goal: <strong>LKR ${r.amountRequired}</strong></div>
+                            <div style="font-size: 0.75rem; color: #2D3748; background: #F7FAFC; padding: 6px 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #EDF2F7;">Target Funding: <strong style="color:var(--color-teal-primary);">LKR ${r.amountRequired}</strong></div>
                         ` : ''}
                         ${reqType === 'volunteer' ? `
-                            <div style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 6px;">Volunteers Required: <strong>${r.volunteersRequired}</strong></div>
-                            <div style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 12px;">Equipment: ${r.equipmentNeeded || 'Standard tools'}</div>
+                            <div style="font-size: 0.75rem; color: #2D3748; background: #F7FAFC; padding: 6px 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #EDF2F7;">Volunteers: <strong>${r.volunteersRequired} needed</strong></div>
                         ` : ''}
                     </div>
-                    ${actionBtn}
+                    <div>
+                        ${actionBtn}
+                    </div>
                 </div>
             `;
         }).join("");
@@ -1122,11 +1284,29 @@ document.addEventListener("DOMContentLoaded", () => {
     const searchDonorNeeds = document.getElementById("searchDonorNeeds");
     const filterReqType = document.getElementById("filterReqType");
     const filterReqCategory = document.getElementById("filterReqCategory");
+    const filterReceiverCategory = document.getElementById("filterReceiverCategory");
+    const filterReqDistrict = document.getElementById("filterReqDistrict");
     const sortCatalogueOrder = document.getElementById("sortCatalogueOrder");
+    const btnResetFilters = document.getElementById("btnResetFilters");
+
     if (searchDonorNeeds) searchDonorNeeds.addEventListener("input", renderDonorNeeds);
     if (filterReqType) filterReqType.addEventListener("change", renderDonorNeeds);
     if (filterReqCategory) filterReqCategory.addEventListener("change", renderDonorNeeds);
+    if (filterReceiverCategory) filterReceiverCategory.addEventListener("change", renderDonorNeeds);
+    if (filterReqDistrict) filterReqDistrict.addEventListener("change", renderDonorNeeds);
     if (sortCatalogueOrder) sortCatalogueOrder.addEventListener("change", renderDonorNeeds);
+
+    if (btnResetFilters) {
+        btnResetFilters.addEventListener("click", () => {
+            if (searchDonorNeeds) searchDonorNeeds.value = "";
+            if (filterReqType) filterReqType.value = "all";
+            if (filterReqCategory) filterReqCategory.value = "all";
+            if (filterReceiverCategory) filterReceiverCategory.value = "all";
+            if (filterReqDistrict) filterReqDistrict.value = "all";
+            if (sortCatalogueOrder) sortCatalogueOrder.value = "latest";
+            renderDonorNeeds();
+        });
+    }
 
     // 1. Donor Offers Donation First to Receiver Need Request
     window.offerPhysicalDonation = (requestId) => {
@@ -2364,19 +2544,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (catFilter !== 'all') {
-            filtered = filtered.filter(d => {
-                if (!d.category) return false;
-                const c = d.category.toLowerCase().trim();
-                const f = catFilter.toLowerCase().trim();
-                return c === f || c.includes(f) || f.includes(c) ||
-                       (f.includes('food') && c.includes('food')) ||
-                       (f.includes('medical') && c.includes('medical')) ||
-                       (f.includes('clothing') && c.includes('clothing')) ||
-                       (f.includes('education') && c.includes('education')) ||
-                       (f.includes('electronics') && c.includes('electronics')) ||
-                       (f.includes('furniture') && c.includes('furniture')) ||
-                       (f.includes('household') && c.includes('household'));
-            });
+            filtered = filtered.filter(d => isCategoryMatch(d.category, catFilter));
         }
 
         if (districtFilter !== 'all') {
@@ -2801,6 +2969,37 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
         `).join("");
     }
+
+    document.getElementById("formDashboardContact")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const topic = document.getElementById("dashContactTopic").value;
+        const message = document.getElementById("dashContactMessage").value;
+
+        try {
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            if (helper) {
+                await helper.db().collection("inquiries").add({
+                    userId: currentUser.uid,
+                    name: currentUser.name,
+                    email: currentUser.email,
+                    role: currentUser.role,
+                    topic,
+                    message,
+                    status: "new",
+                    createdAt: new Date().toISOString()
+                });
+            }
+        } catch(err) {
+            console.log("Inquiry submitted:", { topic, message });
+        }
+
+        document.getElementById("formDashboardContact").reset();
+        const msg = document.getElementById("dashContactSuccessMsg");
+        if (msg) {
+            msg.style.display = "block";
+            setTimeout(() => msg.style.display = "none", 5000);
+        }
+    });
 
     init();
 });

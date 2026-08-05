@@ -44,11 +44,14 @@
                     <div class="form-group">
                         <label class="form-label">Category</label>
                         <select class="form-control form-select" id="donCategory" required>
-                            <option value="Food">Food / Nutritional Supplies</option>
-                            <option value="Clothing">Clothing / Apparel</option>
-                            <option value="Books">Books / Learning Materials</option>
-                            <option value="Medical">Medical / First Aid Packs</option>
-                            <option value="General">General / Shelter Items</option>
+                            <option value="Education Supplies">📚 Education Supplies</option>
+                            <option value="Medical Supplies">🏥 Medical Supplies</option>
+                            <option value="Food & Nutrition">📦 Food & Nutrition</option>
+                            <option value="Furniture">🪑 Furniture</option>
+                            <option value="Electronics & IT Equipment">💻 Electronics & IT Equipment</option>
+                            <option value="Clothing & Personal Care">👕 Clothing & Personal Care</option>
+                            <option value="Household Essentials">🏠 Household Essentials</option>
+                            <option value="Other Supplies">🧩 Other Supplies</option>
                         </select>
                     </div>
                 </div>
@@ -169,11 +172,14 @@
                     <label class="form-label" style="font-size: 0.75rem;">Category</label>
                     <select id="filterReqCategory" class="form-control form-select">
                         <option value="all">All Categories</option>
-                        <option value="Food">Food / Nutritional</option>
-                        <option value="Clothing">Clothing</option>
-                        <option value="Books">Books / Education</option>
-                        <option value="Medical">Medical / Health</option>
-                        <option value="General">General / Shelter</option>
+                        <option value="Education Supplies">📚 Education Supplies</option>
+                        <option value="Medical Supplies">🏥 Medical Supplies</option>
+                        <option value="Food & Nutrition">📦 Food & Nutrition</option>
+                        <option value="Furniture">🪑 Furniture</option>
+                        <option value="Electronics & IT Equipment">💻 Electronics & IT Equipment</option>
+                        <option value="Clothing & Personal Care">👕 Clothing & Personal Care</option>
+                        <option value="Household Essentials">🏠 Household Essentials</option>
+                        <option value="Other Supplies">🧩 Other Supplies</option>
                     </select>
                 </div>
             </div>
@@ -189,15 +195,6 @@
                         <option value="Kandy">Kandy</option>
                         <option value="Galle">Galle</option>
                         <option value="Jaffna">Jaffna</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="form-label" style="font-size: 0.75rem;">Urgency Level</label>
-                    <select id="filterReqUrgency" class="form-control form-select">
-                        <option value="all">All Priority Levels</option>
-                        <option value="High">Emergency / High Priority</option>
-                        <option value="Medium">Medium Priority</option>
-                        <option value="Low">Low Priority</option>
                     </select>
                 </div>
                 <div style="display: flex; align-items: flex-end;">
@@ -217,11 +214,20 @@
 
 <!-- 4. SMART MATCHING SECTION -->
 <div id="matching-panel" class="dashboard-view-panel" style="display: none;">
+    <div class="glass-panel" style="padding: 30px; margin-bottom: 24px; background: #FFFFFF;">
+        <div class="card-header" style="margin-bottom: 16px;">
+            <h3 class="card-title">⚡ AI Recommended Smart Matches</h3>
+            <span class="badge badge-success">Algorithm Active</span>
+        </div>
+        <div id="aiSmartMatchesContainer">
+            <!-- AI Matches rendered dynamically -->
+        </div>
+    </div>
+
     <div class="dashboard-grid">
         <div class="glass-panel" style="padding: 30px; background: #FFFFFF;">
             <div class="card-header">
-                <h3 class="card-title">Smart Matching Recommendations</h3>
-                <span class="badge badge-success">Algorithm Active</span>
+                <h3 class="card-title">📦 Active Match Orders & Delivery Sessions</h3>
             </div>
             <div id="donorMatchesContainer" style="max-height: 500px; overflow-y: auto;">
                 <!-- Filled dynamically by app.js -->
@@ -236,6 +242,9 @@
             <small style="color: var(--color-text-muted); display: block; margin-top: 12px; text-align: center;">
                 Calculates geometric distance (in km) between your location and active matched needs.
             </small>
+        </div>
+    </div>
+</div>
         </div>
     </div>
 </div>
