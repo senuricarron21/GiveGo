@@ -760,6 +760,31 @@
                 <button class="btn btn-primary" type="submit" style="width:100%; font-weight:800; padding:12px;">Send Proposed Schedule</button>
             </form>
         </div>
+    <!-- Modal: Receiver Upload Handover Evidence Image -->
+    <div class="modal" id="modalHandoverEvidence">
+        <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:520px; width:90%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--color-border); padding-bottom:10px;">
+                <h3 id="mdlEvidenceTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem;">📷 Upload Handover Evidence Image</h3>
+                <button type="button" class="btn btn-secondary" style="padding:2px 8px; font-size:0.75rem;" onclick="document.getElementById('modalHandoverEvidence').classList.remove('active')">✕</button>
+            </div>
+            <form id="formSubmitHandoverEvidence">
+                <input type="hidden" id="mdlEvidenceMatchId">
+                <div class="form-group">
+                    <label class="form-label">Handover Evidence Photo / Document Image</label>
+                    <input class="form-control" type="file" id="mdlEvidenceFile" accept="image/*" style="margin-bottom:8px;">
+                    <small style="color:var(--color-text-muted); display:block; margin-bottom:12px;">Or paste direct image URL below:</small>
+                    <input class="form-control" type="url" id="mdlEvidenceUrl" placeholder="https://images.unsplash.com/photo-...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Handover Notes (Optional)</label>
+                    <textarea class="form-control" id="mdlEvidenceNotes" rows="2" placeholder="e.g. Received 10 boxes of books in excellent condition."></textarea>
+                </div>
+                <div style="background:#E6F4F1; padding:12px; border-radius:6px; font-size:0.8rem; color:var(--color-teal-primary); font-weight:700; margin-bottom:16px;">
+                    🛡️ Admin Verification: Uploaded evidence photos are automatically submitted to the Admin Command Center for official verification.
+                </div>
+                <button class="btn btn-primary" type="submit" style="width:100%; font-weight:800; padding:12px;">Confirm & Submit Evidence to Admin</button>
+            </form>
+        </div>
     </div>
 
 
@@ -797,8 +822,8 @@
 
     <!-- Core Javascript Files -->
     <script src="js/firebase-config.js"></script>
-    <script src="js/auth.js?v=4.0"></script>
-    <script src="js/app.js?v=4.0"></script>
+    <script src="js/auth.js?v=5.0"></script>
+    <script src="js/app.js?v=5.0"></script>
     
     <script>
         document.getElementById("btnLogout").addEventListener("click", () => {

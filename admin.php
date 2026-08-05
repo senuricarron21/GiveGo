@@ -129,6 +129,17 @@
             <!-- Filled dynamically by app.js -->
         </div>
     </div>
+
+    <!-- Handover Evidence Image Verification Queue -->
+    <div class="glass-panel" style="padding: 30px; background: #FFFFFF; margin-top: 30px;">
+        <div class="card-header" style="border-bottom: 1.5px solid var(--color-border); margin-bottom: 20px; padding-bottom: 15px;">
+            <h3 class="card-title">📷 Receiver Handover Evidence Image Verifications</h3>
+        </div>
+        
+        <div class="grid-cols-2" id="adminEvidenceApprovalsGrid" style="gap: 20px; margin-top: 10px;">
+            <!-- Filled dynamically by app.js -->
+        </div>
+    </div>
 </div>
 
 <!-- 4. ANNOUNCEMENTS ARCHIVE -->
