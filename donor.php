@@ -44,11 +44,14 @@
                     <div class="form-group">
                         <label class="form-label">Category</label>
                         <select class="form-control form-select" id="donCategory" required>
-                            <option value="Food">Food / Nutritional Supplies</option>
-                            <option value="Clothing">Clothing / Apparel</option>
-                            <option value="Books">Books / Learning Materials</option>
-                            <option value="Medical">Medical / First Aid Packs</option>
-                            <option value="General">General / Shelter Items</option>
+                            <option value="Education Supplies">📚 Education Supplies</option>
+                            <option value="Medical Supplies">🏥 Medical Supplies</option>
+                            <option value="Food & Nutrition">📦 Food & Nutrition</option>
+                            <option value="Furniture">🪑 Furniture</option>
+                            <option value="Electronics & IT Equipment">💻 Electronics & IT Equipment</option>
+                            <option value="Clothing & Personal Care">👕 Clothing & Personal Care</option>
+                            <option value="Household Essentials">🏠 Household Essentials</option>
+                            <option value="Other Supplies">🧩 Other Supplies</option>
                         </select>
                     </div>
                 </div>
