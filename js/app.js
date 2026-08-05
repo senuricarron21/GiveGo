@@ -1160,7 +1160,10 @@ document.addEventListener("DOMContentLoaded", () => {
                             <div style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 12px;">Equipment: ${r.equipmentNeeded || 'Standard tools'}</div>
                         ` : ''}
                     </div>
-                    ${actionBtn}
+                    <div>
+                        ${actionBtn}
+                        <button class="btn btn-secondary" style="width:100%; font-size:0.75rem; padding:4px; margin-top:6px;" onclick="openDirectChatWithUser('${r.receiverId}', '${r.receiverName}', '${r.itemName}')">💬 Message Receiver</button>
+                    </div>
                 </div>
             `;
         }).join("");
@@ -2057,7 +2060,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 `;
             }
 
-            if (m.status === 'delivered' || m.status === 'in_transit') {
+            if (m.status === 'delivered' || m.status === 'in_transit' || m.status === 'confirmed' || m.status === 'donor_scheduled_delivery') {
                 actionButtonsHtml += `
                     <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="confirmPhysicalReceipt('${m.id}')">✅ Confirm Receipt (Complete)</button>
                 `;
@@ -2257,6 +2260,70 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    window.confirmPhysicalReceipt = async (matchId) => {
+        if (!confirm("Confirm that you have received this item and completed the handover?")) return;
+
+        try {
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            const db = helper.db();
+
+            const match = matchesList.find(m => m.id === matchId);
+            if (!match) {
+                showToast("Match session record not found.", "danger");
+                return;
+            }
+
+            // Update match status to completed
+            await db.collection("matches").doc(matchId).update({
+                status: "completed",
+                completedAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            });
+
+            // Update donation listing if associated
+            if (match.donationId) {
+                try {
+                    await db.collection("donations").doc(match.donationId).update({
+                        status: "completed",
+                        completedAt: new Date().toISOString()
+                    });
+                } catch(e) {}
+            }
+
+            // Update request if associated
+            if (match.requestId) {
+                try {
+                    await db.collection("requests").doc(match.requestId).update({
+                        status: "fulfilled",
+                        fulfilledAt: new Date().toISOString()
+                    });
+                } catch(e) {}
+            }
+
+            // Notify partner (donor or receiver)
+            const partnerId = currentUser.uid === match.donorId ? match.receiverId : match.donorId;
+            if (partnerId) {
+                await db.collection("notifications").add({
+                    userId: partnerId,
+                    type: "receipt_confirmed",
+                    message: `🎉 ${currentUser.name} confirmed receipt of "${match.requestName}". Match is completed!`,
+                    isRead: false,
+                    read: false,
+                    createdAt: new Date().toISOString()
+                });
+            }
+
+            showToast("🎉 Handover receipt confirmed! Match completed successfully.", "success");
+            if (typeof updateOverviewStats === 'function') updateOverviewStats();
+            if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
+            if (typeof renderDonorMatches === 'function') renderDonorMatches();
+            if (typeof renderAdminActiveMatches === 'function') renderAdminActiveMatches();
+        } catch (err) {
+            console.error("Error confirming receipt:", err);
+            showToast("Failed to confirm receipt. Please try again.", "danger");
+        }
+    };
+
 
 
     let liveTrackerMap = null;
@@ -2428,6 +2495,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         grid.innerHTML = filtered.map(d => {
             const reqBtn = isReceiver ? `<button class="btn btn-primary" style="width:100%; font-size:0.75rem; padding:6px; margin-top:8px; font-weight:800;" onclick="openRequestAvailableItemModal('${d.id}')">Request Item (Self Pick Up)</button>` : '';
+            const msgBtn = isReceiver ? `<button class="btn btn-secondary" style="width:100%; font-size:0.75rem; padding:4px; margin-top:4px;" onclick="openDirectChatWithUser('${d.donorId}', '${d.donorName}', '${d.itemName}')">💬 Message Donor</button>` : '';
 
             return `
                 <div class="glass-panel" style="padding: 12px; background: #FFFFFF; border-radius: 8px; border: 1px solid var(--color-border); display: flex; flex-direction: column; justify-content: space-between;">
@@ -2442,6 +2510,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             Donor: ${d.donorName} (${d.district || 'Colombo'})
                         </div>
                         ${reqBtn}
+                        ${msgBtn}
                     </div>
                 </div>
             `;
@@ -2558,9 +2627,59 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     window.startChatWithPartner = (matchId) => {
-        const commNav = document.querySelector('.nav-item[data-view="communication-panel"]');
-        if (commNav) commNav.click();
-        selectChatMatch(matchId);
+        window.location.hash = '#messages';
+        
+        document.querySelectorAll(".dashboard-view-panel").forEach(p => p.style.display = "none");
+        const msgPanel = document.getElementById("messages-panel") || document.getElementById("communication-panel");
+        if (msgPanel) msgPanel.style.display = "block";
+
+        document.querySelectorAll("#sidebarMenuList .menu-item").forEach(item => {
+            const link = item.querySelector("a");
+            if (link && link.getAttribute("href") === "#messages") {
+                item.classList.add("active");
+            } else {
+                item.classList.remove("active");
+            }
+        });
+
+        if (typeof selectChatMatch === 'function' && matchId) {
+            selectChatMatch(matchId);
+        }
+    };
+
+    window.openDirectChatWithUser = async (targetUserId, targetUserName, itemTitle) => {
+        if (!targetUserId) {
+            showToast("Cannot message partner: user ID is missing.", "warning");
+            return;
+        }
+
+        const existingMatch = matchesList.find(m => 
+            (m.donorId === targetUserId && m.receiverId === currentUser.uid) ||
+            (m.receiverId === targetUserId && m.donorId === currentUser.uid)
+        );
+
+        if (existingMatch) {
+            window.startChatWithPartner(existingMatch.id);
+        } else {
+            try {
+                const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+                const newDoc = await helper.db().collection("matches").add({
+                    donorId: currentUser.role === 'donor' ? currentUser.uid : targetUserId,
+                    donorName: currentUser.role === 'donor' ? currentUser.name : (targetUserName || 'Donor'),
+                    receiverId: currentUser.role === 'receiver' ? currentUser.uid : targetUserId,
+                    receiverName: currentUser.role === 'receiver' ? currentUser.name : (targetUserName || 'Receiver'),
+                    requestName: itemTitle || "Direct Discussion",
+                    type: "physical",
+                    status: "in_discussion",
+                    createdAt: new Date().toISOString()
+                });
+                window.startChatWithPartner(newDoc.id);
+                showToast(`💬 Opened direct chat channel with ${targetUserName || 'partner'}`, "success");
+            } catch(err) {
+                console.error("Error creating direct chat session:", err);
+                showToast("Could not open chat channel. Please try again.", "danger");
+            }
+        }
     };
 
     function renderChatMatchesList() {
