@@ -172,11 +172,14 @@
                     <label class="form-label" style="font-size: 0.75rem;">Category</label>
                     <select id="filterReqCategory" class="form-control form-select">
                         <option value="all">All Categories</option>
-                        <option value="Food">Food / Nutritional</option>
-                        <option value="Clothing">Clothing</option>
-                        <option value="Books">Books / Education</option>
-                        <option value="Medical">Medical / Health</option>
-                        <option value="General">General / Shelter</option>
+                        <option value="Education Supplies">📚 Education Supplies</option>
+                        <option value="Medical Supplies">🏥 Medical Supplies</option>
+                        <option value="Food & Nutrition">📦 Food & Nutrition</option>
+                        <option value="Furniture">🪑 Furniture</option>
+                        <option value="Electronics & IT Equipment">💻 Electronics & IT Equipment</option>
+                        <option value="Clothing & Personal Care">👕 Clothing & Personal Care</option>
+                        <option value="Household Essentials">🏠 Household Essentials</option>
+                        <option value="Other Supplies">🧩 Other Supplies</option>
                     </select>
                 </div>
             </div>
