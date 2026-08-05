@@ -264,6 +264,44 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    function isCategoryMatch(itemCategory, filterCategory) {
+        if (!filterCategory || filterCategory === 'all') return true;
+        if (!itemCategory) return false;
+
+        const c = itemCategory.toLowerCase().trim();
+        const f = filterCategory.toLowerCase().trim();
+
+        if (c === f || c.includes(f) || f.includes(c)) return true;
+
+        if ((f.includes('education') || f.includes('book') || f.includes('school')) &&
+            (c.includes('book') || c.includes('education') || c.includes('stationery') || c.includes('school') || c.includes('learning'))) return true;
+
+        if ((f.includes('food') || f.includes('nutrition') || f.includes('ration')) &&
+            (c.includes('food') || c.includes('ration') || c.includes('nutrition') || c.includes('meal'))) return true;
+
+        if ((f.includes('medical') || f.includes('health') || f.includes('first aid')) &&
+            (c.includes('medical') || c.includes('health') || c.includes('aid') || c.includes('medicine') || c.includes('pack'))) return true;
+
+        if ((f.includes('clothing') || f.includes('personal') || f.includes('apparel')) &&
+            (c.includes('cloth') || c.includes('apparel') || c.includes('personal') || c.includes('wear'))) return true;
+
+        if ((f.includes('electronic') || f.includes('it') || f.includes('tech')) &&
+            (c.includes('electronic') || c.includes('it') || c.includes('tech') || c.includes('computer'))) return true;
+
+        if (f.includes('furniture') && c.includes('furniture')) return true;
+
+        if ((f.includes('household') || f.includes('essential')) &&
+            (c.includes('house') || c.includes('shelter') || c.includes('home') || c.includes('general'))) return true;
+
+        return false;
+    }
+
+    function isDistrictMatch(itemDistrict, filterDistrict) {
+        if (!filterDistrict || filterDistrict === 'all') return true;
+        if (!itemDistrict) return filterDistrict.toLowerCase() === 'colombo';
+        return itemDistrict.toLowerCase().trim() === filterDistrict.toLowerCase().trim();
+    }
+
     function renderSmartMatches() {
         const container = document.getElementById("smartMatchesContainer");
         if (!container) return;
@@ -705,7 +743,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (catFilter !== 'all') {
-            myDonations = myDonations.filter(d => d.category === catFilter);
+            myDonations = myDonations.filter(d => isCategoryMatch(d.category, catFilter));
         }
 
         if (myDonations.length === 0) {
@@ -771,7 +809,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (catFilter !== 'all') {
-            myRequests = myRequests.filter(r => r.category === catFilter);
+            myRequests = myRequests.filter(r => isCategoryMatch(r.category, catFilter));
         }
 
         if (myRequests.length === 0) {
@@ -1052,10 +1090,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (reqTypeFilter !== 'all') filtered = filtered.filter(r => (r.reqType || 'physical') === reqTypeFilter);
-        if (catFilter !== 'all') filtered = filtered.filter(r => r.category === catFilter);
-        if (receiverCatFilter !== 'all') filtered = filtered.filter(r => r.receiverCategory === receiverCatFilter);
+        if (catFilter !== 'all') filtered = filtered.filter(r => isCategoryMatch(r.category, catFilter));
+        if (receiverCatFilter !== 'all') filtered = filtered.filter(r => isCategoryMatch(r.receiverCategory, receiverCatFilter));
         if (priorityFilter !== 'all') filtered = filtered.filter(r => (r.priorityLevel || 'Medium') === priorityFilter);
-        if (districtFilter !== 'all') filtered = filtered.filter(r => r.district === districtFilter);
+        if (districtFilter !== 'all') filtered = filtered.filter(r => isDistrictMatch(r.district, districtFilter));
 
         // Sort: Donor's local district first, then by date order
         const sortOrder = document.getElementById("sortCatalogueOrder")?.value || "latest";
@@ -2364,23 +2402,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (catFilter !== 'all') {
-            filtered = filtered.filter(d => {
-                if (!d.category) return false;
-                const c = d.category.toLowerCase().trim();
-                const f = catFilter.toLowerCase().trim();
-                return c === f || c.includes(f) || f.includes(c) ||
-                       (f.includes('food') && c.includes('food')) ||
-                       (f.includes('medical') && c.includes('medical')) ||
-                       (f.includes('clothing') && c.includes('clothing')) ||
-                       (f.includes('education') && c.includes('education')) ||
-                       (f.includes('electronics') && c.includes('electronics')) ||
-                       (f.includes('furniture') && c.includes('furniture')) ||
-                       (f.includes('household') && c.includes('household'));
-            });
+            filtered = filtered.filter(d => isCategoryMatch(d.category, catFilter));
         }
 
         if (districtFilter !== 'all') {
-            filtered = filtered.filter(d => (d.district || 'Colombo') === districtFilter);
+            filtered = filtered.filter(d => isDistrictMatch(d.district, districtFilter));
         }
 
         if (filtered.length === 0) {
@@ -2413,15 +2439,28 @@ document.addEventListener("DOMContentLoaded", () => {
         }).join("");
     }
 
-    const searchAllAvailableItems = document.getElementById("searchAllAvailableItems");
-    const filterAvailableCategory = document.getElementById("filterAvailableCategory");
-    const filterAvailableDistrict = document.getElementById("filterAvailableDistrict");
-    const sortAvailableItemsOrder = document.getElementById("sortAvailableItemsOrder");
+    // Global Event Delegation for Live Instant Filtering across all inputs & selects
+    document.addEventListener("change", (e) => {
+        if (!e.target) return;
+        const id = e.target.id || "";
+        if (id.startsWith("filter") || id.startsWith("sort") || id.includes("Category") || id.includes("District")) {
+            renderAllAvailableItems();
+            renderDonorNeeds();
+            renderDonorListings();
+            renderReceiverRequests();
+        }
+    });
 
-    if (searchAllAvailableItems) searchAllAvailableItems.addEventListener("input", renderAllAvailableItems);
-    if (filterAvailableCategory) filterAvailableCategory.addEventListener("change", renderAllAvailableItems);
-    if (filterAvailableDistrict) filterAvailableDistrict.addEventListener("change", renderAllAvailableItems);
-    if (sortAvailableItemsOrder) sortAvailableItemsOrder.addEventListener("change", renderAllAvailableItems);
+    document.addEventListener("input", (e) => {
+        if (!e.target) return;
+        const id = e.target.id || "";
+        if (id.startsWith("search") || id.startsWith("filter")) {
+            renderAllAvailableItems();
+            renderDonorNeeds();
+            renderDonorListings();
+            renderReceiverRequests();
+        }
+    });
 
     function renderHistory() {
         const header = document.getElementById("historyTableHeader");
