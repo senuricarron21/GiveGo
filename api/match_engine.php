@@ -62,7 +62,16 @@ function calculateMatchScore($donation, $request) {
         $distanceScore = (( $maxDistance - $distance ) / $maxDistance) * 100;
     }
     
-    // 3. Quantity fulfillment score (Weight: 40%)
+    // 3. Urgency score (Weight: 35%)
+    $urgency = strtolower($request['urgency'] ?? 'low');
+    $urgencyScore = 30; // Low default
+    if ($urgency === 'high') {
+        $urgencyScore = 100;
+    } elseif ($urgency === 'medium') {
+        $urgencyScore = 70;
+    }
+    
+    // 4. Quantity fulfillment score (Weight: 25%)
     $reqQty = $request['quantityRequired'] ?? 1;
     $recQty = $request['quantityReceived'] ?? 0;
     $remainingNeeded = max(0, $reqQty - $recQty);
@@ -79,13 +88,14 @@ function calculateMatchScore($donation, $request) {
         $quantityScore = ($donQty / $remainingNeeded) * 100;
     }
     
-    // Calculate final weighted score (60% distance, 40% quantity match)
-    $finalScore = ($distanceScore * 0.60) + ($quantityScore * 0.40);
+    // Calculate final weighted score
+    $finalScore = ($distanceScore * 0.40) + ($urgencyScore * 0.35) + ($quantityScore * 0.25);
     
     return [
         'score' => round($finalScore, 1),
         'distance' => round($distance, 2),
         'distanceScore' => round($distanceScore, 1),
+        'urgencyScore' => $urgencyScore,
         'quantityScore' => round($quantityScore, 1),
         'remainingNeeded' => $remainingNeeded
     ];

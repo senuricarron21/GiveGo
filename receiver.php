@@ -59,14 +59,12 @@
                     <div class="form-group">
                         <label class="form-label">Category</label>
                         <select class="form-control form-select" id="reqCategory" required>
-                            <option value="Education Supplies">📚 Education Supplies</option>
-                            <option value="Medical Supplies">🏥 Medical Supplies</option>
-                            <option value="Food & Nutrition">📦 Food & Nutrition</option>
-                            <option value="Furniture">🪑 Furniture</option>
-                            <option value="Electronics & IT Equipment">💻 Electronics & IT Equipment</option>
-                            <option value="Clothing & Personal Care">👕 Clothing & Personal Care</option>
-                            <option value="Household Essentials">🏠 Household Essentials</option>
-                            <option value="Other Supplies">🧩 Other Supplies</option>
+                            <option value="Food">Food / Nutritional Supplies</option>
+                            <option value="Clothing">Clothing / Apparel</option>
+                            <option value="Books">Books / Learning Materials</option>
+                            <option value="Medical">Medical / Health Packs</option>
+                            <option value="General">General / Maintenance / Shelter</option>
+                            <option value="Emergency Relief">Emergency Relief</option>
                         </select>
                     </div>
                 </div>
@@ -84,6 +82,14 @@
                                 <option value="Brand New">Brand New Only</option>
                                 <option value="Gently Used">Gently Used / Good</option>
                                 <option value="Any Condition">Any Usable Condition</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Urgency Level</label>
+                            <select class="form-control form-select" id="reqUrgency">
+                                <option value="Low">Low Priority</option>
+                                <option value="Medium">Medium Priority</option>
+                                <option value="High">Emergency / High Priority</option>
                             </select>
                         </div>
                     </div>
@@ -222,20 +228,11 @@
 
 <!-- 4. MATCHING SECTION -->
 <div id="matching-panel" class="dashboard-view-panel" style="display: none;">
-    <div class="glass-panel" style="padding: 30px; margin-bottom: 24px; background: #FFFFFF;">
-        <div class="card-header" style="margin-bottom: 16px;">
-            <h3 class="card-title">⚡ AI Recommended Smart Matches</h3>
-            <span class="badge badge-success">Algorithm Active</span>
-        </div>
-        <div id="aiSmartMatchesContainer">
-            <!-- AI Matches rendered dynamically -->
-        </div>
-    </div>
-
     <div class="dashboard-grid">
         <div class="glass-panel" style="padding: 30px; background: #FFFFFF;">
             <div class="card-header">
-                <h3 class="card-title">📦 Active Match Orders & Delivery Sessions</h3>
+                <h3 class="card-title">Donation Matches For You</h3>
+                <span class="badge badge-success">Algorithm Active</span>
             </div>
             <div id="receiverMatchesContainer" style="max-height: 500px; overflow-y: auto;">
                 <!-- Filled dynamically by app.js -->
