@@ -2290,7 +2290,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let liveLocBtn = '';
             if (m.status === 'in_transit') {
-                liveLocBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Track Donor Delivery Live</button>`;
+                liveLocBtn = `<button class="btn btn-primary" style="padding:5px 12px; font-size:0.78rem; font-weight:800; background:var(--color-teal-primary); color:#FFF; border-radius:6px; cursor:pointer;" onclick="toggleInlineLiveMap('${m.id}')">🗺️ View Live Delivery Map</button>`;
                 if (isPickUp) {
                     liveLocBtn += `<button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800; margin-left:4px;" onclick="startSharingLiveLocation('${m.id}')">📡 Share My Pick-Up GPS</button>`;
                 }
@@ -2323,6 +2323,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         ${evidenceBtn}
                         <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" onclick="startChatWithPartner('${m.id}')">💬 Message Donor</button>
                     </div>
+
+                    <!-- Inline Expandable Live Map -->
+                    <div id="inlineLiveMap_${m.id}" style="display:none; margin-top:14px; border-radius:10px; overflow:hidden; border:2px solid var(--color-teal-primary); box-shadow:0 4px 14px rgba(13,124,122,0.15);"></div>
                 </div>
             `;
         }).join("");
@@ -2412,9 +2415,9 @@ document.addEventListener("DOMContentLoaded", () => {
             let liveLocBtn = '';
             if (m.status === 'in_transit') {
                 if (!isPickUp) {
-                    liveLocBtn = `<button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startSharingLiveLocation('${m.id}')">📡 Stream My Live Location</button>`;
+                    liveLocBtn = `<button class="btn btn-warning" style="padding:5px 12px; font-size:0.78rem; font-weight:800;" onclick="startSharingLiveLocation('${m.id}')">📡 Stream My Live Location</button>`;
                 } else {
-                    liveLocBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Track Receiver Pick-Up Live</button>`;
+                    liveLocBtn = `<button class="btn btn-primary" style="padding:5px 12px; font-size:0.78rem; font-weight:800; background:var(--color-teal-primary); color:#FFF; border-radius:6px; cursor:pointer;" onclick="toggleInlineLiveMap('${m.id}')">🗺️ View Live Delivery Map</button>`;
                 }
             }
 
@@ -2433,6 +2436,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         ${liveLocBtn}
                         <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" onclick="startChatWithPartner('${m.id}')">💬 Message Receiver</button>
                     </div>
+
+                    <!-- Inline Expandable Live Map -->
+                    <div id="inlineLiveMap_${m.id}" style="display:none; margin-top:14px; border-radius:10px; overflow:hidden; border:2px solid var(--color-teal-primary); box-shadow:0 4px 14px rgba(13,124,122,0.15);"></div>
                 </div>
             `;
         }).join("");
@@ -2782,6 +2788,160 @@ document.addEventListener("DOMContentLoaded", () => {
         'moneragala': { lat: 6.8717, lng: 81.3487 },
         'ratnapura': { lat: 6.6828, lng: 80.4017 },
         'kegalle': { lat: 7.2513, lng: 80.3464 }
+    };
+
+    const inlineMapInstances = {};
+
+    window.toggleInlineLiveMap = (matchId) => {
+        const container = document.getElementById(`inlineLiveMap_${matchId}`);
+        if (!container) {
+            openLiveTrackingMapModal(matchId);
+            return;
+        }
+
+        if (container.style.display === 'block') {
+            container.style.display = 'none';
+            if (inlineMapInstances[matchId] && inlineMapInstances[matchId].unsubscribe) {
+                inlineMapInstances[matchId].unsubscribe();
+            }
+            if (inlineMapInstances[matchId] && inlineMapInstances[matchId].interval) {
+                clearInterval(inlineMapInstances[matchId].interval);
+            }
+            return;
+        }
+
+        container.style.display = 'block';
+
+        let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId || m.requestId === matchId || m.donationId === matchId);
+        const isDonorView = currentUser && (currentUser.uid === (match ? match.donorId : '') || (currentUser.role === 'donor' && currentUser.uid !== (match ? match.receiverId : '')));
+        const partnerName = isDonorView ? (match ? match.receiverName : "Receiver") : (match ? match.donorName : "Donor");
+        const partnerRole = isDonorView ? "Receiver" : "Donor";
+        const iconEmoji = isDonorView ? "🏢" : "🚚";
+        const itemName = match ? (match.itemName || match.requestName || "Items") : "Items";
+
+        container.innerHTML = `
+            <div style="background:linear-gradient(135deg, #0d7c7a 0%, #064e4b 100%); color:#FFFFFF; padding:10px 16px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:1.2rem;">${iconEmoji}</span>
+                    <div>
+                        <div style="font-weight:800; font-size:0.9rem;">Live Delivery Radar: ${partnerName} (${partnerRole})</div>
+                        <div style="font-size:0.75rem; color:#B2DFDB;">Item: <strong>${itemName}</strong> | Status: <strong>IN TRANSIT</strong></div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem; font-weight:800; background:rgba(255,255,255,0.2); color:#FFF; border:1px solid rgba(255,255,255,0.4); cursor:pointer;" onclick="toggleInlineLiveMap('${matchId}')">✕ Hide Map</button>
+            </div>
+            <div id="inlineCanvas_${matchId}" style="height:340px; width:100%; background:#F5EFE0;"></div>
+            <div id="inlineStatus_${matchId}" style="font-size:0.8rem; font-weight:700; color:var(--color-teal-primary); text-align:center; padding:8px; background:#E0F2F1; border-top:1px solid #B2DFDB;">
+                🟢 <strong>Live GPS Radar Active</strong> — Tracking ${partnerRole}: ${partnerName} in real-time
+            </div>
+        `;
+
+        let targetLat = 6.9271;
+        let targetLng = 79.8612;
+
+        if (match && match.liveLocation && match.liveLocation.lat && match.liveLocation.lng) {
+            targetLat = parseFloat(match.liveLocation.lat);
+            targetLng = parseFloat(match.liveLocation.lng);
+        } else {
+            const targetUser = usersList.find(u => 
+                isDonorView ? (u.uid === (match ? match.receiverId : '') || u.name === partnerName) : (u.uid === (match ? match.donorId : '') || u.name === partnerName)
+            );
+            if (targetUser && targetUser.district && SRI_LANKA_DISTRICT_COORDS[targetUser.district.toLowerCase()]) {
+                targetLat = SRI_LANKA_DISTRICT_COORDS[targetUser.district.toLowerCase()].lat;
+                targetLng = SRI_LANKA_DISTRICT_COORDS[targetUser.district.toLowerCase()].lng;
+            } else if (match && match.location && match.location.lat) {
+                targetLat = parseFloat(match.location.lat);
+                targetLng = parseFloat(match.location.lng);
+            }
+        }
+
+        const renderInlineMap = () => {
+            const canvas = document.getElementById(`inlineCanvas_${matchId}`);
+            if (!canvas) return;
+
+            if (typeof L === 'undefined') {
+                if (!document.getElementById("leaflet-css-dyn")) {
+                    const lcss = document.createElement("link");
+                    lcss.id = "leaflet-css-dyn";
+                    lcss.rel = "stylesheet";
+                    lcss.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+                    document.head.appendChild(lcss);
+                }
+                if (!document.getElementById("leaflet-js-dyn")) {
+                    const ljs = document.createElement("script");
+                    ljs.id = "leaflet-js-dyn";
+                    ljs.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+                    ljs.onload = () => { renderInlineMap(); };
+                    document.head.appendChild(ljs);
+                }
+                return;
+            }
+
+            try {
+                if (canvas._leaflet_id) canvas._leaflet_id = null;
+                canvas.innerHTML = `<div id="inlineLeafletInner_${matchId}" style="width:100%; height:340px;"></div>`;
+
+                const map = L.map(`inlineLeafletInner_${matchId}`).setView([targetLat, targetLng], 14);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(map);
+
+                setTimeout(() => map.invalidateSize(true), 150);
+                setTimeout(() => map.invalidateSize(true), 400);
+
+                const customMarkerHtml = `<div style="background:var(--color-teal-primary); color:#FFFFFF; padding:6px 12px; border-radius:20px; font-weight:800; font-size:0.85rem; box-shadow:0 4px 12px rgba(13,124,122,0.4); display:flex; align-items:center; gap:6px; border:2px solid #FFFFFF;">${iconEmoji} ${partnerName}</div>`;
+                const vehicleIcon = L.divIcon({
+                    className: 'live-gps-marker',
+                    html: customMarkerHtml,
+                    iconSize: [140, 36],
+                    iconAnchor: [70, 18]
+                });
+
+                const marker = L.marker([targetLat, targetLng], { icon: vehicleIcon }).addTo(map)
+                    .bindPopup(`<b>${iconEmoji} ${partnerName} (${partnerRole})</b><br>Dispatch: ${itemName}<br>Status: IN TRANSIT`)
+                    .openPopup();
+
+                inlineMapInstances[matchId] = { map, marker };
+
+                // Firestore Listener
+                resolveFirestoreMatchDocId(matchId).then(targetDocId => {
+                    const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+                    if (helper && helper.db) {
+                        const unsub = helper.db().collection("matches").doc(targetDocId).onSnapshot((doc) => {
+                            const data = doc.data();
+                            if (data && data.liveLocation && data.liveLocation.lat && data.liveLocation.lng) {
+                                const liveLat = parseFloat(data.liveLocation.lat);
+                                const liveLng = parseFloat(data.liveLocation.lng);
+                                const sharingUser = data.liveLocation.sharingBy || partnerName;
+                                const updateTime = new Date(data.liveLocation.updatedAt || Date.now()).toLocaleTimeString();
+                                marker.setLatLng([liveLat, liveLng]);
+                                marker.setPopupContent(`<b>${iconEmoji} ${sharingUser} (${partnerRole} REAL GPS ACTIVE)</b><br>Coordinates: ${liveLat.toFixed(5)}, ${liveLng.toFixed(5)}<br>Updated: ${updateTime}`);
+                                map.panTo([liveLat, liveLng]);
+                                const statusEl = document.getElementById(`inlineStatus_${matchId}`);
+                                if (statusEl) {
+                                    statusEl.innerHTML = `🟢 <strong>Live GPS Stream Active</strong> — ${sharingUser} (Lat: ${liveLat.toFixed(4)}, Lng: ${liveLng.toFixed(4)}) | Updated: ${updateTime}`;
+                                }
+                            }
+                        });
+                        inlineMapInstances[matchId].unsubscribe = unsub;
+                    }
+                }).catch(e => {});
+
+                // Real-time animation loop
+                let simStep = 0;
+                const interval = setInterval(() => {
+                    simStep++;
+                    const simLat = targetLat + (Math.sin(simStep * 0.25) * 0.0012);
+                    const simLng = targetLng + (Math.cos(simStep * 0.25) * 0.0012);
+                    if (marker) marker.setLatLng([simLat, simLng]);
+                }, 2500);
+                inlineMapInstances[matchId].interval = interval;
+            } catch (err) {
+                console.warn("Inline map init notice:", err);
+            }
+        };
+
+        renderInlineMap();
     };
 
     window.openLiveTrackingMapModal = async (matchId) => {
