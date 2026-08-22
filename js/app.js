@@ -2250,6 +2250,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
 
+            if (m.status === 'in_transit' || m.status === 'delivered' || m.status === 'confirmed') {
+                actionButtonsHtml += `
+                    <button class="btn btn-success" style="padding:4px 10px; font-size:0.75rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none;" onclick="confirmPhysicalReceipt('${m.id}')">✅ Confirm Receipt (Complete)</button>
+                `;
+            }
+
             let liveLocBtn = '';
             if (m.status === 'in_transit') {
                 liveLocBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Track Donor Delivery Live</button>`;
@@ -2462,118 +2468,160 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     window.confirmPhysicalReceipt = (matchId) => {
-        const match = matchesList.find(m => m.id === matchId);
-        if (!match) {
-            showToast("Match session record not found.", "danger");
-            return;
+        let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId);
+        const targetId = match ? match.id : matchId;
+
+        let modal = document.getElementById("modalHandoverEvidence");
+        if (!modal) {
+            modal = document.createElement("div");
+            modal.className = "modal";
+            modal.id = "modalHandoverEvidence";
+            modal.innerHTML = `
+                <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:540px; width:95%; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.3);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--color-border); padding-bottom:10px;">
+                        <h3 id="mdlEvidenceTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin:0;">📷 Handover Evidence & Receipt Confirmation</h3>
+                        <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.85rem; font-weight:800; cursor:pointer;" onclick="closeHandoverEvidenceModal()">✕</button>
+                    </div>
+                    <form id="formSubmitHandoverEvidence">
+                        <input type="hidden" id="mdlEvidenceMatchId" value="${targetId}">
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.85rem; font-weight:700;">Handover Notes / Feedback (Optional):</label>
+                            <textarea id="mdlEvidenceNotes" class="input-control" style="width:100%; height:60px;" placeholder="e.g. Items received in excellent condition..."></textarea>
+                        </div>
+                        <div style="margin-bottom:16px;">
+                            <label style="font-size:0.85rem; font-weight:700;">Evidence Photo URL (Optional):</label>
+                            <input type="text" id="mdlEvidenceUrl" class="input-control" placeholder="https://example.com/photo.jpg">
+                        </div>
+                        <div style="display:flex; gap:10px; justify-content:flex-end;">
+                            <button type="button" class="btn btn-secondary" onclick="confirmReceiptWithoutPhoto(document.getElementById('mdlEvidenceMatchId').value)">Confirm Without Photo</button>
+                            <button type="submit" class="btn btn-primary">✅ Submit & Confirm Receipt</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
         }
 
         const matchIdInput = document.getElementById("mdlEvidenceMatchId");
-        if (matchIdInput) matchIdInput.value = matchId;
+        if (matchIdInput) matchIdInput.value = targetId;
 
         const modalTitle = document.getElementById("mdlEvidenceTitle");
-        if (modalTitle) modalTitle.textContent = `📷 Handover Evidence: ${match.requestName}`;
+        if (modalTitle) modalTitle.textContent = `📷 Handover Evidence: ${match ? (match.requestName || match.itemName || 'Donation Item') : 'Item'}`;
 
+        modal.style.display = "flex";
+        modal.style.visibility = "visible";
+        modal.style.opacity = "1";
+        modal.style.zIndex = "999999";
+        modal.classList.add("active");
+    };
+
+    window.confirmReceiptWithoutPhoto = async (matchId) => {
+        try {
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            const db = helper.db();
+
+            let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId);
+            const targetId = match ? match.id : matchId;
+
+            await db.collection("matches").doc(targetId).update({
+                status: "completed",
+                deliveryStatus: "delivered_and_confirmed",
+                completedAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            });
+
+            if (match && match.donationId) {
+                try {
+                    await db.collection("donations").doc(match.donationId).update({
+                        status: "completed",
+                        completedAt: new Date().toISOString()
+                    });
+                } catch (dErr) {}
+            }
+            if (match && match.requestId) {
+                try {
+                    await db.collection("requests").doc(match.requestId).update({
+                        status: "fulfilled",
+                        fulfilledAt: new Date().toISOString()
+                    });
+                } catch (rErr) {}
+            }
+
+            closeHandoverEvidenceModal();
+            showToast("🎉 Handover confirmed! Order completed successfully.", "success");
+            if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
+            if (typeof renderDonorMatches === 'function') renderDonorMatches();
+            if (typeof updateOverviewStats === 'function') updateOverviewStats();
+        } catch (err) {
+            console.error("Receipt confirmation error:", err);
+            showToast("Failed to confirm receipt.", "danger");
+        }
+    };
+
+    window.closeHandoverEvidenceModal = () => {
         const modal = document.getElementById("modalHandoverEvidence");
-        if (modal) modal.classList.add("active");
+        if (modal) {
+            modal.classList.remove("active");
+            modal.style.display = "none";
+        }
     };
 
     document.getElementById("formSubmitHandoverEvidence")?.addEventListener("submit", async (e) => {
         e.preventDefault();
         const matchId = document.getElementById("mdlEvidenceMatchId")?.value;
-        const fileInput = document.getElementById("mdlEvidenceFile");
         const urlInput = document.getElementById("mdlEvidenceUrl")?.value.trim();
         const notes = document.getElementById("mdlEvidenceNotes")?.value.trim() || "";
 
         if (!matchId) return;
 
-        const match = matchesList.find(m => m.id === matchId);
-        if (!match) return;
-
+        let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId);
+        const targetId = match ? match.id : matchId;
         let evidenceUrl = urlInput || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=600&q=80';
 
-        const processSubmission = async (finalImgUrl) => {
-            try {
-                const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-                const db = helper.db();
+        try {
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            const db = helper.db();
 
-                // Update match status & store evidence details
-                await db.collection("matches").doc(matchId).update({
-                    status: "completed",
-                    deliveryStatus: "delivered_and_confirmed",
-                    handoverEvidenceUrl: finalImgUrl,
-                    handoverNotes: notes,
-                    handoverVerificationStatus: "pending_admin_verification",
-                    handoverUploadedAt: new Date().toISOString(),
-                    completedAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                });
+            await db.collection("matches").doc(targetId).update({
+                status: "completed",
+                deliveryStatus: "delivered_and_confirmed",
+                handoverEvidenceUrl: evidenceUrl,
+                handoverNotes: notes,
+                handoverVerificationStatus: "pending_admin_verification",
+                handoverUploadedAt: new Date().toISOString(),
+                completedAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            });
 
-                // Update donation listing if associated
-                if (match.donationId) {
-                    try {
-                        await db.collection("donations").doc(match.donationId).update({
-                            status: "completed",
-                            completedAt: new Date().toISOString()
-                        });
-                    } catch(e) {}
-                }
-
-                // Update request if associated
-                if (match.requestId) {
-                    try {
-                        await db.collection("requests").doc(match.requestId).update({
-                            status: "fulfilled",
-                            fulfilledAt: new Date().toISOString()
-                        });
-                    } catch(e) {}
-                }
-
-                // Notify Admin for verification
-                await db.collection("notifications").add({
-                    userId: "admin",
-                    type: "evidence_submitted",
-                    message: `📷 ${currentUser.name} uploaded handover evidence image for "${match.requestName}". Awaiting admin verification.`,
-                    isRead: false,
-                    read: false,
-                    createdAt: new Date().toISOString()
-                });
-
-                // Notify Partner (Donor)
-                if (match.donorId) {
-                    await db.collection("notifications").add({
-                        userId: match.donorId,
-                        type: "receipt_confirmed",
-                        message: `🎉 ${currentUser.name} confirmed receipt and uploaded handover photo evidence for "${match.requestName}". Match completed!`,
-                        isRead: false,
-                        read: false,
-                        createdAt: new Date().toISOString()
+            if (match && match.donationId) {
+                try {
+                    await db.collection("donations").doc(match.donationId).update({
+                        status: "completed",
+                        completedAt: new Date().toISOString()
                     });
-                }
-
-                showToast("🎉 Handover receipt confirmed & evidence image submitted to Admin for verification!", "success");
-                document.getElementById("modalHandoverEvidence")?.classList.remove("active");
-                document.getElementById("formSubmitHandoverEvidence")?.reset();
-
-                if (typeof updateOverviewStats === 'function') updateOverviewStats();
-                if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
-                if (typeof renderDonorMatches === 'function') renderDonorMatches();
-                if (typeof renderAdminActiveMatches === 'function') renderAdminActiveMatches();
-                if (typeof renderAdminEvidenceApprovals === 'function') renderAdminEvidenceApprovals();
-            } catch (err) {
-                console.error("Error submitting handover evidence:", err);
-                showToast("Failed to submit handover evidence. Please try again.", "danger");
+                } catch(e) {}
             }
-        };
 
-        if (fileInput && fileInput.files && fileInput.files[0]) {
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                processSubmission(evt.target.result);
-            };
-            reader.readAsDataURL(fileInput.files[0]);
-        } else {
-            processSubmission(evidenceUrl);
+            if (match && match.requestId) {
+                try {
+                    await db.collection("requests").doc(match.requestId).update({
+                        status: "fulfilled",
+                        fulfilledAt: new Date().toISOString()
+                    });
+                } catch(e) {}
+            }
+
+            showToast("🎉 Handover receipt confirmed & evidence submitted!", "success");
+            closeHandoverEvidenceModal();
+
+            if (typeof updateOverviewStats === 'function') updateOverviewStats();
+            if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
+            if (typeof renderDonorMatches === 'function') renderDonorMatches();
+            if (typeof renderAdminActiveMatches === 'function') renderAdminActiveMatches();
+            if (typeof renderAdminEvidenceApprovals === 'function') renderAdminEvidenceApprovals();
+        } catch (err) {
+            console.error("Submit evidence error:", err);
+            showToast("Failed to confirm receipt.", "danger");
         }
     });
 
