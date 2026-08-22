@@ -2831,7 +2831,7 @@ document.addEventListener("DOMContentLoaded", () => {
             modal = document.createElement("div");
             modal.className = "modal";
             modal.id = "modalEvidenceImageViewer";
-            modal.style.zIndex = "9999999";
+            modal.style.zIndex = "99999999";
             modal.style.background = "rgba(0,0,0,0.75)";
             modal.innerHTML = `
                 <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:680px; width:95%; border-radius:12px; box-shadow:0 12px 35px rgba(0,0,0,0.4); max-height:90vh; display:flex; flex-direction:column;">
@@ -2849,6 +2849,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                 </div>
             `;
+            document.body.appendChild(modal);
+        } else if (modal.parentElement !== document.body) {
             document.body.appendChild(modal);
         }
 
@@ -2876,6 +2878,7 @@ document.addEventListener("DOMContentLoaded", () => {
         modal.style.setProperty("display", "flex", "important");
         modal.style.setProperty("visibility", "visible", "important");
         modal.style.setProperty("opacity", "1", "important");
+        modal.style.setProperty("z-index", "99999999", "important");
         modal.classList.add("active");
     };
 
@@ -4137,10 +4140,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const container = document.getElementById("adminChatMessagesContainer");
         const modal = document.getElementById("modalAdminInspectChat");
         if (modal) {
+            if (modal.parentElement !== document.body) {
+                document.body.appendChild(modal);
+            }
             modal.style.setProperty("display", "flex", "important");
             modal.style.setProperty("visibility", "visible", "important");
             modal.style.setProperty("opacity", "1", "important");
-            modal.style.setProperty("z-index", "9999999", "important");
+            modal.style.setProperty("z-index", "99999999", "important");
             modal.classList.add("active");
         }
 
