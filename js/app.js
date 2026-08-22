@@ -4079,9 +4079,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     <td>${statusBadge}</td>
                     <td>
                         <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                            <button class="btn btn-secondary" style="padding:3px 8px; font-size:0.75rem;" onclick="adminInspectMatchChat('${m.id}')">👁️ View Live Chat</button>
-                            ${m.status === 'in_transit' ? `<button class="btn btn-warning" style="padding:3px 8px; font-size:0.75rem; font-weight:800;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Monitor GPS Radar</button>` : ''}
-                            ${m.handoverEvidenceUrl ? `<button type="button" class="btn btn-success" style="padding:3px 8px; font-size:0.75rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:4px; cursor:pointer;" onclick="openEvidenceImageViewer('${m.id}')">📷 Photo Evidence</button>` : ''}
+                            <button type="button" class="btn btn-secondary" data-action="admin-chat" data-match-id="${m.id}" style="padding:4px 10px; font-size:0.75rem; font-weight:800; cursor:pointer;" onclick="adminInspectMatchChat('${m.id}')">💬 Monitor Live Chat</button>
+                            ${m.status === 'in_transit' ? `<button type="button" class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800; cursor:pointer;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Monitor GPS Radar</button>` : ''}
+                            ${m.handoverEvidenceUrl ? `<button type="button" class="btn btn-success" data-action="view-evidence" data-match-id="${m.id}" style="padding:4px 10px; font-size:0.75rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:4px; cursor:pointer; box-shadow:0 2px 6px rgba(13,124,122,0.3);" onclick="openEvidenceImageViewer('${m.id}')">🖼️ Inspect Handover Photo</button>` : ''}
                         </div>
                     </td>
                 </tr>
@@ -4128,42 +4128,88 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     window.adminInspectMatchChat = async (matchId) => {
-        const match = matchesList.find(m => m.id === matchId);
-        if (!match) return;
+        let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId);
+        const modalTitle = document.getElementById("mdlAdminInspectTitle");
+        if (modalTitle) {
+            modalTitle.textContent = match ? `🛡️ Admin Chat Inspector: ${match.requestName} (${match.donorName} ↔ ${match.receiverName})` : `🛡️ Admin Chat Inspector`;
+        }
 
-        document.getElementById("mdlAdminInspectTitle").textContent = `🛡️ Admin Chat Inspector: ${match.requestName} (${match.donorName} ↔ ${match.receiverName})`;
         const container = document.getElementById("adminChatMessagesContainer");
         const modal = document.getElementById("modalAdminInspectChat");
-        if (modal) modal.classList.add("active");
+        if (modal) {
+            modal.style.setProperty("display", "flex", "important");
+            modal.style.setProperty("visibility", "visible", "important");
+            modal.style.setProperty("opacity", "1", "important");
+            modal.style.setProperty("z-index", "9999999", "important");
+            modal.classList.add("active");
+        }
 
-        container.innerHTML = `<div style="text-align:center; color:var(--color-text-muted); padding:20px;">Loading real-time chat log...</div>`;
+        if (container) {
+            container.innerHTML = `<div style="text-align:center; color:var(--color-text-muted); padding:20px;">Loading real-time chat log...</div>`;
+        }
 
         try {
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-            const snapshot = await helper.db().collection("messages").where("matchId", "==", matchId).get();
-            const msgs = snapshot.docs.map(doc => doc.data()).sort((a,b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+            const targetDocId = await resolveFirestoreMatchDocId(matchId);
+            
+            let querySnap1 = await helper.db().collection("messages").where("matchId", "==", matchId).get();
+            let msgs = querySnap1.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            if (targetDocId && targetDocId !== matchId) {
+                let querySnap2 = await helper.db().collection("messages").where("matchId", "==", targetDocId).get();
+                let extraMsgs = querySnap2.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                extraMsgs.forEach(em => {
+                    if (!msgs.some(m => m.id === em.id)) msgs.push(em);
+                });
+            }
+
+            msgs.sort((a,b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
 
             if (msgs.length === 0) {
-                container.innerHTML = `<div style="text-align:center; color:var(--color-text-muted); padding:30px;">No chat messages exchanged between donor and receiver yet.</div>`;
+                if (container) container.innerHTML = `<div style="text-align:center; color:var(--color-text-muted); padding:30px;">No chat messages exchanged between donor and receiver yet.</div>`;
                 return;
             }
 
-            container.innerHTML = msgs.map(msg => {
-                const date = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                return `
-                    <div style="background:#FFFFFF; border:1px solid #D8CE9C; border-radius:8px; padding:8px 12px; margin-bottom:8px;">
-                        <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--color-teal-primary); font-weight:800; margin-bottom:4px;">
-                            <span>${msg.senderName}</span>
-                            <span style="color:var(--color-text-muted);">${date}</span>
+            if (container) {
+                container.innerHTML = msgs.map(msg => {
+                    const date = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    return `
+                        <div style="background:#FFFFFF; border:1px solid #D8CE9C; border-radius:8px; padding:8px 12px; margin-bottom:8px;">
+                            <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--color-teal-primary); font-weight:800; margin-bottom:4px;">
+                                <span>${msg.senderName || 'Partner'}</span>
+                                <span style="color:var(--color-text-muted);">${date}</span>
+                            </div>
+                            <div style="font-size:0.85rem; color:var(--color-text-dark);">${msg.text || msg.message || ''}</div>
                         </div>
-                        <div style="font-size:0.85rem; color:var(--color-text-dark);">${msg.text}</div>
-                    </div>
-                `;
-            }).join("");
+                    `;
+                }).join("");
+            }
         } catch (err) {
-            container.innerHTML = `<div style="text-align:center; color:red; padding:20px;">Failed to load chat log.</div>`;
+            console.error("adminInspectMatchChat error:", err);
+            if (container) container.innerHTML = `<div style="text-align:center; color:red; padding:20px;">Failed to load chat log.</div>`;
         }
     };
+
+    window.closeAdminInspectChat = () => {
+        const modal = document.getElementById("modalAdminInspectChat");
+        if (modal) {
+            modal.classList.remove("active");
+            modal.style.setProperty("display", "none", "important");
+            modal.style.setProperty("visibility", "hidden", "important");
+            modal.style.setProperty("opacity", "0", "important");
+        }
+    };
+
+    // Delegated click handler for admin-chat
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-action="admin-chat"]');
+        if (btn) {
+            const matchId = btn.getAttribute('data-match-id');
+            if (matchId && typeof window.adminInspectMatchChat === 'function') {
+                window.adminInspectMatchChat(matchId);
+            }
+        }
+    });
 
     function renderAdminDirectory() {
         renderAdminActiveMatchesTable();
