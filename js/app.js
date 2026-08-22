@@ -2563,12 +2563,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 details = `Quantity: <strong>${m.quantity} ${m.unit || 'units'}</strong>`;
             } else if (m.type === 'monetary') {
                 details = `Amount: <strong>LKR ${parseFloat(m.amount || 0).toLocaleString()}</strong> | Ref: ${m.referenceNumber || 'N/A'} | ${m.receiptUrl ? `<a href="${m.receiptUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700;">View Receipt</a>` : 'No Receipt'}`;
+            } else if (m.type === 'volunteer') {
+                details = `Volunteer: <strong>${m.volunteerName || m.donorName}</strong> (${m.volunteerCount || 1} Person${(m.volunteerCount || 1) > 1 ? 's' : ''})${m.volunteerPhone ? ` | Contact: <strong>${m.volunteerPhone}</strong>` : ''}${m.notes ? `<div style="margin-top:4px; font-size:0.8rem; color:var(--color-teal-primary);">"${m.notes}"</div>` : ''}`;
             }
 
             const isPickUp = isReceiverPickupMethod(m);
 
             let scheduleInfo = '';
-            if (m.scheduledDateTime) {
+            if (m.scheduledDateTime && m.type !== 'volunteer') {
                 const formatted = new Date(m.scheduledDateTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
                 if (!isPickUp) {
                     scheduleInfo = `<div style="font-size:0.8rem; color:var(--color-teal-primary); font-weight:700; margin-top:4px; margin-bottom:6px;">🚚 Scheduled Donor Self Delivery: ${formatted}</div>`;
@@ -2579,52 +2581,61 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let actionButtonsHtml = '';
 
-            if (m.status === 'pending_receiver' || m.status === 'pending_receiver_approval' || m.status === 'pending') {
-                if (m.type === 'monetary' || (m.amount && !m.quantity)) {
+            if (m.type === 'volunteer') {
+                if (m.status === 'pending_receiver' || m.status === 'pending_receiver_approval' || m.status === 'pending') {
+                    actionButtonsHtml += `
+                        <button type="button" class="btn btn-primary" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="acceptDonationOffer('${m.id}')">🤝 Accept Volunteer Offer</button>
+                    `;
+                }
+            } else if (m.type === 'monetary' || (m.amount && !m.quantity)) {
+                if (m.status === 'pending_receiver' || m.status === 'pending_receiver_approval' || m.status === 'pending') {
                     actionButtonsHtml += `
                         <button type="button" class="btn btn-primary" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="acceptDonationOffer('${m.id}')">💰 Confirm & Accept Fund Receipt</button>
                     `;
-                } else {
+                }
+            } else {
+                // Physical parcel items
+                if (m.status === 'pending_receiver' || m.status === 'pending_receiver_approval' || m.status === 'pending') {
                     actionButtonsHtml += `
                         <button type="button" class="btn btn-primary" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="acceptDonationOffer('${m.id}')">🎁 Accept Donation Offer</button>
                     `;
-                }
-            } else if (m.status === 'pending_receiver_pickup_schedule' || m.status === 'accepted_pending_receiver_schedule') {
-                actionButtonsHtml += `
-                    <button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openScheduleReceiverPickupModal('${m.id}')">Schedule Pick Up Date & Time</button>
-                `;
-            } else if (m.status === 'donor_scheduled_delivery') {
-                actionButtonsHtml += `
-                    <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="acceptSchedule('${m.id}')">Accept Schedule</button>
-                    <button class="btn btn-danger" style="padding:4px 10px; font-size:0.75rem;" onclick="rejectSchedule('${m.id}')">Reject Schedule</button>
-                `;
-            } else if (m.status === 'schedule_negotiating' && m.proposedBy !== currentUser.uid) {
-                actionButtonsHtml += `
-                    <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="acceptSchedule('${m.id}')">Accept Proposed Time</button>
-                    <button class="btn btn-danger" style="padding:4px 10px; font-size:0.75rem;" onclick="rejectSchedule('${m.id}')">Reject Proposal</button>
-                `;
-            }
-
-            if (m.status === 'confirmed') {
-                if (isPickUp) {
+                } else if (m.status === 'pending_receiver_pickup_schedule' || m.status === 'accepted_pending_receiver_schedule') {
                     actionButtonsHtml += `
-                        <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startDeliverySession('${m.id}')">🚚 Start Pick-Up Journey</button>
+                        <button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openScheduleReceiverPickupModal('${m.id}')">Schedule Pick Up Date & Time</button>
                     `;
-                } else {
+                } else if (m.status === 'donor_scheduled_delivery') {
                     actionButtonsHtml += `
-                        <span style="font-size:0.78rem; color:var(--color-teal-primary); font-weight:700; background:#E0F2F1; padding:4px 8px; border-radius:4px; border:1px solid #B2DFDB;">⏳ Waiting for donor to start delivery journey</span>
+                        <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="acceptSchedule('${m.id}')">Accept Schedule</button>
+                        <button class="btn btn-danger" style="padding:4px 10px; font-size:0.75rem;" onclick="rejectSchedule('${m.id}')">Reject Schedule</button>
+                    `;
+                } else if (m.status === 'schedule_negotiating' && m.proposedBy !== currentUser.uid) {
+                    actionButtonsHtml += `
+                        <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="acceptSchedule('${m.id}')">Accept Proposed Time</button>
+                        <button class="btn btn-danger" style="padding:4px 10px; font-size:0.75rem;" onclick="rejectSchedule('${m.id}')">Reject Proposal</button>
                     `;
                 }
-            }
 
-            if (m.status === 'in_transit' || m.status === 'delivered' || m.status === 'confirmed') {
-                actionButtonsHtml += `
-                    <button class="btn btn-success" style="padding:7px 18px; font-size:0.82rem; font-weight:800; background:#0D7C7A; color:#FFFFFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="toggleInlineEvidenceDrawer('${m.id}')">📸 Confirm Receipt & Upload Evidence</button>
-                `;
+                if (m.status === 'confirmed') {
+                    if (isPickUp) {
+                        actionButtonsHtml += `
+                            <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startDeliverySession('${m.id}')">🚚 Start Pick-Up Journey</button>
+                        `;
+                    } else {
+                        actionButtonsHtml += `
+                            <span style="font-size:0.78rem; color:var(--color-teal-primary); font-weight:700; background:#E0F2F1; padding:4px 8px; border-radius:4px; border:1px solid #B2DFDB;">⏳ Waiting for donor to start delivery journey</span>
+                        `;
+                    }
+                }
+
+                if (m.status === 'in_transit' || m.status === 'delivered' || m.status === 'confirmed') {
+                    actionButtonsHtml += `
+                        <button class="btn btn-success" style="padding:7px 18px; font-size:0.82rem; font-weight:800; background:#0D7C7A; color:#FFFFFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="toggleInlineEvidenceDrawer('${m.id}')">📸 Confirm Receipt & Upload Evidence</button>
+                    `;
+                }
             }
 
             let liveLocBtn = '';
-            if (m.status === 'in_transit' || m.status === 'delivered') {
+            if (m.type !== 'volunteer' && (m.status === 'in_transit' || m.status === 'delivered')) {
                 liveLocBtn = `<button class="btn btn-primary" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:var(--color-teal-primary); color:#FFF; border-radius:6px; cursor:pointer;" onclick="toggleInlineLiveMap('${m.id}')">🗺️ View Live Delivery Map</button>`;
                 if (isPickUp) {
                     liveLocBtn += `<button class="btn btn-warning" style="padding:6px 12px; font-size:0.8rem; font-weight:800; margin-left:4px; border-radius:6px;" onclick="startSharingLiveLocation('${m.id}')">📡 Share My Pick-Up GPS</button>`;
