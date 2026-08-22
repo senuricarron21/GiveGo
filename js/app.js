@@ -2403,6 +2403,47 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    function renderDocumentPreview(docUrl, docTitle) {
+        if (!docUrl || docUrl === 'attached_via_registration_form' || docUrl.trim() === '') {
+            return `
+                <div style="margin-top: 10px; padding: 8px 12px; background: #FFF5F5; border-radius: 6px; border: 1px solid #FED7D7; font-size: 0.8rem; color: #C53030;">
+                    ${docTitle}: <strong>No document uploaded</strong>
+                </div>
+            `;
+        }
+
+        const isPdf = docUrl.startsWith('data:application/pdf') || docUrl.toLowerCase().includes('.pdf');
+        
+        if (isPdf) {
+            return `
+                <div style="margin-top: 12px; padding: 12px; background: #F5EFE0; border-radius: 8px; border: 1px solid var(--color-border);">
+                    <div style="font-weight: 800; font-size: 0.85rem; color: var(--color-teal-primary); margin-bottom: 8px;">
+                        ${docTitle}:
+                    </div>
+                    <iframe src="${docUrl}" style="width: 100%; height: 260px; border: 1px solid #E2E8F0; border-radius: 6px; background: #FFFFFF;"></iframe>
+                    <div style="margin-top: 8px; text-align: right;">
+                        <a href="${docUrl}" target="_blank" class="btn btn-secondary" style="font-size: 0.8rem; padding: 5px 12px; font-weight: 700;">Open PDF in New Tab</a>
+                    </div>
+                </div>
+            `;
+        }
+
+        return `
+            <div style="margin-top: 12px; padding: 12px; background: #F5EFE0; border-radius: 8px; border: 1px solid var(--color-border);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                    <span style="font-weight: 800; font-size: 0.85rem; color: var(--color-teal-primary);">${docTitle}</span>
+                    <span style="font-size: 0.75rem; color: var(--color-text-muted);">Click image to enlarge</span>
+                </div>
+                <div style="text-align: center; background: #FFFFFF; padding: 8px; border-radius: 6px; border: 1px solid #E2E8F0;">
+                    <img src="${docUrl}" alt="${docTitle}" style="max-height: 240px; max-width: 100%; object-fit: contain; border-radius: 4px; cursor: pointer; display: block; margin: 0 auto;" onclick="window.open('${docUrl}', '_blank')" onerror="this.parentElement.innerHTML='<div style=\\'padding:15px; color:#C53030; font-size:0.85rem;\\'>Unable to preview document. <a href=\\'${docUrl}\\' target=\\'_blank\\' style=\\'font-weight:700; text-decoration:underline;\\'>Click here to open</a></div>'">
+                </div>
+                <div style="margin-top: 8px; text-align: right;">
+                    <a href="${docUrl}" target="_blank" class="btn btn-secondary" style="font-size: 0.8rem; padding: 5px 12px; font-weight: 700;">Open Full Image</a>
+                </div>
+            </div>
+        `;
+    }
+
     function renderAdminApprovals() {
         const grid = document.getElementById("adminApprovalsGrid");
         if (!grid) return;
@@ -2436,21 +2477,19 @@ document.addEventListener("DOMContentLoaded", () => {
             if (isOrgDonor) idLabel = "Business Registration (BR) No";
             else if (isReceiver) idLabel = "Official NGO / Govt Reg No";
 
-            let docLinks = '';
-            const nicDoc = u.nicDocUrl || (u.individualDetails && u.individualDetails.nicDocUrl);
-            if (nicDoc && nicDoc.length > 50) {
-                docLinks += `<div style="margin-top:6px;"><a href="${nicDoc}" target="_blank" style="color:var(--color-teal-primary); font-weight:700; font-size:0.85rem; text-decoration:underline;">View NIC Document Copy</a></div>`;
-            }
-            if (u.orgDetails && u.orgDetails.brDocUrl && u.orgDetails.brDocUrl.length > 50) {
-                docLinks += `<div style="margin-top:6px;"><a href="${u.orgDetails.brDocUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700; font-size:0.85rem; text-decoration:underline;">View Business Registration (BR) Document</a></div>`;
-            }
-            if (u.receiverDetails) {
-                if (u.receiverDetails.registrationDocUrl && u.receiverDetails.registrationDocUrl.length > 50) {
-                    docLinks += `<div style="margin-top:4px;"><a href="${u.receiverDetails.registrationDocUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700; font-size:0.85rem; text-decoration:underline;">View Registration Certificate</a></div>`;
-                }
-                if (u.receiverDetails.bankDocUrl && u.receiverDetails.bankDocUrl.length > 50) {
-                    docLinks += `<div style="margin-top:4px;"><a href="${u.receiverDetails.bankDocUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700; font-size:0.85rem; text-decoration:underline;">View Bank Account Proof</a></div>`;
-                }
+            const nicDoc = (u.individualDetails && u.individualDetails.nicDocUrl) || u.nicDocUrl || '';
+            const brDoc = (u.orgDetails && u.orgDetails.brDocUrl) || u.brDocUrl || u.docUrl || '';
+            const recDoc = (u.receiverDetails && u.receiverDetails.registrationDocUrl) || u.registrationDocUrl || '';
+            const bankDoc = (u.receiverDetails && u.receiverDetails.bankDocUrl) || u.bankDocUrl || '';
+
+            let docPreviews = '';
+            if (isPersonal) {
+                if (nicDoc) docPreviews += renderDocumentPreview(nicDoc, 'National Identity Card (NIC) Document');
+            } else if (isOrgDonor) {
+                docPreviews += renderDocumentPreview(brDoc, 'Business Registration (BR) Document');
+            } else if (isReceiver) {
+                if (recDoc) docPreviews += renderDocumentPreview(recDoc, 'Official Registration Certificate');
+                if (bankDoc) docPreviews += renderDocumentPreview(bankDoc, 'Bank Account Proof');
             }
 
             let extraInfo = '';
@@ -2472,7 +2511,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 4px;">District: <strong>${u.district || 'Colombo'}</strong> | Address: <strong>${address}</strong></div>
                     ${extraInfo}
                     <div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 6px;">${idLabel}: <strong>${regNum}</strong></div>
-                    ${docLinks}
+                    ${docPreviews}
                     <div style="display:flex; gap:10px; margin-top:16px;">
                         <button class="btn btn-primary" style="flex-grow:1; font-size:0.85rem; font-weight:800;" onclick="updateUserStatus('${u.id || u.uid}', 'verified')">Approve Account</button>
                         <button class="btn btn-danger" style="font-size:0.85rem; font-weight:800;" onclick="updateUserStatus('${u.id || u.uid}', 'rejected')">Reject</button>
