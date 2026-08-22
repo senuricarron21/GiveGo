@@ -129,21 +129,23 @@ document.addEventListener("DOMContentLoaded", () => {
         // --- 1. Admin Overview Metrics ---
         if (isAdmin) {
             const pendingAccountVerifications = usersList.filter(u => u.status === 'pending').length;
-            const pendingRequestApprovals = requestsList.filter(r => r.status === 'pending_admin').length;
-            const pendingDonationApprovals = donationsList.filter(d => d.status === 'pending_admin').length;
+            const pendingRequestApprovals = requestsList.filter(r => r.status === 'pending_admin' || r.status === 'pending').length;
+            const pendingDonationApprovals = donationsList.filter(d => d.status === 'pending_admin' || d.status === 'pending').length;
             const totalPendingApprovals = pendingAccountVerifications + pendingRequestApprovals + pendingDonationApprovals;
             
-            const totalSystemRequests = requestsList.filter(r => r.status === 'published').length;
-            const totalMatches = matchesList.length;
-            const confirmedMatches = matchesList.filter(m => m.status === 'confirmed').length;
-            const rate = totalMatches > 0 ? Math.round((confirmedMatches / totalMatches) * 100) : 0;
-            const totalUsersCount = usersList.length;
+            const totalPublishedRequests = requestsList.filter(r => (r.status === 'published' || r.status === 'matched') && r.status !== 'rejected').length;
+            
+            const activeMatches = matchesList.filter(m => m.status !== 'rejected');
+            const confirmedMatches = activeMatches.filter(m => m.status === 'confirmed' || m.status === 'completed' || m.status === 'in_transit').length;
+            const rate = activeMatches.length > 0 ? Math.round((confirmedMatches / activeMatches.length) * 100) : (totalPublishedRequests > 0 ? Math.round((confirmedMatches / totalPublishedRequests) * 100) : 0);
+            
+            const totalUsersCount = usersList.filter(u => u.status !== 'rejected').length;
 
             const elPending = document.getElementById("statPendingApprovalsCount");
             if (elPending) elPending.textContent = totalPendingApprovals;
 
             const elTotalReqs = document.getElementById("statTotalRequests");
-            if (elTotalReqs) elTotalReqs.textContent = totalSystemRequests;
+            if (elTotalReqs) elTotalReqs.textContent = totalPublishedRequests;
 
             const elRate = document.getElementById("statMatchRate");
             if (elRate) elRate.textContent = `${rate}%`;
@@ -2384,8 +2386,16 @@ document.addEventListener("DOMContentLoaded", () => {
             let statusBadge = `<span class="badge badge-warning">Pending</span>`;
             if (u.status === 'verified') statusBadge = `<span class="badge badge-success">Verified</span>`;
             else if (u.status === 'suspended') statusBadge = `<span class="badge badge-danger">Suspended</span>`;
+            else if (u.status === 'rejected') statusBadge = `<span class="badge badge-danger">Rejected</span>`;
 
-            return ` <tr> <td><strong>${u.name}</strong></td> <td>${u.email}</td> <td>${(u.role || u.accountType || 'user').toUpperCase()} (${u.donorType || u.receiverCategory || 'User'})</td> <td>${u.district || 'Colombo'}</td> <td>${statusBadge}</td> <td> ${u.status === 'suspended' ? ` <button class="btn btn-primary" style="padding:4px 8px; font-size:0.75rem;" onclick="updateUserStatus('${u.id}', 'verified')">Reactivate</button> ` : ` <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="updateUserStatus('${u.id}', 'suspended')">Suspend</button> `} </td> </tr> `;
+            let actionBtn = ` <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="updateUserStatus('${u.id || u.uid}', 'suspended')">Suspend</button> `;
+            if (u.status === 'suspended' || u.status === 'rejected') {
+                actionBtn = ` <button class="btn btn-primary" style="padding:4px 8px; font-size:0.75rem;" onclick="updateUserStatus('${u.id || u.uid}', 'verified')">Reactivate / Approve</button> `;
+            } else if (u.status === 'pending') {
+                actionBtn = ` <button class="btn btn-primary" style="padding:4px 8px; font-size:0.75rem;" onclick="updateUserStatus('${u.id || u.uid}', 'verified')">Approve</button> <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem; margin-left:4px;" onclick="updateUserStatus('${u.id || u.uid}', 'rejected')">Reject</button> `;
+            }
+
+            return ` <tr> <td><strong>${u.name}</strong></td> <td>${u.email}</td> <td>${(u.role || u.accountType || 'user').toUpperCase()} (${u.donorType || u.receiverCategory || 'User'})</td> <td>${u.district || 'Colombo'}</td> <td>${statusBadge}</td> <td> ${actionBtn} </td> </tr> `;
         }).join("");
     }
 
@@ -4257,14 +4267,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (execSec) execSec.style.display = isAdmin ? "block" : "none";
 
-        const content = matchesList.length === 0 ? `<tr><td colspan="6" style="text-align:center; color:var(--color-text-muted); padding:20px;">No active matches found in system.</td></tr>` :
-        matchesList.map(m => {
+        const activeMatches = matchesList.filter(m => m.status !== 'rejected');
+
+        const content = activeMatches.length === 0 ? `<tr><td colspan="6" style="text-align:center; color:var(--color-text-muted); padding:20px;">No active matches found in system.</td></tr>` :
+        activeMatches.map(m => {
             let sessionText = m.deliverySessionId || 'N/A';
             let statusBadge = `<span class="badge badge-info">${m.status}</span>`;
             if (m.status === 'in_transit') statusBadge = `<span class="badge badge-warning"> In Transit</span>`;
+            else if (m.status === 'confirmed') statusBadge = `<span class="badge badge-success"> Confirmed</span>`;
             else if (m.status === 'completed') statusBadge = `<span class="badge badge-success"> Completed</span>`;
 
-            return ` <tr> <td><strong>${m.requestName || 'Material Item'}</strong><br><small style="color:var(--color-teal-primary); font-weight:700;">ID: ${sessionText}</small></td> <td>${m.donorName}</td> <td>${m.receiverName}</td> <td><span class="telemetry-pill">${(m.deliveryMethod || 'pending').replace('_', ' ').toUpperCase()}</span></td> <td>${statusBadge}</td> <td> <div style="display:flex; gap:6px; flex-wrap:wrap;"> <button type="button" class="btn btn-secondary" data-action="admin-chat" data-match-id="${m.id}" style="padding:4px 10px; font-size:0.75rem; font-weight:800; cursor:pointer;" onclick="adminInspectMatchChat('${m.id}')"> Monitor Live Chat</button> ${m.status === 'in_transit' ? `<button type="button" class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800; cursor:pointer;" onclick="openLiveTrackingMapModal('${m.id}')"> Monitor GPS Radar</button>` : ''}
+            return ` <tr> <td><strong>${m.requestName || 'Material Item'}</strong><br><small style="color:var(--color-teal-primary); font-weight:700;">ID: ${sessionText}</small></td> <td>${m.donorName || 'Donor'}</td> <td>${m.receiverName || 'Receiver'}</td> <td><span class="telemetry-pill">${(m.deliveryMethod || 'pending').replace('_', ' ').toUpperCase()}</span></td> <td>${statusBadge}</td> <td> <div style="display:flex; gap:6px; flex-wrap:wrap;"> <button type="button" class="btn btn-secondary" data-action="admin-chat" data-match-id="${m.id}" style="padding:4px 10px; font-size:0.75rem; font-weight:800; cursor:pointer;" onclick="adminInspectMatchChat('${m.id}')"> Monitor Live Chat</button> ${m.status === 'in_transit' ? `<button type="button" class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800; cursor:pointer;" onclick="openLiveTrackingMapModal('${m.id}')"> Monitor GPS Radar</button>` : ''}
                             ${m.handoverEvidenceUrl ? `<button type="button" class="btn btn-success" data-action="view-evidence" data-match-id="${m.id}" style="padding:4px 10px; font-size:0.75rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:4px; cursor:pointer; box-shadow:0 2px 6px rgba(13,124,122,0.3);" onclick="openEvidenceImageViewer('${m.id}')"> Inspect Handover Photo</button>` : ''} </div> </td> </tr> `;
         }).join("");
 
@@ -4278,7 +4291,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const body = document.getElementById("adminMonetarySLABody");
         if (!body) return;
 
-        const monetaryList = matchesList.filter(m => m.type === 'monetary' || m.amount);
+        const monetaryList = matchesList.filter(m => (m.type === 'monetary' || m.amount) && m.status !== 'rejected');
 
         if (monetaryList.length === 0) {
             body.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--color-text-muted); padding:20px;">No monetary funding transfers recorded.</td></tr>`;
