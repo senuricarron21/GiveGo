@@ -2447,14 +2447,17 @@ document.addEventListener("DOMContentLoaded", () => {
             if (m.handoverEvidenceUrl) {
                 donorEvidenceHtml = `
                     <div style="margin-top:12px; padding:12px; background:#F0FDF4; border:1px solid #86EFAC; border-radius:8px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                             <span style="font-size:0.82rem; font-weight:800; color:#15803D;">📷 Receiver Uploaded Handover Evidence:</span>
                             <span style="font-size:0.75rem; color:#166534; font-weight:700; background:#DCFCE7; padding:2px 8px; border-radius:4px;">Receipt Confirmed</span>
                         </div>
-                        <a href="${m.handoverEvidenceUrl}" target="_blank" title="Click to view full image in new tab" style="display:inline-block; margin-top:4px;">
+                        <div style="text-align:center; cursor:pointer;" onclick="openEvidenceImageViewer('${m.id}')">
                             <img src="${m.handoverEvidenceUrl}" alt="Handover Evidence" style="max-height:160px; max-width:100%; border-radius:6px; border:2px solid #15803D; object-fit:contain; box-shadow:0 2px 6px rgba(0,0,0,0.1);" />
-                        </a>
+                        </div>
                         ${m.handoverNotes ? `<div style="font-size:0.8rem; color:#14532D; margin-top:6px;"><strong>Receiver Notes:</strong> "${m.handoverNotes}"</div>` : ''}
+                        <div style="margin-top:8px; text-align:right;">
+                            <button type="button" class="btn btn-success" style="padding:4px 12px; font-size:0.78rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer;" onclick="openEvidenceImageViewer('${m.id}')">🔍 Open Full Photo</button>
+                        </div>
                     </div>
                 `;
             }
@@ -2809,6 +2812,80 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Submit inline evidence error:", err);
             showToast("Order completed successfully!", "success");
             if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
+        }
+    };
+
+    window.openEvidenceImageViewer = (matchIdOrUrl, title) => {
+        let match = matchesList.find(m => m.id === matchIdOrUrl || String(m.id) === String(matchIdOrUrl) || m.deliverySessionId === matchIdOrUrl);
+        const imageUrl = match ? (match.handoverEvidenceUrl || match.evidenceUrl) : matchIdOrUrl;
+        const itemName = match ? (match.requestName || match.itemName || 'Package Handover') : (title || 'Handover Evidence');
+        const notes = match ? (match.handoverNotes || '') : '';
+
+        if (!imageUrl) {
+            showToast("No evidence image available.", "warning");
+            return;
+        }
+
+        let modal = document.getElementById("modalEvidenceImageViewer");
+        if (!modal) {
+            modal = document.createElement("div");
+            modal.className = "modal";
+            modal.id = "modalEvidenceImageViewer";
+            modal.style.zIndex = "9999999";
+            modal.style.background = "rgba(0,0,0,0.75)";
+            modal.innerHTML = `
+                <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:680px; width:95%; border-radius:12px; box-shadow:0 12px 35px rgba(0,0,0,0.4); max-height:90vh; display:flex; flex-direction:column;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--color-border); padding-bottom:10px;">
+                        <h3 id="mdlImageViewerTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin:0;">📷 Handover Evidence Photo</h3>
+                        <button type="button" class="btn btn-secondary" style="padding:4px 12px; font-size:0.9rem; font-weight:800; cursor:pointer;" onclick="closeEvidenceImageViewer()">✕ Close</button>
+                    </div>
+                    <div style="flex:1; overflow-y:auto; text-align:center; padding:10px 0;">
+                        <img id="mdlImageViewerImg" src="" alt="Handover Evidence" style="max-width:100%; max-height:55vh; border-radius:8px; border:2px solid var(--color-teal-primary); object-fit:contain; box-shadow:0 4px 15px rgba(0,0,0,0.15);" />
+                        <div id="mdlImageViewerNotes" style="margin-top:12px; font-size:0.85rem; color:#2D3748; background:#F7FAFC; padding:10px; border-radius:6px; text-align:left; border-left:4px solid var(--color-teal-primary);"></div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding-top:10px; border-top:1px solid var(--color-border);">
+                        <a id="mdlImageViewerDownload" href="#" download="handover-evidence.jpg" class="btn btn-primary" style="padding:6px 14px; font-size:0.82rem; font-weight:800; background:#0D7C7A; color:#FFF; text-decoration:none; border-radius:6px;">⬇️ Download Full Resolution</a>
+                        <button type="button" class="btn btn-secondary" style="padding:6px 14px; font-size:0.82rem; font-weight:700;" onclick="closeEvidenceImageViewer()">Close</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        const titleEl = document.getElementById("mdlImageViewerTitle");
+        if (titleEl) titleEl.textContent = `📷 Handover Evidence: ${itemName}`;
+
+        const imgEl = document.getElementById("mdlImageViewerImg");
+        if (imgEl) imgEl.src = imageUrl;
+
+        const notesEl = document.getElementById("mdlImageViewerNotes");
+        if (notesEl) {
+            if (notes) {
+                notesEl.innerHTML = `<strong>Receiver Notes:</strong> "${notes}"`;
+                notesEl.style.display = "block";
+            } else {
+                notesEl.style.display = "none";
+            }
+        }
+
+        const downloadLink = document.getElementById("mdlImageViewerDownload");
+        if (downloadLink) {
+            downloadLink.href = imageUrl;
+        }
+
+        modal.style.setProperty("display", "flex", "important");
+        modal.style.setProperty("visibility", "visible", "important");
+        modal.style.setProperty("opacity", "1", "important");
+        modal.classList.add("active");
+    };
+
+    window.closeEvidenceImageViewer = () => {
+        const modal = document.getElementById("modalEvidenceImageViewer");
+        if (modal) {
+            modal.classList.remove("active");
+            modal.style.setProperty("display", "none", "important");
+            modal.style.setProperty("visibility", "hidden", "important");
+            modal.style.setProperty("opacity", "0", "important");
         }
     };
 
@@ -3603,7 +3680,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 `;
             } else if (m.handoverEvidenceUrl) {
                 docs = `
-                    <a href="${m.handoverEvidenceUrl}" target="_blank" style="color:#15803D; font-weight:800; font-size:0.75rem; text-decoration:underline;">📷 View Handover Photo</a>
+                    <button type="button" class="btn btn-secondary" style="padding:3px 10px; font-size:0.75rem; font-weight:800; color:#15803D; cursor:pointer; border:1px solid #86EFAC;" onclick="openEvidenceImageViewer('${m.id}')">📷 View Photo</button>
                 `;
             }
 
@@ -3993,7 +4070,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <div style="display:flex; gap:6px; flex-wrap:wrap;">
                             <button class="btn btn-secondary" style="padding:3px 8px; font-size:0.75rem;" onclick="adminInspectMatchChat('${m.id}')">👁️ View Live Chat</button>
                             ${m.status === 'in_transit' ? `<button class="btn btn-warning" style="padding:3px 8px; font-size:0.75rem; font-weight:800;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Monitor GPS Radar</button>` : ''}
-                            ${m.handoverEvidenceUrl ? `<a href="${m.handoverEvidenceUrl}" target="_blank" class="btn btn-success" style="padding:3px 8px; font-size:0.75rem; font-weight:800; background:#0D7C7A; color:#FFF;">📷 Photo Evidence</a>` : ''}
+                            ${m.handoverEvidenceUrl ? `<button type="button" class="btn btn-success" style="padding:3px 8px; font-size:0.75rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:4px; cursor:pointer;" onclick="openEvidenceImageViewer('${m.id}')">📷 Photo Evidence</button>` : ''}
                         </div>
                     </td>
                 </tr>
@@ -4143,9 +4220,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div style="font-size:0.8rem; color:#4A5568; margin-bottom:4px;">Receiver: <strong>${m.receiverName}</strong> | Donor: <strong>${m.donorName}</strong></div>
                     <div style="font-size:0.75rem; color:#718096; margin-bottom:10px;">Uploaded: ${new Date(m.handoverUploadedAt || m.completedAt || Date.now()).toLocaleString()}</div>
                     
-                    <a href="${m.handoverEvidenceUrl}" target="_blank" title="Click to view full image">
+                    <div style="cursor:pointer; text-align:center;" onclick="openEvidenceImageViewer('${m.id}')" title="Click to view full photo">
                         <img src="${m.handoverEvidenceUrl}" style="width:100%; max-height:180px; object-fit:cover; border-radius:6px; border:1px solid #E2E8F0; margin-bottom:8px;">
-                    </a>
+                    </div>
+                    <div style="margin-bottom:8px; text-align:right;">
+                        <button type="button" class="btn btn-secondary" style="padding:2px 8px; font-size:0.75rem; font-weight:800; cursor:pointer;" onclick="openEvidenceImageViewer('${m.id}')">🔍 Full Screen View</button>
+                    </div>
                     
                     ${m.handoverNotes ? `<div style="font-size:0.8rem; background:#F8FAFC; padding:8px; border-radius:4px; margin-bottom:8px;"><strong>Notes:</strong> ${m.handoverNotes}</div>` : ''}
                     ${actionsHtml}
