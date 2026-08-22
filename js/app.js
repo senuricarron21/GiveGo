@@ -2451,12 +2451,12 @@ document.addEventListener("DOMContentLoaded", () => {
                             <span style="font-size:0.82rem; font-weight:800; color:#15803D;">📷 Receiver Uploaded Handover Evidence:</span>
                             <span style="font-size:0.75rem; color:#166534; font-weight:700; background:#DCFCE7; padding:2px 8px; border-radius:4px;">Receipt Confirmed</span>
                         </div>
-                        <div style="text-align:center; cursor:pointer;" onclick="openEvidenceImageViewer('${m.id}')">
+                        <div style="text-align:center; cursor:pointer;" data-action="view-evidence" data-match-id="${m.id}" onclick="openEvidenceImageViewer('${m.id}')">
                             <img src="${m.handoverEvidenceUrl}" alt="Handover Evidence" style="max-height:160px; max-width:100%; border-radius:6px; border:2px solid #15803D; object-fit:contain; box-shadow:0 2px 6px rgba(0,0,0,0.1);" />
                         </div>
                         ${m.handoverNotes ? `<div style="font-size:0.8rem; color:#14532D; margin-top:6px;"><strong>Receiver Notes:</strong> "${m.handoverNotes}"</div>` : ''}
                         <div style="margin-top:8px; text-align:right;">
-                            <button type="button" class="btn btn-success" style="padding:4px 12px; font-size:0.78rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer;" onclick="openEvidenceImageViewer('${m.id}')">🔍 Open Full Photo</button>
+                            <button type="button" class="btn btn-success" data-action="view-evidence" data-match-id="${m.id}" style="padding:5px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 6px rgba(13,124,122,0.3);" onclick="openEvidenceImageViewer('${m.id}')">🖼️ Inspect Handover Photo</button>
                         </div>
                     </div>
                 `;
@@ -2888,6 +2888,17 @@ document.addEventListener("DOMContentLoaded", () => {
             modal.style.setProperty("opacity", "0", "important");
         }
     };
+
+    // Delegated click handler for view-evidence
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-action="view-evidence"]');
+        if (btn) {
+            const matchId = btn.getAttribute('data-match-id');
+            if (matchId && typeof window.openEvidenceImageViewer === 'function') {
+                window.openEvidenceImageViewer(matchId);
+            }
+        }
+    });
 
     window.openHandoverEvidenceModal = (matchId) => {
         let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId || m.requestId === matchId || m.donationId === matchId);
