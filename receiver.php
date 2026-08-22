@@ -197,14 +197,14 @@
             </select>
             <select class="form-control form-select" id="filterReceiverCategory" onchange="window.renderReceiverRequests && window.renderReceiverRequests()" style="max-width: 220px;">
                 <option value="all">All Categories</option>
-                <option value="Education Supplies">📚 Education Supplies</option>
-                <option value="Medical Supplies">🏥 Medical Supplies</option>
-                <option value="Food & Nutrition">📦 Food & Nutrition</option>
+                <option value="Food">📦 Food / Nutrition</option>
+                <option value="Clothing">👕 Clothing & Apparel</option>
+                <option value="Books">📚 Books & Education</option>
+                <option value="Medical">🏥 Medical Supplies</option>
+                <option value="General">🏠 General / Maintenance</option>
+                <option value="Emergency Relief">🚨 Emergency Relief</option>
                 <option value="Furniture">🪑 Furniture</option>
-                <option value="Electronics & IT Equipment">💻 Electronics & IT Equipment</option>
-                <option value="Clothing & Personal Care">👕 Clothing & Personal Care</option>
-                <option value="Household Essentials">🏠 Household Essentials</option>
-                <option value="Other Supplies">🧩 Other Supplies</option>
+                <option value="Electronics & IT Equipment">💻 Electronics & IT</option>
             </select>
             <select class="form-control form-select" id="sortReceiverOrder" onchange="window.renderReceiverRequests && window.renderReceiverRequests()" style="max-width: 180px; font-weight:700;">
                 <option value="latest">Latest Added First</option>

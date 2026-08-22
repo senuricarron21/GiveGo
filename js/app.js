@@ -843,12 +843,18 @@ document.addEventListener("DOMContentLoaded", () => {
         if (searchKeyword) {
             myRequests = myRequests.filter(r => 
                 (r.itemName && r.itemName.toLowerCase().includes(searchKeyword)) ||
-                (r.category && r.category.toLowerCase().includes(searchKeyword))
+                (r.category && r.category.toLowerCase().includes(searchKeyword)) ||
+                (r.reqType && r.reqType.toLowerCase().includes(searchKeyword))
             );
         }
 
         if (statusFilter !== 'all') {
-            myRequests = myRequests.filter(r => (r.status || 'pending_admin') === statusFilter);
+            myRequests = myRequests.filter(r => {
+                const itemStatus = (r.status || 'pending_admin').toLowerCase();
+                const targetStatus = statusFilter.toLowerCase();
+                if (targetStatus === 'pending_admin') return itemStatus === 'pending_admin' || itemStatus === 'pending';
+                return itemStatus === targetStatus;
+            });
         }
 
         if (catFilter !== 'all') {
@@ -1059,44 +1065,6 @@ document.addEventListener("DOMContentLoaded", () => {
             showToast("Failed to reject donation listing.", "danger");
         }
     };
-
-    function renderReceiverRequests() {
-        const body = document.getElementById("receiverRequestsBody");
-        if (!body) return;
-        
-        const myRequests = requestsList.filter(r => r.receiverId === currentUser.uid);
-        
-        if (myRequests.length === 0) {
-            body.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--color-text-muted); padding: 30px;">No requests submitted yet.</td></tr>`;
-            return;
-        }
-
-        body.innerHTML = myRequests.map(r => {
-            let typeBadge = `<span class="badge badge-info">${(r.reqType || 'physical').toUpperCase()}</span>`;
-            let targetText = r.quantityRequired ? `${r.quantityRequired} units` : (r.amountRequired ? `LKR ${r.amountRequired}` : `${r.volunteersRequired || 0} volunteers`);
-            let fulfilledText = r.quantityReceived ? `${r.quantityReceived} units` : (r.amountReceived ? `LKR ${r.amountReceived}` : `${r.volunteersAssigned || 0} filled`);
-
-            let statusBadge = `<span class="badge badge-warning">Pending Admin</span>`;
-            if (r.status === 'published') statusBadge = `<span class="badge badge-success">Approved / Published</span>`;
-            else if (r.status === 'rejected') statusBadge = `<span class="badge badge-danger">Rejected by Admin</span>`;
-            else if (r.status === 'fulfilled') statusBadge = `<span class="badge badge-info">Completed</span>`;
-            else if (r.status === 'suspended') statusBadge = `<span class="badge badge-danger">Suspended</span>`;
-
-            return `
-                <tr>
-                    <td>${typeBadge}</td>
-                    <td><strong>${r.itemName}</strong></td>
-                    <td>${r.category}</td>
-                    <td>${targetText}</td>
-                    <td>${fulfilledText}</td>
-                    <td>${statusBadge}</td>
-                    <td>
-                        <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="deleteRequest('${r.id}')">Delete</button>
-                    </td>
-                </tr>
-            `;
-        }).join("");
-    }
 
     window.deleteRequest = async (reqId) => {
         if (!confirm("Are you sure you want to delete this request?")) return;
