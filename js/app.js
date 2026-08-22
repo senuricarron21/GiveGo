@@ -81,9 +81,15 @@ document.addEventListener("DOMContentLoaded", () => {
             menuHTML += ` <li class="menu-item"><a href="#requests">Material Requests</a></li> <li class="menu-item"><a href="#matching">Matches & Connections</a></li> <li class="menu-item"><a href="#chat">Messages</a></li> `;
         }
 
-        menuHTML += ` <li class="menu-item"><a href="#available-items">Available Items</a></li> <li class="menu-item"><a href="#history">History</a></li> <li class="menu-item"><a href="#notifications">Notifications ${unreadBadgeHTML}</a></li> <li class="menu-item"><a href="#contact">Contact Us</a></li> `;
+        menuHTML += ` <li class="menu-item"><a href="#profile">My Profile</a></li> <li class="menu-item"><a href="#available-items">Available Items</a></li> <li class="menu-item"><a href="#history">History</a></li> <li class="menu-item"><a href="#notifications">Notifications ${unreadBadgeHTML}</a></li> <li class="menu-item"><a href="#contact">Contact Us</a></li> `;
 
         menuList.innerHTML = menuHTML;
+
+        const upMenu = document.querySelector(".user-profile-menu");
+        if (upMenu) {
+            upMenu.style.cursor = "pointer";
+            upMenu.onclick = () => { window.location.hash = "#profile"; };
+        }
         
         // Re-bind active class to current hash
         const currentHash = window.location.hash || '#overview';
@@ -480,6 +486,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 renderHistory();
             } else if (hash === '#notifications') {
                 renderNotifications();
+            } else if (hash === '#profile') {
+                renderUserProfilePanel();
             } else if (hash === '#matching') {
                 const roleStr = ((currentUser.role) || (currentUser.accountType) || "").toLowerCase();
                 if (roleStr.includes('donor')) renderDonorMatches();
@@ -492,6 +500,241 @@ document.addEventListener("DOMContentLoaded", () => {
         window.addEventListener("hashchange", handleHashChange);
         handleHashChange();
     }
+
+    const districtCoordinates = {
+        "Colombo": { lat: 6.9271, lng: 79.8612 },
+        "Gampaha": { lat: 7.0840, lng: 79.9943 },
+        "Kalutara": { lat: 6.5854, lng: 79.9607 },
+        "Kandy": { lat: 7.2906, lng: 80.6337 },
+        "Matale": { lat: 7.4675, lng: 80.6234 },
+        "Nuwara Eliya": { lat: 6.9497, lng: 80.7891 },
+        "Galle": { lat: 6.0535, lng: 80.2210 },
+        "Matara": { lat: 5.9549, lng: 80.5550 },
+        "Hambantota": { lat: 6.1429, lng: 81.1212 },
+        "Jaffna": { lat: 9.6615, lng: 80.0255 },
+        "Kilinochchi": { lat: 9.3803, lng: 80.3770 },
+        "Mannar": { lat: 8.9810, lng: 79.9044 },
+        "Vavuniya": { lat: 8.7542, lng: 80.4982 },
+        "Mullaitivu": { lat: 9.2671, lng: 80.8142 },
+        "Batticaloa": { lat: 7.7310, lng: 81.6747 },
+        "Ampara": { lat: 7.2975, lng: 81.6747 },
+        "Trincomalee": { lat: 8.5874, lng: 81.2152 },
+        "Kurunegala": { lat: 7.4863, lng: 80.3623 },
+        "Puttalam": { lat: 8.0362, lng: 79.8283 },
+        "Anuradhapura": { lat: 8.3114, lng: 80.4037 },
+        "Polonnaruwa": { lat: 7.9403, lng: 81.0188 },
+        "Badulla": { lat: 6.9934, lng: 81.0550 },
+        "Moneragala": { lat: 6.8728, lng: 81.3507 },
+        "Ratnapura": { lat: 6.6828, lng: 80.4037 },
+        "Kegalle": { lat: 7.2513, lng: 80.3464 }
+    };
+
+    window.renderUserProfilePanel = async () => {
+        if (!currentUser) return;
+        
+        let userData = currentUser;
+        try {
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            const doc = await helper.db().collection("users").doc(currentUser.uid).get();
+            if (doc.exists) {
+                userData = { ...currentUser, ...doc.data() };
+                currentUser = userData;
+                localStorage.setItem("givego_user", JSON.stringify(userData));
+            }
+        } catch (e) {
+            console.warn("Could not fetch fresh user profile from DB:", e);
+        }
+
+        const nameEl = document.getElementById("prfDisplayName");
+        const emailEl = document.getElementById("prfDisplayEmail");
+        const roleEl = document.getElementById("prfDisplayRole");
+        const statusBadge = document.getElementById("prfStatusBadge");
+        const regNumEl = document.getElementById("prfDisplayRegNum");
+        const phoneEl = document.getElementById("prfDisplayPhone");
+        const districtEl = document.getElementById("prfDisplayDistrict");
+        const addressEl = document.getElementById("prfDisplayAddress");
+        const cityEl = document.getElementById("prfDisplayCity");
+
+        if (nameEl) nameEl.textContent = userData.name || "User";
+        if (emailEl) emailEl.textContent = userData.email || "-";
+        
+        let roleFormatted = (userData.role || "Member").toUpperCase();
+        if (userData.receiverCategory) roleFormatted += ` (${userData.receiverCategory})`;
+        else if (userData.donorType) roleFormatted += ` (${userData.donorType.toUpperCase()})`;
+        if (roleEl) roleEl.textContent = roleFormatted;
+
+        if (statusBadge) {
+            if (userData.status === 'verified') {
+                statusBadge.className = "badge badge-success";
+                statusBadge.textContent = "Verified Account";
+            } else if (userData.status === 'suspended') {
+                statusBadge.className = "badge badge-danger";
+                statusBadge.textContent = "Suspended";
+            } else {
+                statusBadge.className = "badge badge-warning";
+                statusBadge.textContent = "Pending Verification";
+            }
+        }
+
+        const regNum = userData.registrationNumber || (userData.receiverDetails && userData.receiverDetails.registrationNumber) || (userData.orgDetails && userData.orgDetails.registrationNumber) || "N/A";
+        if (regNumEl) regNumEl.textContent = regNum;
+        if (phoneEl) phoneEl.textContent = userData.phone || userData.contactNumber || "Not provided";
+        if (districtEl) districtEl.textContent = userData.district || "Colombo";
+        
+        const fullAddr = userData.address || (userData.receiverDetails && userData.receiverDetails.address) || "Not provided";
+        if (addressEl) addressEl.textContent = fullAddr;
+        if (cityEl) cityEl.textContent = userData.city || userData.district || "Colombo";
+
+        // Bank details for receiver
+        const bankCard = document.getElementById("prfReceiverBankCard");
+        const isRec = ((userData.role) || "").toLowerCase().includes("receiver");
+        if (bankCard) {
+            if (isRec) {
+                bankCard.style.display = "block";
+                const b = userData.receiverDetails || userData.bankDetails || {};
+                const bName = document.getElementById("prfDisplayBankName");
+                const accName = document.getElementById("prfDisplayAccountName");
+                const accNum = document.getElementById("prfDisplayAccountNumber");
+                const bBranch = document.getElementById("prfDisplayBankBranch");
+                if (bName) bName.textContent = b.bankName || "Not set";
+                if (accName) accName.textContent = b.accountName || "Not set";
+                if (accNum) accNum.textContent = b.accountNumber || "Not set";
+                if (bBranch) bBranch.textContent = b.bankBranch || "Not set";
+            } else {
+                bankCard.style.display = "none";
+            }
+        }
+    };
+
+    window.openEditProfileModal = () => {
+        if (!currentUser) return;
+        let modal = document.getElementById("modalEditProfile");
+        if (modal && modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
+        }
+
+        const nameInp = document.getElementById("editPrfName");
+        const phoneInp = document.getElementById("editPrfPhone");
+        const districtInp = document.getElementById("editPrfDistrict");
+        const cityInp = document.getElementById("editPrfCity");
+        const addrInp = document.getElementById("editPrfAddress");
+
+        if (nameInp) nameInp.value = currentUser.name || "";
+        if (phoneInp) phoneInp.value = currentUser.phone || "";
+        if (districtInp) districtInp.value = currentUser.district || "Colombo";
+        if (cityInp) cityInp.value = currentUser.city || "";
+        if (addrInp) addrInp.value = currentUser.address || (currentUser.receiverDetails && currentUser.receiverDetails.address) || "";
+
+        const isRec = ((currentUser.role) || "").toLowerCase().includes("receiver");
+        const secBank = document.getElementById("secEditReceiverBank");
+        if (secBank) {
+            if (isRec) {
+                secBank.style.display = "block";
+                const b = currentUser.receiverDetails || currentUser.bankDetails || {};
+                const bName = document.getElementById("editPrfBankName");
+                const accName = document.getElementById("editPrfAccountName");
+                const accNum = document.getElementById("editPrfAccountNumber");
+                const bBranch = document.getElementById("editPrfBankBranch");
+                if (bName) bName.value = b.bankName || "";
+                if (accName) accName.value = b.accountName || "";
+                if (accNum) accNum.value = b.accountNumber || "";
+                if (bBranch) bBranch.value = b.bankBranch || "";
+            } else {
+                secBank.style.display = "none";
+            }
+        }
+
+        if (modal) {
+            modal.style.setProperty("display", "flex", "important");
+            modal.style.setProperty("visibility", "visible", "important");
+            modal.style.setProperty("opacity", "1", "important");
+            modal.style.setProperty("z-index", "99999999", "important");
+            modal.classList.add("active");
+        }
+    };
+
+    window.closeEditProfileModal = () => {
+        const modal = document.getElementById("modalEditProfile");
+        if (modal) {
+            modal.classList.remove("active");
+            modal.style.setProperty("display", "none", "important");
+            modal.style.setProperty("visibility", "hidden", "important");
+            modal.style.setProperty("opacity", "0", "important");
+        }
+    };
+
+    window.submitEditProfileDirectly = async () => {
+        if (!currentUser) return;
+        const name = document.getElementById("editPrfName")?.value.trim();
+        const phone = document.getElementById("editPrfPhone")?.value.trim();
+        const district = document.getElementById("editPrfDistrict")?.value || "Colombo";
+        const city = document.getElementById("editPrfCity")?.value.trim() || "";
+        const address = document.getElementById("editPrfAddress")?.value.trim() || "";
+        const btnSave = document.getElementById("btnSubmitProfileSave");
+
+        if (!name || !phone || !address) {
+            showToast("Please provide your name, phone, and complete street address.", "warning");
+            return;
+        }
+
+        try {
+            if (btnSave) {
+                btnSave.disabled = true;
+                btnSave.textContent = "Saving...";
+            }
+            showToast("Updating profile & address...", "info");
+
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            const db = helper.db();
+
+            const location = districtCoordinates[district] || { lat: 6.9271, lng: 79.8612 };
+
+            const updates = {
+                name,
+                phone,
+                district,
+                city,
+                address,
+                location,
+                updatedAt: new Date().toISOString()
+            };
+
+            const isRec = ((currentUser.role) || "").toLowerCase().includes("receiver");
+            if (isRec) {
+                const bName = document.getElementById("editPrfBankName")?.value.trim() || "";
+                const accName = document.getElementById("editPrfAccountName")?.value.trim() || "";
+                const accNum = document.getElementById("editPrfAccountNumber")?.value.trim() || "";
+                const bBranch = document.getElementById("editPrfBankBranch")?.value.trim() || "";
+
+                const recDetails = currentUser.receiverDetails || {};
+                recDetails.address = address;
+                recDetails.bankName = bName;
+                recDetails.accountName = accName;
+                recDetails.accountNumber = accNum;
+                recDetails.bankBranch = bBranch;
+
+                updates.receiverDetails = recDetails;
+            }
+
+            await db.collection("users").doc(currentUser.uid).update(updates);
+
+            currentUser = { ...currentUser, ...updates };
+            localStorage.setItem("givego_user", JSON.stringify(currentUser));
+
+            showToast("Profile & Address updated successfully.", "success");
+            closeEditProfileModal();
+            updateUIProfileAndMenu();
+            renderUserProfilePanel();
+        } catch (err) {
+            console.error("Profile update error:", err);
+            showToast("Failed to update profile details.", "danger");
+        } finally {
+            if (btnSave) {
+                btnSave.disabled = false;
+                btnSave.textContent = "Save Changes";
+            }
+        }
+    };
 
     function renderNotifications() {
         const container = document.getElementById("notificationsContainer") || document.getElementById("notificationsListContainer");

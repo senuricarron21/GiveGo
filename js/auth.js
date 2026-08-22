@@ -41,6 +41,34 @@ document.addEventListener("DOMContentLoaded", () => {
                         status: status
                     };
 
+                    const districtCoordinates = {
+                        "Colombo": { lat: 6.9271, lng: 79.8612 },
+                        "Gampaha": { lat: 7.0840, lng: 79.9943 },
+                        "Kalutara": { lat: 6.5854, lng: 79.9607 },
+                        "Kandy": { lat: 7.2906, lng: 80.6337 },
+                        "Matale": { lat: 7.4675, lng: 80.6234 },
+                        "Nuwara Eliya": { lat: 6.9497, lng: 80.7891 },
+                        "Galle": { lat: 6.0535, lng: 80.2210 },
+                        "Matara": { lat: 5.9549, lng: 80.5550 },
+                        "Hambantota": { lat: 6.1429, lng: 81.1212 },
+                        "Jaffna": { lat: 9.6615, lng: 80.0255 },
+                        "Kilinochchi": { lat: 9.3803, lng: 80.3770 },
+                        "Mannar": { lat: 8.9810, lng: 79.9044 },
+                        "Vavuniya": { lat: 8.7542, lng: 80.4982 },
+                        "Mullaitivu": { lat: 9.2671, lng: 80.8142 },
+                        "Batticaloa": { lat: 7.7310, lng: 81.6747 },
+                        "Ampara": { lat: 7.2975, lng: 81.6747 },
+                        "Trincomalee": { lat: 8.5874, lng: 81.2152 },
+                        "Kurunegala": { lat: 7.4863, lng: 80.3623 },
+                        "Puttalam": { lat: 8.0362, lng: 79.8283 },
+                        "Anuradhapura": { lat: 8.3114, lng: 80.4037 },
+                        "Polonnaruwa": { lat: 7.9403, lng: 81.0188 },
+                        "Badulla": { lat: 6.9934, lng: 81.0550 },
+                        "Moneragala": { lat: 6.8728, lng: 81.3507 },
+                        "Ratnapura": { lat: 6.6828, lng: 80.4037 },
+                        "Kegalle": { lat: 7.2513, lng: 80.3464 }
+                    };
+
                     if (userDoc && userDoc.exists) {
                         const data = userDoc.data();
                         
@@ -63,8 +91,16 @@ document.addEventListener("DOMContentLoaded", () => {
                             status: status,
                             donorType: data.donorType || "individual",
                             receiverCategory: data.receiverCategory || "",
+                            phone: data.phone || "",
                             district: data.district || "Colombo",
-                            location: data.location || { lat: 6.9271, lng: 79.8612 }
+                            address: data.address || (data.receiverDetails && data.receiverDetails.address) || "",
+                            city: data.city || "",
+                            postalCode: data.postalCode || "",
+                            registrationNumber: data.registrationNumber || (data.orgDetails && data.orgDetails.registrationNumber) || (data.receiverDetails && data.receiverDetails.registrationNumber) || "",
+                            receiverDetails: data.receiverDetails || null,
+                            orgDetails: data.orgDetails || null,
+                            categories: data.categories || "All Categories",
+                            location: data.location || districtCoordinates[data.district || "Colombo"] || { lat: 6.9271, lng: 79.8612 }
                         };
 
                         if (!data.role || !data.status) {
@@ -160,18 +196,44 @@ document.addEventListener("DOMContentLoaded", () => {
                     accountType,
                     phone,
                     district,
+                    address,
+                    city,
+                    postalCode,
                     categories,
                     receiverCategory,
                     orgDetails,
-                    receiverDetails,
-                    lat,
-                    lng
+                    receiverDetails
                 } = payload;
 
-                const location = { 
-                    lat: parseFloat(lat) || 6.9271, 
-                    lng: parseFloat(lng) || 79.8612 
+                const districtCoordinates = {
+                    "Colombo": { lat: 6.9271, lng: 79.8612 },
+                    "Gampaha": { lat: 7.0840, lng: 79.9943 },
+                    "Kalutara": { lat: 6.5854, lng: 79.9607 },
+                    "Kandy": { lat: 7.2906, lng: 80.6337 },
+                    "Matale": { lat: 7.4675, lng: 80.6234 },
+                    "Nuwara Eliya": { lat: 6.9497, lng: 80.7891 },
+                    "Galle": { lat: 6.0535, lng: 80.2210 },
+                    "Matara": { lat: 5.9549, lng: 80.5550 },
+                    "Hambantota": { lat: 6.1429, lng: 81.1212 },
+                    "Jaffna": { lat: 9.6615, lng: 80.0255 },
+                    "Kilinochchi": { lat: 9.3803, lng: 80.3770 },
+                    "Mannar": { lat: 8.9810, lng: 79.9044 },
+                    "Vavuniya": { lat: 8.7542, lng: 80.4982 },
+                    "Mullaitivu": { lat: 9.2671, lng: 80.8142 },
+                    "Batticaloa": { lat: 7.7310, lng: 81.6747 },
+                    "Ampara": { lat: 7.2975, lng: 81.6747 },
+                    "Trincomalee": { lat: 8.5874, lng: 81.2152 },
+                    "Kurunegala": { lat: 7.4863, lng: 80.3623 },
+                    "Puttalam": { lat: 8.0362, lng: 79.8283 },
+                    "Anuradhapura": { lat: 8.3114, lng: 80.4037 },
+                    "Polonnaruwa": { lat: 7.9403, lng: 81.0188 },
+                    "Badulla": { lat: 6.9934, lng: 81.0550 },
+                    "Moneragala": { lat: 6.8728, lng: 81.3507 },
+                    "Ratnapura": { lat: 6.6828, lng: 80.4037 },
+                    "Kegalle": { lat: 7.2513, lng: 80.3464 }
                 };
+
+                const location = payload.location || districtCoordinates[district || "Colombo"] || { lat: 6.9271, lng: 79.8612 };
 
                 let role = "donor";
                 let donorType = "";
@@ -207,7 +269,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     accountType,
                     registrationNumber: regNum,
                     phone,
-                    district,
+                    district: district || "Colombo",
+                    address: address || "",
+                    city: city || "",
+                    postalCode: postalCode || "",
                     categories: categories || "All Categories",
                     receiverCategory: receiverCategory || "",
                     orgDetails: orgDetails || null,
@@ -227,6 +292,15 @@ document.addEventListener("DOMContentLoaded", () => {
                         role: role,
                         donorType,
                         receiverCategory,
+                        phone,
+                        district: district || "Colombo",
+                        address: address || "",
+                        city: city || "",
+                        postalCode: postalCode || "",
+                        registrationNumber: regNum,
+                        receiverDetails: receiverDetails || null,
+                        orgDetails: orgDetails || null,
+                        categories: categories || "All Categories",
                         status: status,
                         location: location
                     }));
@@ -240,6 +314,15 @@ document.addEventListener("DOMContentLoaded", () => {
                             role: role,
                             donorType,
                             receiverCategory,
+                            phone,
+                            district: district || "Colombo",
+                            address: address || "",
+                            city: city || "",
+                            postalCode: postalCode || "",
+                            registrationNumber: regNum,
+                            receiverDetails: receiverDetails || null,
+                            orgDetails: orgDetails || null,
+                            categories: categories || "All Categories",
                             status: status,
                             location: location
                         })
@@ -322,11 +405,16 @@ document.addEventListener("DOMContentLoaded", () => {
             const district = document.getElementById("regDistrict").value;
             const categories = document.getElementById("regCategories").value;
             const receiverCategory = document.getElementById("regReceiverCategory").value;
-            const lat = document.getElementById("regLat").value;
-            const lng = document.getElementById("regLng").value;
+            const address = document.getElementById("regAddress")?.value.trim() || document.getElementById("regReceiverAddress")?.value.trim() || "";
+            const city = document.getElementById("regCity")?.value.trim() || "";
+            const postalCode = document.getElementById("regPostalCode")?.value.trim() || "";
 
             if (!email || !password || !name || !phone) {
                 showToast("Please fill all required profile fields.", "warning");
+                return;
+            }
+            if (!address) {
+                showToast("Please provide your street address / premise location.", "warning");
                 return;
             }
             if (password.length < 6) {
@@ -355,7 +443,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (accountType === 'receiver') {
                 const recNumEl = document.getElementById("regReceiverRegNumber");
                 receiverDetails = {
-                    address: document.getElementById("regReceiverAddress").value.trim(),
+                    address: address,
                     registrationNumber: recNumEl ? recNumEl.value.trim() : "",
                     repName: document.getElementById("regReceiverRep").value.trim(),
                     bankName: document.getElementById("regBankName").value.trim(),
@@ -378,12 +466,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 accountType,
                 phone,
                 district,
+                address,
+                city,
+                postalCode,
                 categories,
                 receiverCategory,
                 orgDetails,
-                receiverDetails,
-                lat,
-                lng
+                receiverDetails
             });
         });
     }
