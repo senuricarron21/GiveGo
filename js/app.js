@@ -2196,6 +2196,14 @@ document.addEventListener("DOMContentLoaded", () => {
         if (statSpan) statSpan.textContent = pendingEvidenceCount;
     }
 
+    function isReceiverPickupMethod(m) {
+        if (!m) return false;
+        const dm = (m.deliveryMethod || '').toLowerCase();
+        if (dm === 'self_delivery' || dm === 'donor_delivery') return false;
+        if (dm === 'receiver_pickup' || dm === 'pickup') return true;
+        return m.initiator === 'receiver' || m.status === 'receiver_scheduled_pickup' || m.status === 'pending_receiver_pickup_schedule' || !m.deliveryMethod;
+    }
+
     function renderReceiverMatches() {
         const container = document.getElementById("receiverMatchesContainer");
         if (!container) return;
@@ -2225,10 +2233,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 details = `Amount: <strong>LKR ${m.amount}</strong> | Ref: ${m.referenceNumber} | <a href="${m.receiptUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700;">View Receipt</a>`;
             }
 
+            const isPickUp = isReceiverPickupMethod(m);
+
             let scheduleInfo = '';
             if (m.scheduledDateTime) {
                 const formatted = new Date(m.scheduledDateTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
-                if (m.deliveryMethod === 'self_delivery') {
+                if (!isPickUp) {
                     scheduleInfo = `<div style="font-size:0.8rem; color:var(--color-teal-primary); font-weight:700; margin-top:4px; margin-bottom:6px;">🚚 Scheduled Donor Self Delivery: ${formatted}</div>`;
                 } else {
                     scheduleInfo = `<div style="font-size:0.8rem; color:var(--color-secondary); font-weight:700; margin-top:4px; margin-bottom:6px;">📍 Scheduled Pick Up: ${formatted}</div>`;
@@ -2261,7 +2271,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             if (m.status === 'confirmed') {
-                if (m.deliveryMethod === 'receiver_pickup') {
+                if (isPickUp) {
                     actionButtonsHtml += `
                         <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startDeliverySession('${m.id}')">🚚 Start Pick-Up Journey</button>
                     `;
@@ -2281,7 +2291,7 @@ document.addEventListener("DOMContentLoaded", () => {
             let liveLocBtn = '';
             if (m.status === 'in_transit') {
                 liveLocBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Track Donor Delivery Live</button>`;
-                if (m.deliveryMethod === 'receiver_pickup') {
+                if (isPickUp) {
                     liveLocBtn += `<button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800; margin-left:4px;" onclick="startSharingLiveLocation('${m.id}')">📡 Share My Pick-Up GPS</button>`;
                 }
             }
@@ -2310,8 +2320,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px;">
                         ${actionButtonsHtml}
                         ${liveLocBtn}
-                        <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" onclick="startChatWithPartner('${m.id}')">💬 Message Donor</button>
                         ${evidenceBtn}
+                        <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" onclick="startChatWithPartner('${m.id}')">💬 Message Donor</button>
                     </div>
                 </div>
             `;
@@ -2342,10 +2352,12 @@ document.addEventListener("DOMContentLoaded", () => {
             else if (m.status === 'receiver_scheduled_pickup') statusBadge = `<span class="badge badge-info">Receiver Scheduled Pick Up</span>`;
             else if (m.status === 'schedule_negotiating') statusBadge = `<span class="badge badge-warning">Schedule Under Negotiation</span>`;
 
+            const isPickUp = isReceiverPickupMethod(m);
+
             let scheduleInfo = '';
             if (m.scheduledDateTime) {
                 const formatted = new Date(m.scheduledDateTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
-                if (m.deliveryMethod === 'self_delivery') {
+                if (!isPickUp) {
                     scheduleInfo = `<div style="font-size:0.8rem; color:var(--color-teal-primary); font-weight:700; margin-top:4px; margin-bottom:6px;">🚚 Scheduled Self Delivery: ${formatted}</div>`;
                 } else {
                     scheduleInfo = `<div style="font-size:0.8rem; color:var(--color-secondary); font-weight:700; margin-top:4px; margin-bottom:6px;">📍 Scheduled Pick Up: ${formatted}</div>`;
@@ -2378,7 +2390,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             if (m.status === 'confirmed') {
-                if (m.deliveryMethod === 'receiver_pickup') {
+                if (isPickUp) {
                     actionButtonsHtml += `
                         <span style="font-size:0.78rem; color:var(--color-teal-primary); font-weight:700; background:#E0F2F1; padding:4px 8px; border-radius:4px; border:1px solid #B2DFDB;">⏳ Waiting for receiver to start pick-up journey</span>
                     `;
@@ -2399,9 +2411,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let liveLocBtn = '';
             if (m.status === 'in_transit') {
-                if (m.deliveryMethod === 'self_delivery') {
+                if (!isPickUp) {
                     liveLocBtn = `<button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startSharingLiveLocation('${m.id}')">📡 Stream My Live Location</button>`;
-                } else if (m.deliveryMethod === 'receiver_pickup') {
+                } else {
                     liveLocBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Track Receiver Pick-Up Live</button>`;
                 }
             }
