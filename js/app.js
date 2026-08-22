@@ -1555,8 +1555,115 @@ document.addEventListener("DOMContentLoaded", () => {
         const item = donationsList.find(d => d.id === donationId);
         if (!item) return;
 
-        document.getElementById("mdlReqDonationId").value = item.id;
-        document.getElementById("mdlReqItemTitle").textContent = `Request Item: ${item.itemName}`;
+        let modal = document.getElementById("modalRequestAvailableItem");
+        if (!modal) {
+            modal = document.createElement("div");
+            modal.className = "modal";
+            modal.id = "modalRequestAvailableItem";
+            modal.innerHTML = `
+                <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:520px; width:90%; border-radius:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--color-border); padding-bottom:10px;">
+                        <h3 id="mdlReqItemTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin:0;">Request Material Item</h3>
+                        <button type="button" class="btn btn-secondary" style="padding:2px 8px; font-size:0.75rem; cursor:pointer;" onclick="document.getElementById('modalRequestAvailableItem').classList.remove('active'); document.getElementById('modalRequestAvailableItem').style.display='none';">✕</button>
+                    </div>
+                    <form id="formSubmitItemRequest">
+                        <input type="hidden" id="mdlReqDonationId" value="${item.id}">
+                        <div class="form-group" style="margin-bottom:14px;">
+                            <label class="form-label" style="font-weight:700; font-size:0.85rem;">Requested Quantity / Units</label>
+                            <input class="form-control" type="number" id="mdlReqItemQty" min="1" value="${item.quantity || 1}" max="${item.quantity || 1}" required style="font-weight:700; width:100%;">
+                            <div id="lblReqItemMaxNotice" style="font-size:0.75rem; color:var(--color-teal-primary); font-weight:700; margin-top:4px;">📌 Max Stock Available: ${item.quantity || 1} ${item.unit || 'units'}</div>
+                        </div>
+                        <div class="form-group" style="margin-bottom:14px;">
+                            <label class="form-label" style="font-weight:700; font-size:0.85rem;">Delivery Method</label>
+                            <input class="form-control" type="text" value="Self Pick Up (Receiver Pick Up)" readonly style="font-weight:800; background:#F5EFE0; color:var(--color-teal-primary); width:100%;">
+                        </div>
+                        <div style="background:#F5EFE0; padding:12px; border-radius:6px; font-size:0.8rem; color:var(--color-text-dark); margin-bottom:16px;">
+                            📌 As a Receiver requesting this available item, an automated notification will be sent to the donor to accept your request.
+                        </div>
+                        <button class="btn btn-primary" type="submit" style="width:100%; font-weight:800; padding:12px; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer;">Confirm Request</button>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById("formSubmitItemRequest")?.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const donId = document.getElementById("mdlReqDonationId").value;
+                const dItem = donationsList.find(d => d.id === donId);
+                if (!dItem) return;
+
+                const reqQty = parseInt(document.getElementById("mdlReqItemQty")?.value) || 1;
+                const maxAvail = parseInt(dItem.quantity) || 1;
+
+                if (reqQty > maxAvail) {
+                    showToast(`Illogical Quantity! You cannot request ${reqQty} units when the donor only has ${maxAvail} ${dItem.unit || 'units'} available.`, "warning");
+                    return;
+                }
+
+                if (reqQty <= 0) {
+                    showToast("Requested quantity must be at least 1 unit.", "warning");
+                    return;
+                }
+
+                const existingReq = matchesList.find(m => 
+                    m.donationId === dItem.id && 
+                    (m.receiverId === currentUser.uid || (currentUser.email && m.receiverEmail === currentUser.email)) && 
+                    (m.status === 'pending_donor_approval' || m.status === 'accepted' || m.status === 'confirmed')
+                );
+                if (existingReq) {
+                    showToast("You already have an active or pending request for this surplus item.", "warning");
+                    const mdl = document.getElementById("modalRequestAvailableItem");
+                    if (mdl) { mdl.classList.remove("active"); mdl.style.display = "none"; }
+                    return;
+                }
+
+                try {
+                    const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+                    const db = helper.db();
+
+                    const matchDoc = {
+                        donationId: dItem.id,
+                        requestName: dItem.itemName,
+                        receiverId: currentUser.uid,
+                        receiverName: currentUser.name,
+                        receiverEmail: currentUser.email || "",
+                        donorId: dItem.donorId,
+                        donorName: dItem.donorName,
+                        type: "physical",
+                        category: dItem.category,
+                        quantity: reqQty,
+                        unit: dItem.unit || "Units",
+                        initiator: "receiver",
+                        status: "pending_donor_approval",
+                        createdAt: new Date().toISOString()
+                    };
+
+                    await db.collection("matches").add(matchDoc);
+
+                    await db.collection("notifications").add({
+                        userId: dItem.donorId,
+                        message: `📌 Receiver ${currentUser.name} requested ${reqQty} ${dItem.unit || 'units'} of your available item "${dItem.itemName}". Please Accept or Reject this request in your dashboard.`,
+                        read: false,
+                        createdAt: new Date().toISOString()
+                    });
+
+                    showToast("Item request sent to donor! Waiting for donor approval.", "success");
+                    const mdl = document.getElementById("modalRequestAvailableItem");
+                    if (mdl) { mdl.classList.remove("active"); mdl.style.display = "none"; }
+                    updateOverviewStats();
+                    if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
+                } catch (err) {
+                    showToast("Failed to submit request.", "danger");
+                    console.error(err);
+                }
+            });
+        }
+
+        const donInput = document.getElementById("mdlReqDonationId");
+        if (donInput) donInput.value = item.id;
+
+        const titleEl = document.getElementById("mdlReqItemTitle");
+        if (titleEl) titleEl.textContent = `Request Item: ${item.itemName}`;
 
         const qtyInput = document.getElementById("mdlReqItemQty");
         const maxNotice = document.getElementById("lblReqItemMaxNotice");
@@ -1570,97 +1677,12 @@ document.addEventListener("DOMContentLoaded", () => {
             maxNotice.textContent = `📌 Max Stock Available: ${maxAvail} ${item.unit || 'units'}`;
         }
 
-        const modal = document.getElementById("modalRequestAvailableItem");
-        if (modal) modal.classList.add("active");
+        modal.style.display = "flex";
+        modal.style.visibility = "visible";
+        modal.style.opacity = "1";
+        modal.style.zIndex = "999999";
+        modal.classList.add("active");
     };
-
-    const formSubmitItemRequest = document.getElementById("formSubmitItemRequest");
-    if (formSubmitItemRequest) {
-        formSubmitItemRequest.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const donId = document.getElementById("mdlReqDonationId").value;
-            const item = donationsList.find(d => d.id === donId);
-            if (!item) return;
-
-            const reqQty = parseInt(document.getElementById("mdlReqItemQty")?.value) || 1;
-            const maxAvail = parseInt(item.quantity) || 1;
-
-            if (reqQty > maxAvail) {
-                showToast(`Illogical Quantity! You cannot request ${reqQty} units when the donor only has ${maxAvail} ${item.unit || 'units'} available.`, "warning");
-                return;
-            }
-
-            if (reqQty <= 0) {
-                showToast("Requested quantity must be at least 1 unit.", "warning");
-                return;
-            }
-
-            // Prevent duplicate active/pending request
-            const existingReq = matchesList.find(m => 
-                m.donationId === item.id && 
-                (m.receiverId === currentUser.uid || (currentUser.email && m.receiverEmail === currentUser.email)) && 
-                (m.status === 'pending_donor_approval' || m.status === 'accepted' || m.status === 'confirmed')
-            );
-            if (existingReq) {
-                showToast("You already have an active or pending request for this surplus item.", "warning");
-                const modal = document.getElementById("modalRequestAvailableItem");
-                if (modal) modal.classList.remove("active");
-                return;
-            }
-
-            const btnSubmit = formSubmitItemRequest.querySelector("button[type='submit']");
-
-            try {
-                if (btnSubmit) {
-                    btnSubmit.disabled = true;
-                    btnSubmit.textContent = "Sending Request...";
-                }
-
-                const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-                const db = helper.db();
-
-                const matchDoc = {
-                    donationId: item.id,
-                    requestName: item.itemName,
-                    receiverId: currentUser.uid,
-                    receiverName: currentUser.name,
-                    receiverEmail: currentUser.email || "",
-                    donorId: item.donorId,
-                    donorName: item.donorName,
-                    type: "physical",
-                    category: item.category,
-                    quantity: reqQty,
-                    unit: item.unit || "Units",
-                    initiator: "receiver",
-                    status: "pending_donor_approval",
-                    createdAt: new Date().toISOString()
-                };
-
-                await db.collection("matches").add(matchDoc);
-
-                await db.collection("notifications").add({
-                    userId: item.donorId,
-                    message: `📌 Receiver ${currentUser.name} requested ${reqQty} ${item.unit || 'units'} of your available item "${item.itemName}". Please Accept or Reject this request in your dashboard.`,
-                    read: false,
-                    createdAt: new Date().toISOString()
-                });
-
-                showToast("Item request sent to donor! Waiting for donor approval.", "success");
-                const modal = document.getElementById("modalRequestAvailableItem");
-                if (modal) modal.classList.remove("active");
-                formSubmitItemRequest.reset();
-                updateOverviewStats();
-            } catch (err) {
-                showToast("Failed to submit request.", "danger");
-                console.error(err);
-            } finally {
-                if (btnSubmit) {
-                    btnSubmit.disabled = false;
-                    btnSubmit.textContent = "Confirm Request";
-                }
-            }
-        });
-    }
 
     // Donor Accepts Receiver Item Request
     window.acceptReceiverItemRequest = async (matchId) => {
