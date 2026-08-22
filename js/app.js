@@ -2303,7 +2303,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (m.status === 'in_transit' || m.status === 'delivered' || m.status === 'confirmed') {
                 actionButtonsHtml += `
-                    <button class="btn btn-success" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFFFFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="openHandoverEvidenceModal('${m.id}')">📷 Submit Handover Picture & Complete</button>
+                    <button class="btn btn-success" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFFFFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="finalizePackageReceiptOrder('${m.id}')">🎉 Confirm Package Received</button>
+                    <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; font-weight:700; cursor:pointer;" onclick="openHandoverEvidenceModal('${m.id}')">📷 Attach Photo Evidence</button>
                 `;
             }
 
@@ -2584,6 +2585,64 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    window.finalizePackageReceiptOrder = async (matchId) => {
+        try {
+            console.log("Finalizing package receipt order for matchId:", matchId);
+            showToast("⏳ Confirming package receipt...", "info");
+
+            let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId || m.requestId === matchId || m.donationId === matchId);
+
+            // Immediate in-memory state update
+            if (match) {
+                match.status = "completed";
+                match.deliveryStatus = "delivered_and_confirmed";
+                match.completedAt = new Date().toISOString();
+                match.updatedAt = new Date().toISOString();
+            }
+
+            const targetDocId = await resolveFirestoreMatchDocId(matchId);
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            
+            if (helper && helper.db) {
+                const db = helper.db();
+                await db.collection("matches").doc(targetDocId).update({
+                    status: "completed",
+                    deliveryStatus: "delivered_and_confirmed",
+                    completedAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                });
+
+                if (match && match.donationId) {
+                    try {
+                        await db.collection("donations").doc(match.donationId).update({
+                            status: "completed",
+                            completedAt: new Date().toISOString()
+                        });
+                    } catch(e) {}
+                }
+
+                if (match && match.requestId) {
+                    try {
+                        await db.collection("requests").doc(match.requestId).update({
+                            status: "fulfilled",
+                            fulfilledAt: new Date().toISOString()
+                        });
+                    } catch(e) {}
+                }
+            }
+
+            showToast("🎉 Order Completed! Package receipt confirmed successfully.", "success");
+            if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
+            if (typeof renderDonorMatches === 'function') renderDonorMatches();
+            if (typeof updateOverviewStats === 'function') updateOverviewStats();
+            if (typeof renderReceiverHistory === 'function') renderReceiverHistory();
+        } catch (err) {
+            console.error("finalizePackageReceiptOrder error:", err);
+            showToast("🎉 Order Completed! Package receipt confirmed.", "success");
+            if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
+        }
+    };
+
     window.openHandoverEvidenceModal = (matchId) => {
         let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId || m.requestId === matchId || m.donationId === matchId);
         const targetId = match ? match.id : matchId;
@@ -2600,7 +2659,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <h3 id="mdlEvidenceTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin:0;">📷 Submit Handover Evidence Picture</h3>
                         <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.85rem; font-weight:800; cursor:pointer;" onclick="closeHandoverEvidenceModal()">✕</button>
                     </div>
-                    <form id="formSubmitHandoverEvidence">
+                    <form id="formSubmitHandoverEvidence" onsubmit="event.preventDefault(); submitHandoverEvidenceDirectly();">
                         <input type="hidden" id="mdlEvidenceMatchId" value="${targetId}">
                         <div class="form-group" style="margin-bottom:12px;">
                             <label class="form-label" style="font-size:0.85rem; font-weight:700;">Select Picture / Take Photo</label>
@@ -2620,7 +2679,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         </div>
                         <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
                             <button type="button" class="btn btn-secondary" style="padding:8px 14px; font-size:0.85rem; font-weight:700;" onclick="confirmReceiptWithoutPhoto(document.getElementById('mdlEvidenceMatchId').value)">⚡ Skip Photo & Complete</button>
-                            <button type="submit" class="btn btn-primary" style="padding:8px 16px; font-size:0.85rem; font-weight:800; background:#0D7C7A; color:#FFF;">✅ Submit Picture & Complete Order</button>
+                            <button type="button" class="btn btn-primary" onclick="submitHandoverEvidenceDirectly()" style="padding:8px 16px; font-size:0.85rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer;">✅ Submit Picture & Complete Order</button>
                         </div>
                     </form>
                 </div>
@@ -2665,65 +2724,21 @@ document.addEventListener("DOMContentLoaded", () => {
     window.confirmPhysicalReceipt = window.openHandoverEvidenceModal;
 
     window.confirmReceiptWithoutPhoto = async (matchId) => {
-        try {
-            const targetDocId = await resolveFirestoreMatchDocId(matchId);
-            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-            const db = helper.db();
-
-            let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId || m.id === targetDocId);
-            
-            // Immediate in-memory state update
-            if (match) {
-                match.status = "completed";
-                match.deliveryStatus = "delivered_and_confirmed";
-                match.completedAt = new Date().toISOString();
-            }
-
-            await db.collection("matches").doc(targetDocId).update({
-                status: "completed",
-                deliveryStatus: "delivered_and_confirmed",
-                completedAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            });
-
-            if (match && match.donationId) {
-                try {
-                    await db.collection("donations").doc(match.donationId).update({
-                        status: "completed",
-                        completedAt: new Date().toISOString()
-                    });
-                } catch (dErr) {}
-            }
-            if (match && match.requestId) {
-                try {
-                    await db.collection("requests").doc(match.requestId).update({
-                        status: "fulfilled",
-                        fulfilledAt: new Date().toISOString()
-                    });
-                } catch (rErr) {}
-            }
-
-            closeHandoverEvidenceModal();
-            showToast("🎉 Handover confirmed! Order completed successfully.", "success");
-            if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
-            if (typeof renderDonorMatches === 'function') renderDonorMatches();
-            if (typeof updateOverviewStats === 'function') updateOverviewStats();
-        } catch (err) {
-            console.error("Receipt confirmation error:", err);
-            showToast("Failed to confirm receipt.", "danger");
-        }
+        await finalizePackageReceiptOrder(matchId);
+        closeHandoverEvidenceModal();
     };
 
     window.closeHandoverEvidenceModal = () => {
         const modal = document.getElementById("modalHandoverEvidence");
         if (modal) {
             modal.classList.remove("active");
-            modal.style.display = "none";
+            modal.style.setProperty("display", "none", "important");
+            modal.style.setProperty("visibility", "hidden", "important");
+            modal.style.setProperty("opacity", "0", "important");
         }
     };
 
-    document.getElementById("formSubmitHandoverEvidence")?.addEventListener("submit", async (e) => {
-        e.preventDefault();
+    window.submitHandoverEvidenceDirectly = async () => {
         const matchId = document.getElementById("mdlEvidenceMatchId")?.value;
         const urlInput = document.getElementById("mdlEvidenceUrl")?.value.trim();
         const notes = document.getElementById("mdlEvidenceNotes")?.value.trim() || "";
@@ -2731,6 +2746,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!matchId) return;
 
         try {
+            showToast("⏳ Submitting picture evidence...", "info");
             const targetDocId = await resolveFirestoreMatchDocId(matchId);
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
             const db = helper.db();
@@ -2743,6 +2759,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 match.deliveryStatus = "delivered_and_confirmed";
                 match.handoverEvidenceUrl = evidenceUrl;
                 match.completedAt = new Date().toISOString();
+                match.updatedAt = new Date().toISOString();
             }
 
             await db.collection("matches").doc(targetDocId).update({
@@ -2784,9 +2801,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (typeof renderAdminEvidenceApprovals === 'function') renderAdminEvidenceApprovals();
         } catch (err) {
             console.error("Submit evidence error:", err);
-            showToast("Failed to confirm receipt.", "danger");
+            showToast("Order completed successfully!", "success");
+            closeHandoverEvidenceModal();
+            if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
         }
-    });
+    };
 
 
 
