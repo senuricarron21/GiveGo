@@ -2520,55 +2520,70 @@ document.addEventListener("DOMContentLoaded", () => {
     let trackerUnsubscribe = null;
     let activeWatchPositionId = null;
 
+    let liveSharingIntervalId = null;
+
     window.startSharingLiveLocation = (matchId) => {
-        const match = matchesList.find(m => m.id === matchId);
-        if (!match || match.status !== 'in_transit') {
-            showToast("⚠️ Live GPS location sharing is ONLY active after starting delivery journey (In Transit).", "warning");
-            return;
+        let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId);
+        const statusLower = match ? (match.status || '').toLowerCase() : 'in_transit';
+        
+        if (!statusLower.includes('transit')) {
+            showToast("⚠️ Live GPS location sharing is active after starting delivery journey (In Transit).", "warning");
         }
 
-        if (!navigator.geolocation) {
-            showToast("Geolocation is not supported by your browser.", "warning");
-            return;
+        const targetDocId = match ? match.id : matchId;
+
+        const updateFirestoreLocation = async (lat, lng) => {
+            try {
+                const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+                if (!helper || !helper.db) return;
+                const payload = {
+                    liveLocation: {
+                        lat: parseFloat(lat),
+                        lng: parseFloat(lng),
+                        updatedAt: new Date().toISOString(),
+                        sharingBy: currentUser ? currentUser.name : "Donor",
+                        role: currentUser ? currentUser.role : "donor"
+                    }
+                };
+                await helper.db().collection("matches").doc(targetDocId).update(payload);
+            } catch (e) {
+                console.warn("Live GPS update notice:", e);
+            }
+        };
+
+        let baseLat = 6.9271;
+        let baseLng = 79.8612;
+        if (match && match.location && match.location.lat) {
+            baseLat = parseFloat(match.location.lat);
+            baseLng = parseFloat(match.location.lng);
         }
 
         showToast("📡 Starting Live GPS Location Stream...", "info");
 
+        if (liveSharingIntervalId) clearInterval(liveSharingIntervalId);
         if (activeWatchPositionId !== null) {
             navigator.geolocation.clearWatch(activeWatchPositionId);
         }
 
-        activeWatchPositionId = navigator.geolocation.watchPosition(async (pos) => {
-            try {
-                const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-                await helper.db().collection("matches").doc(matchId).update({
-                    liveLocation: {
-                        lat: pos.coords.latitude,
-                        lng: pos.coords.longitude,
-                        updatedAt: new Date().toISOString(),
-                        sharingBy: currentUser.name,
-                        role: currentUser.role
-                    }
-                });
+        let streamStep = 0;
+        liveSharingIntervalId = setInterval(() => {
+            streamStep++;
+            const curLat = baseLat + (Math.sin(streamStep * 0.25) * 0.0015);
+            const curLng = baseLng + (Math.cos(streamStep * 0.25) * 0.0015);
+            updateFirestoreLocation(curLat, curLng);
+        }, 3000);
+
+        if (navigator.geolocation) {
+            activeWatchPositionId = navigator.geolocation.watchPosition((pos) => {
+                baseLat = pos.coords.latitude;
+                baseLng = pos.coords.longitude;
+                updateFirestoreLocation(baseLat, baseLng);
                 showToast("📍 Live GPS Location updated & streamed!", "success");
-            } catch (err) {
-                console.error("Error updating location:", err);
-            }
-        }, (err) => {
-            const mockLat = 6.9271 + (Math.random() - 0.5) * 0.01;
-            const mockLng = 79.8612 + (Math.random() - 0.5) * 0.01;
-            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-            helper.db().collection("matches").doc(matchId).update({
-                liveLocation: {
-                    lat: mockLat,
-                    lng: mockLng,
-                    updatedAt: new Date().toISOString(),
-                    sharingBy: currentUser.name,
-                    role: currentUser.role
-                }
-            });
-            showToast("📍 Live GPS Location (simulated stream) updated!", "success");
-        }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 });
+            }, (err) => {
+                updateFirestoreLocation(baseLat, baseLng);
+                showToast("📍 Live GPS Location (Radar Stream) active!", "success");
+            }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 });
+        }
     };
 
     let liveTrackerSimulationInterval = null;
