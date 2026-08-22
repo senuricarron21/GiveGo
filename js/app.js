@@ -2687,20 +2687,41 @@ document.addEventListener("DOMContentLoaded", () => {
             const container = document.getElementById("liveTrackerMapContainer");
             if (!container) return;
 
-            // Reset container to avoid Leaflet container re-init errors
-            if (container._leaflet_id) {
-                container._leaflet_id = null;
-            }
-            container.innerHTML = `<div id="liveMapInner" style="width:100%; height:380px;"></div>`;
-
             if (typeof L === 'undefined') {
-                container.innerHTML = `<iframe width="100%" height="380" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://maps.google.com/maps?q=${donorLat},${donorLng}&z=14&output=embed"></iframe>`;
+                if (!document.getElementById("leaflet-css-dyn")) {
+                    const lcss = document.createElement("link");
+                    lcss.id = "leaflet-css-dyn";
+                    lcss.rel = "stylesheet";
+                    lcss.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+                    document.head.appendChild(lcss);
+                }
+                if (!document.getElementById("leaflet-js-dyn")) {
+                    const ljs = document.createElement("script");
+                    ljs.id = "leaflet-js-dyn";
+                    ljs.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+                    ljs.onload = () => { renderMap(); };
+                    document.head.appendChild(ljs);
+                }
+                container.innerHTML = `
+                    <div style="width:100%; height:380px; background:linear-gradient(135deg, #0d7c7a 0%, #064e4b 100%); border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#FFFFFF; position:relative; overflow:hidden;">
+                        <div style="position:absolute; width:280px; height:280px; border:2px dashed rgba(255,255,255,0.25); border-radius:50%;"></div>
+                        <div style="position:absolute; width:180px; height:180px; border:2px solid rgba(255,255,255,0.4); border-radius:50%;"></div>
+                        <div style="font-size:3rem; margin-bottom:8px; z-index:2;">🚚</div>
+                        <div style="font-size:1.1rem; font-weight:800; z-index:2; margin-bottom:4px;">${partnerName} (Donor Live Stream)</div>
+                        <div style="font-size:0.85rem; font-weight:700; color:#E0F2F1; z-index:2; background:rgba(0,0,0,0.3); padding:4px 12px; border-radius:12px;">📍 Coordinates: ${donorLat.toFixed(4)}°N, ${donorLng.toFixed(4)}°E</div>
+                    </div>
+                `;
                 const statusDiv = document.getElementById("trackerStatusDetails");
-                if (statusDiv) statusDiv.innerHTML = `🟢 <strong>Live Donor Location Stream</strong> — ${partnerName} (${donorLat.toFixed(4)}, ${donorLng.toFixed(4)})`;
+                if (statusDiv) statusDiv.innerHTML = `🟢 <strong>Live Donor Location Stream Active</strong> — ${partnerName} (${donorLat.toFixed(4)}, ${donorLng.toFixed(4)})`;
                 return;
             }
 
             try {
+                if (container._leaflet_id) {
+                    container._leaflet_id = null;
+                }
+                container.innerHTML = `<div id="liveMapInner" style="width:100%; height:380px;"></div>`;
+
                 if (liveTrackerMap) {
                     try { liveTrackerMap.remove(); } catch (e) {}
                     liveTrackerMap = null;
@@ -2728,7 +2749,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     .openPopup();
             } catch (mapErr) {
                 console.warn("Leaflet init fallback:", mapErr);
-                container.innerHTML = `<iframe width="100%" height="380" frameborder="0" scrolling="no" src="https://maps.google.com/maps?q=${donorLat},${donorLng}&z=14&output=embed"></iframe>`;
             }
         };
 
