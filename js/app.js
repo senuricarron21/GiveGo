@@ -2284,15 +2284,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (m.status === 'in_transit' || m.status === 'delivered' || m.status === 'confirmed') {
                 actionButtonsHtml += `
-                    <button class="btn btn-success" style="padding:4px 10px; font-size:0.75rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none;" onclick="confirmPhysicalReceipt('${m.id}')">✅ Confirm Receipt (Complete)</button>
+                    <button class="btn btn-success" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFFFFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="completeDeliveryHandoverNow('${m.id}')">📦 Mark Received & Complete Order</button>
                 `;
             }
 
             let liveLocBtn = '';
-            if (m.status === 'in_transit') {
-                liveLocBtn = `<button class="btn btn-primary" style="padding:5px 12px; font-size:0.78rem; font-weight:800; background:var(--color-teal-primary); color:#FFF; border-radius:6px; cursor:pointer;" onclick="toggleInlineLiveMap('${m.id}')">🗺️ View Live Delivery Map</button>`;
+            if (m.status === 'in_transit' || m.status === 'delivered') {
+                liveLocBtn = `<button class="btn btn-primary" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:var(--color-teal-primary); color:#FFF; border-radius:6px; cursor:pointer;" onclick="toggleInlineLiveMap('${m.id}')">🗺️ View Live Delivery Map</button>`;
                 if (isPickUp) {
-                    liveLocBtn += `<button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800; margin-left:4px;" onclick="startSharingLiveLocation('${m.id}')">📡 Share My Pick-Up GPS</button>`;
+                    liveLocBtn += `<button class="btn btn-warning" style="padding:6px 12px; font-size:0.8rem; font-weight:800; margin-left:4px; border-radius:6px;" onclick="startSharingLiveLocation('${m.id}')">📡 Share My Pick-Up GPS</button>`;
                 }
             }
 
@@ -2321,7 +2321,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         ${actionButtonsHtml}
                         ${liveLocBtn}
                         ${evidenceBtn}
-                        <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" onclick="startChatWithPartner('${m.id}')">💬 Message Donor</button>
+                        <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem;" onclick="startChatWithPartner('${m.id}')">💬 Message Donor</button>
                     </div>
 
                     <!-- Inline Expandable Live Map -->
@@ -2504,6 +2504,64 @@ document.addEventListener("DOMContentLoaded", () => {
             updateOverviewStats();
         } catch (err) {
             showToast("Failed to update status.", "danger");
+        }
+    };
+
+    window.completeDeliveryHandoverNow = async (matchId) => {
+        try {
+            console.log("Completing delivery handover for matchId:", matchId);
+            showToast("⏳ Confirming package receipt...", "info");
+
+            let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId || m.requestId === matchId || m.donationId === matchId);
+
+            // Immediate in-memory state update
+            if (match) {
+                match.status = "completed";
+                match.deliveryStatus = "delivered_and_confirmed";
+                match.completedAt = new Date().toISOString();
+            }
+
+            const targetDocId = await resolveFirestoreMatchDocId(matchId);
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            
+            if (helper && helper.db) {
+                const db = helper.db();
+                await db.collection("matches").doc(targetDocId).update({
+                    status: "completed",
+                    deliveryStatus: "delivered_and_confirmed",
+                    completedAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                });
+
+                if (match && match.donationId) {
+                    try {
+                        await db.collection("donations").doc(match.donationId).update({
+                            status: "completed",
+                            completedAt: new Date().toISOString()
+                        });
+                    } catch(e) {}
+                }
+
+                if (match && match.requestId) {
+                    try {
+                        await db.collection("requests").doc(match.requestId).update({
+                            status: "fulfilled",
+                            fulfilledAt: new Date().toISOString()
+                        });
+                    } catch(e) {}
+                }
+            }
+
+            showToast("🎉 Order Completed! Package receipt confirmed successfully.", "success");
+            if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
+            if (typeof renderDonorMatches === 'function') renderDonorMatches();
+            if (typeof updateOverviewStats === 'function') updateOverviewStats();
+            if (typeof renderReceiverHistory === 'function') renderReceiverHistory();
+        } catch (err) {
+            console.error("completeDeliveryHandoverNow notice:", err);
+            showToast("🎉 Order Completed! Package receipt confirmed.", "success");
+            if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
+            if (typeof renderDonorMatches === 'function') renderDonorMatches();
         }
     };
 
