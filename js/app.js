@@ -3260,26 +3260,119 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    function initLeafletMap() {
+    function calculateHaversineKm(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return (R * c).toFixed(1);
+    }
+
+    window.initLeafletMap = function() {
         const container = document.getElementById("liveSimulatedMap");
-        if (!container || leafletMap) return;
+        if (!container) return;
+
+        if (typeof L === 'undefined') {
+            if (!document.getElementById("leaflet-css-dyn")) {
+                const lcss = document.createElement("link");
+                lcss.id = "leaflet-css-dyn";
+                lcss.rel = "stylesheet";
+                lcss.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+                document.head.appendChild(lcss);
+            }
+            if (!document.getElementById("leaflet-js-dyn")) {
+                const ljs = document.createElement("script");
+                ljs.id = "leaflet-js-dyn";
+                ljs.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+                ljs.onload = () => { window.initLeafletMap(); };
+                document.head.appendChild(ljs);
+            }
+            return;
+        }
 
         try {
-            const defaultLat = currentUser.location ? currentUser.location.lat : 6.9271;
-            const defaultLng = currentUser.location ? currentUser.location.lng : 79.8612;
+            if (leafletMap) {
+                try { leafletMap.remove(); } catch (e) {}
+                leafletMap = null;
+            }
 
-            leafletMap = L.map('liveSimulatedMap').setView([defaultLat, defaultLng], 12);
+            if (container._leaflet_id) {
+                container._leaflet_id = null;
+            }
+            container.innerHTML = `<div id="simulatedMapInner" style="width:100%; height:380px; border-radius:8px;"></div>`;
+
+            let userLat = 6.9271;
+            let userLng = 79.8612;
+            if (currentUser && currentUser.location && currentUser.location.lat) {
+                userLat = parseFloat(currentUser.location.lat);
+                userLng = parseFloat(currentUser.location.lng);
+            } else if (currentUser && currentUser.district && SRI_LANKA_DISTRICT_COORDS[currentUser.district.toLowerCase()]) {
+                userLat = SRI_LANKA_DISTRICT_COORDS[currentUser.district.toLowerCase()].lat;
+                userLng = SRI_LANKA_DISTRICT_COORDS[currentUser.district.toLowerCase()].lng;
+            }
+
+            leafletMap = L.map('simulatedMapInner').setView([userLat, userLng], 11);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors'
             }).addTo(leafletMap);
 
-            L.marker([defaultLat, defaultLng]).addTo(leafletMap)
-                .bindPopup(`<b>${currentUser.name}</b><br>Your Location`)
+            setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 100);
+            setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 400);
+
+            const isDonor = (currentUser && currentUser.role === 'donor') || (currentUser && currentUser.accountType === 'donor');
+            const myTitle = isDonor ? `📍 Depot: ${currentUser ? currentUser.name : 'Your Depot'}` : `🏢 Facility: ${currentUser ? currentUser.name : 'Your Facility'}`;
+
+            const userIconHtml = `<div style="background:#0D7C7A; color:#FFF; padding:6px 12px; border-radius:18px; font-weight:800; font-size:0.8rem; box-shadow:0 3px 8px rgba(0,0,0,0.3); border:2px solid #FFF;">${isDonor ? '🚚' : '🏢'} ${currentUser ? currentUser.name : 'My Facility'}</div>`;
+            const userIcon = L.divIcon({ className: 'user-map-pin', html: userIconHtml, iconSize: [140, 32], iconAnchor: [70, 16] });
+
+            const boundsGroup = [L.latLng(userLat, userLng)];
+            L.marker([userLat, userLng], { icon: userIcon }).addTo(leafletMap)
+                .bindPopup(`<b>${myTitle}</b><br>Coordinates: ${userLat.toFixed(4)}, ${userLng.toFixed(4)}`)
                 .openPopup();
+
+            const activeMatches = matchesList.filter(m => 
+                (isDonor ? m.donorId === currentUser.uid : m.receiverId === currentUser.uid)
+            );
+
+            activeMatches.forEach((m, idx) => {
+                let partnerLat = userLat + (Math.sin(idx + 1) * 0.04);
+                let partnerLng = userLng + (Math.cos(idx + 1) * 0.04);
+                let partnerName = isDonor ? (m.receiverName || 'Receiver') : (m.donorName || 'Donor');
+
+                if (m.location && m.location.lat) {
+                    partnerLat = parseFloat(m.location.lat);
+                    partnerLng = parseFloat(m.location.lng);
+                }
+
+                const distanceKm = calculateHaversineKm(userLat, userLng, partnerLat, partnerLng);
+                const partnerLatLng = [partnerLat, partnerLng];
+                boundsGroup.push(L.latLng(partnerLat, partnerLng));
+
+                const partnerIconHtml = `<div style="background:#E67E22; color:#FFF; padding:5px 10px; border-radius:16px; font-weight:800; font-size:0.75rem; box-shadow:0 3px 8px rgba(0,0,0,0.3); border:2px solid #FFF;">${isDonor ? '🏢' : '🚚'} ${partnerName} (${distanceKm} km)</div>`;
+                const partnerIcon = L.divIcon({ className: 'partner-map-pin', html: partnerIconHtml, iconSize: [150, 30], iconAnchor: [75, 15] });
+
+                L.marker(partnerLatLng, { icon: partnerIcon }).addTo(leafletMap)
+                    .bindPopup(`<b>${isDonor ? '🏢 Receiver Facility' : '🚚 Donor'}: ${partnerName}</b><br>Dispatch: ${m.requestName || 'Donation Item'}<br>Geographic Distance: <strong>${distanceKm} km away</strong>`);
+
+                L.polyline([[userLat, userLng], partnerLatLng], {
+                    color: '#0D7C7A',
+                    weight: 3,
+                    opacity: 0.8,
+                    dashArray: '8, 8'
+                }).addTo(leafletMap);
+            });
+
+            if (boundsGroup.length > 1) {
+                const bounds = L.latLngBounds(boundsGroup);
+                leafletMap.fitBounds(bounds, { padding: [40, 40] });
+            }
         } catch (err) {
-            console.error("Map initialization error:", err);
+            console.error("Real-Time Distance Map init error:", err);
         }
-    }
+    };
 
     function renderAdminActiveMatchesTable() {
         const body1 = document.getElementById("adminActiveMatchesTableBody");
