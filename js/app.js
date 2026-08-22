@@ -74,32 +74,14 @@ document.addEventListener("DOMContentLoaded", () => {
         let menuHTML = `<li class="menu-item active"><a href="#overview">Overview</a></li>`;
 
         if (isAdmin) {
-            menuHTML += `
-                <li class="menu-item"><a href="#users">Accounts</a></li>
-                <li class="menu-item"><a href="#approvals">Approvals</a></li>
-                <li class="menu-item"><a href="#system-directory">System Directory</a></li>
-            `;
+            menuHTML += ` <li class="menu-item"><a href="#users">Accounts</a></li> <li class="menu-item"><a href="#approvals">Approvals</a></li> <li class="menu-item"><a href="#system-directory">System Directory</a></li> `;
         } else if (isDonor) {
-            menuHTML += `
-                <li class="menu-item"><a href="#listings">My Donations</a></li>
-                <li class="menu-item"><a href="#needs-catalogue">Requests Catalogue</a></li>
-                <li class="menu-item"><a href="#matching">Matches & Connections</a></li>
-                <li class="menu-item"><a href="#chat">Messages</a></li>
-            `;
+            menuHTML += ` <li class="menu-item"><a href="#listings">My Donations</a></li> <li class="menu-item"><a href="#needs-catalogue">Requests Catalogue</a></li> <li class="menu-item"><a href="#matching">Matches & Connections</a></li> <li class="menu-item"><a href="#chat">Messages</a></li> `;
         } else if (isReceiver) {
-            menuHTML += `
-                <li class="menu-item"><a href="#requests">Material Requests</a></li>
-                <li class="menu-item"><a href="#matching">Matches & Connections</a></li>
-                <li class="menu-item"><a href="#chat">Messages</a></li>
-            `;
+            menuHTML += ` <li class="menu-item"><a href="#requests">Material Requests</a></li> <li class="menu-item"><a href="#matching">Matches & Connections</a></li> <li class="menu-item"><a href="#chat">Messages</a></li> `;
         }
 
-        menuHTML += `
-            <li class="menu-item"><a href="#available-items">Available Items</a></li>
-            <li class="menu-item"><a href="#history">History</a></li>
-            <li class="menu-item"><a href="#notifications">Notifications ${unreadBadgeHTML}</a></li>
-            <li class="menu-item"><a href="#contact">Contact Us</a></li>
-        `;
+        menuHTML += ` <li class="menu-item"><a href="#available-items">Available Items</a></li> <li class="menu-item"><a href="#history">History</a></li> <li class="menu-item"><a href="#notifications">Notifications ${unreadBadgeHTML}</a></li> <li class="menu-item"><a href="#contact">Contact Us</a></li> `;
 
         menuList.innerHTML = menuHTML;
         
@@ -130,25 +112,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const overviewGrid = document.getElementById("overviewStatsGrid");
         if (overviewGrid) {
             if (isAdmin) {
-                overviewGrid.innerHTML = `
-                    <div class="stat-card glass-panel"><div class="stat-title">PENDING APPROVALS</div><div class="stat-number" id="statPendingApprovalsCount">0</div></div>
-                    <div class="stat-card glass-panel"><div class="stat-title">PUBLISHED NEEDS</div><div class="stat-number" id="statTotalRequests">0</div></div>
-                    <div class="stat-card glass-panel"><div class="stat-title">MATCH ALLOCATION RATE</div><div class="stat-number" id="statMatchRate">0%</div></div>
-                    <div class="stat-card glass-panel"><div class="stat-title">REGISTERED USERS</div><div class="stat-number" id="statTotalUsers">0</div></div>
-                `;
+                overviewGrid.innerHTML = ` <div class="stat-card glass-panel"><div class="stat-title">PENDING APPROVALS</div><div class="stat-number" id="statPendingApprovalsCount">0</div></div> <div class="stat-card glass-panel"><div class="stat-title">PUBLISHED NEEDS</div><div class="stat-number" id="statTotalRequests">0</div></div> <div class="stat-card glass-panel"><div class="stat-title">MATCH ALLOCATION RATE</div><div class="stat-number" id="statMatchRate">0%</div></div> <div class="stat-card glass-panel"><div class="stat-title">REGISTERED USERS</div><div class="stat-number" id="statTotalUsers">0</div></div> `;
             } else if (isDonor) {
-                overviewGrid.innerHTML = `
-                    <div class="stat-card glass-panel"><div class="stat-title">MY PHYSICAL LISTINGS</div><div class="stat-number" id="statMyListings">0</div></div>
-                    <div class="stat-card glass-panel"><div class="stat-title">ACTIVE MATCHES</div><div class="stat-number" id="statMyMatches">0</div></div>
-                    <div class="stat-card glass-panel"><div class="stat-title">COMPLETED SUPPORT</div><div class="stat-number" id="statCompletedDons">0</div></div>
-                `;
+                overviewGrid.innerHTML = ` <div class="stat-card glass-panel"><div class="stat-title">MY PHYSICAL LISTINGS</div><div class="stat-number" id="statMyListings">0</div></div> <div class="stat-card glass-panel"><div class="stat-title">ACTIVE MATCHES</div><div class="stat-number" id="statMyMatches">0</div></div> <div class="stat-card glass-panel"><div class="stat-title">COMPLETED SUPPORT</div><div class="stat-number" id="statCompletedDons">0</div></div> `;
             } else if (isReceiver) {
-                overviewGrid.innerHTML = `
-                    <div class="stat-card glass-panel"><div class="stat-title">MY REQUESTS</div><div class="stat-number" id="statMyRequests">0</div></div>
-                    <div class="stat-card glass-panel"><div class="stat-title">MATCHED OFFERS</div><div class="stat-number" id="statReceiverMatches">0</div></div>
-                    <div class="stat-card glass-panel"><div class="stat-title">UTILISATION PENDING</div><div class="stat-number" id="statPendingEvidence">0</div></div>
-                    <div class="stat-card glass-panel"><div class="stat-title">FULFILLMENT RATE</div><div class="stat-number" id="statFulfillRate">0%</div></div>
-                `;
+                overviewGrid.innerHTML = ` <div class="stat-card glass-panel"><div class="stat-title">MY REQUESTS</div><div class="stat-number" id="statMyRequests">0</div></div> <div class="stat-card glass-panel"><div class="stat-title">MATCHED OFFERS</div><div class="stat-number" id="statReceiverMatches">0</div></div> <div class="stat-card glass-panel"><div class="stat-title">UTILISATION PENDING</div><div class="stat-number" id="statPendingEvidence">0</div></div> <div class="stat-card glass-panel"><div class="stat-title">FULFILLMENT RATE</div><div class="stat-number" id="statFulfillRate">0%</div></div> `;
             }
         }
 
@@ -203,8 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const myMatches = matchesList.filter(m => m.receiverId === currentUser.uid);
             const myConfirmedMatches = myMatches.filter(m => m.status === 'confirmed').length;
             
-            const pendingEvidenceMatches = myMatches.filter(m => 
-                m.type === 'monetary' && 
+            const pendingEvidenceMatches = myMatches.filter(m => m.type === 'monetary' && 
                 !m.evidenceSubmitted
             ).length;
 
@@ -253,7 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             await db.collection("notifications").add({
                 userId: req.receiverId,
-                message: `⚡ Matches & Connections: Admin connected Donor ${don.donorName}'s surplus "${don.itemName}" for your request "${req.itemName}".`,
+                message: ` Matches & Connections: Admin connected Donor ${don.donorName}'s surplus "${don.itemName}" for your request "${req.itemName}".`,
             });
 
             showToast("Matches & Connections auto-connected & dispatch initiated!", "success");
@@ -358,27 +325,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let actionBtn = '';
             if (isUserAdmin) {
-                actionBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="autoConnectSmartMatch('${m.requestId}', '${m.donationId}')">⚡ Auto Connect Pair</button>`;
+                actionBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="autoConnectSmartMatch('${m.requestId}', '${m.donationId}')"> Auto Connect Pair</button>`;
             } else if (isUserDonor) {
                 actionBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="offerPhysicalDonation('${m.requestId}')">Offer Item to Receiver</button>`;
             } else if (isUserReceiver) {
                 actionBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openRequestAvailableItemModal('${m.donationId}')">Request This Surplus Item</button>`;
             }
 
-            return `
-                <div style="background:#FBF5DD; border-left:4px solid var(--color-teal-primary); padding:14px; border-radius:6px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                    <div>
-                        <div style="display:flex; gap:8px; align-items:center; margin-bottom:4px;">
-                            <span class="badge badge-success" style="font-size:0.7rem; font-weight:800;">⚡ MATCHES & CONNECTIONS</span>
-                            <span style="font-size:0.75rem; font-weight:700; color:var(--color-teal-primary);">${m.matchType}</span>
-                        </div>
-                        <div style="font-weight:800; color:var(--color-text-dark); font-size:0.9rem;">
-                            Need: <strong>"${m.requestName}"</strong> (${m.receiverName}) ↔ Surplus: <strong>"${m.donationName}"</strong> (${m.donorName})
-                        </div>
-                    </div>
-                    <div>${actionBtn}</div>
-                </div>
-            `;
+            return ` <div style="background:#FBF5DD; border-left:4px solid var(--color-teal-primary); padding:14px; border-radius:6px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;"> <div> <div style="display:flex; gap:8px; align-items:center; margin-bottom:4px;"> <span class="badge badge-success" style="font-size:0.7rem; font-weight:800;"> MATCHES & CONNECTIONS</span> <span style="font-size:0.75rem; font-weight:700; color:var(--color-teal-primary);">${m.matchType}</span> </div> <div style="font-weight:800; color:var(--color-text-dark); font-size:0.9rem;"> Need: <strong>"${m.requestName}"</strong> (${m.receiverName})  Surplus: <strong>"${m.donationName}"</strong> (${m.donorName}) </div> </div> <div>${actionBtn}</div> </div> `;
         }).join("");
     }
 
@@ -548,27 +502,14 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!container) return;
         
         if (notificationsList.length === 0) {
-            container.innerHTML = `
-                <div class="glass-panel" style="padding: 40px; text-align: center; background: #FFFFFF;">
-                    <h4 style="color: var(--color-teal-primary); font-size: 1.1rem; margin-bottom: 8px;">No Active Alerts</h4>
-                    <p style="color: var(--color-text-muted); font-size: 0.9rem;">You are up to date! System notifications and donation match alerts will appear here automatically.</p>
-                </div>
-            `;
+            container.innerHTML = ` <div class="glass-panel" style="padding: 40px; text-align: center; background: #FFFFFF;"> <h4 style="color: var(--color-teal-primary); font-size: 1.1rem; margin-bottom: 8px;">No Active Alerts</h4> <p style="color: var(--color-text-muted); font-size: 0.9rem;">You are up to date! System notifications and donation match alerts will appear here automatically.</p> </div> `;
             return;
         }
 
         const sorted = [...notificationsList].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
         container.innerHTML = sorted.map(n => {
             const date = new Date(n.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' });
-            return `
-                <div class="glass-panel" style="padding: 16px 20px; margin-bottom: 12px; border-left: 5px solid ${n.read ? 'var(--color-border)' : 'var(--color-teal-primary)'}; background: #FFFFFF; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="markNotificationRead('${n.id}')">
-                    <div>
-                        <div style="font-size: 0.95rem; font-weight: ${n.read ? '600' : '800'}; color: var(--color-teal-primary); margin-bottom: 4px;">${n.message}</div>
-                        <div style="font-size: 0.75rem; color: var(--color-text-muted);">${date}</div>
-                    </div>
-                    ${n.read ? `<span class="badge badge-info" style="font-size:0.7rem;">Read</span>` : `<span class="badge badge-success" style="font-size:0.7rem;">New Alert</span>`}
-                </div>
-            `;
+            return ` <div class="glass-panel" style="padding: 16px 20px; margin-bottom: 12px; border-left: 5px solid ${n.read ? 'var(--color-border)' : 'var(--color-teal-primary)'}; background: #FFFFFF; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="markNotificationRead('${n.id}')"> <div> <div style="font-size: 0.95rem; font-weight: ${n.read ? '600' : '800'}; color: var(--color-teal-primary); margin-bottom: 4px;">${n.message}</div> <div style="font-size: 0.75rem; color: var(--color-text-muted);">${date}</div> </div> ${n.read ? `<span class="badge badge-info" style="font-size:0.7rem;">Read</span>` : `<span class="badge badge-success" style="font-size:0.7rem;">New Alert</span>`} </div> `;
         }).join("");
     }
 
@@ -758,8 +699,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const catFilter = document.getElementById("filterDonorCategory")?.value || "all";
         const sortOrder = document.getElementById("sortDonorOrder")?.value || "latest";
 
-        let myDonations = donationsList.filter(d => 
-            d.donorId === currentUser.uid || 
+        let myDonations = donationsList.filter(d => d.donorId === currentUser.uid || 
             (currentUser.id && d.donorId === currentUser.id) || 
             (currentUser.email && d.donorEmail === currentUser.email)
         );
@@ -771,8 +711,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (searchKeyword) {
-            myDonations = myDonations.filter(d => 
-                (d.itemName && d.itemName.toLowerCase().includes(searchKeyword)) ||
+            myDonations = myDonations.filter(d => (d.itemName && d.itemName.toLowerCase().includes(searchKeyword)) ||
                 (d.category && d.category.toLowerCase().includes(searchKeyword))
             );
         }
@@ -795,18 +734,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (d.status === 'available') statusBadge = `<span class="badge badge-success">Approved / Available</span>`;
             else if (d.status === 'rejected') statusBadge = `<span class="badge badge-danger">Rejected by Admin</span>`;
 
-            return `
-                <tr>
-                    <td><img src="${d.photoUrl || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=80&q=80'}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;"></td>
-                    <td><strong>${d.itemName}</strong></td>
-                    <td>${d.category}</td>
-                    <td>${d.quantity} ${d.unit || 'units'}</td>
-                    <td>${statusBadge}</td>
-                    <td>
-                        <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="deleteDonation('${d.id}')">Delete</button>
-                    </td>
-                </tr>
-            `;
+            return ` <tr> <td><img src="${d.photoUrl || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=80&q=80'}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;"></td> <td><strong>${d.itemName}</strong></td> <td>${d.category}</td> <td>${d.quantity} ${d.unit || 'units'}</td> <td>${statusBadge}</td> <td> <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="deleteDonation('${d.id}')">Delete</button> </td> </tr> `;
         }).join("");
     }
 
@@ -828,8 +756,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const catFilter = document.getElementById("filterReceiverCategory")?.value || "all";
         const sortOrder = document.getElementById("sortReceiverOrder")?.value || "latest";
 
-        let myRequests = requestsList.filter(r => 
-            r.receiverId === currentUser.uid || 
+        let myRequests = requestsList.filter(r => r.receiverId === currentUser.uid || 
             (currentUser.name && r.receiverName === currentUser.name) || 
             (currentUser.email && r.receiverEmail === currentUser.email)
         );
@@ -841,8 +768,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (searchKeyword) {
-            myRequests = myRequests.filter(r => 
-                (r.itemName && r.itemName.toLowerCase().includes(searchKeyword)) ||
+            myRequests = myRequests.filter(r => (r.itemName && r.itemName.toLowerCase().includes(searchKeyword)) ||
                 (r.category && r.category.toLowerCase().includes(searchKeyword)) ||
                 (r.reqType && r.reqType.toLowerCase().includes(searchKeyword))
             );
@@ -877,19 +803,7 @@ document.addEventListener("DOMContentLoaded", () => {
             else if (r.status === 'fulfilled') statusBadge = `<span class="badge badge-info">Completed</span>`;
             else if (r.status === 'suspended') statusBadge = `<span class="badge badge-danger">Suspended</span>`;
 
-            return `
-                <tr>
-                    <td>${typeBadge}</td>
-                    <td><strong>${r.itemName}</strong></td>
-                    <td>${r.category}</td>
-                    <td>${targetText}</td>
-                    <td>${fulfilledText}</td>
-                    <td>${statusBadge}</td>
-                    <td>
-                        <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="deleteRequest('${r.id}')">Delete</button>
-                    </td>
-                </tr>
-            `;
+            return ` <tr> <td>${typeBadge}</td> <td><strong>${r.itemName}</strong></td> <td>${r.category}</td> <td>${targetText}</td> <td>${fulfilledText}</td> <td>${statusBadge}</td> <td> <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="deleteRequest('${r.id}')">Delete</button> </td> </tr> `;
         }).join("");
     }
 
@@ -913,8 +827,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const targetDonation = donationsList.find(d => d.id === donId);
             const donName = targetDonation ? targetDonation.itemName : "";
 
-            const relatedMatches = matchesList.filter(m => 
-                m.donationId === donId || 
+            const relatedMatches = matchesList.filter(m => m.donationId === donId || 
                 (donName && m.donationName === donName)
             );
 
@@ -965,45 +878,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         html += pendingReqs.map(r => {
             const isHospitalVol = (r.receiverCategory === 'Hospital' && r.reqType === 'volunteer');
-            return `
-                <div class="glass-panel" style="padding: 20px; background: #FFFFFF; border-left: 4px solid var(--color-teal-primary);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <span class="badge badge-info">RECEIVER REQUEST: ${(r.reqType || 'physical').toUpperCase()}</span>
-                        <span class="badge badge-warning">${r.district || 'Colombo'}</span>
-                    </div>
-
-                    ${isHospitalVol ? `<div class="badge badge-warning" style="width:100%; margin-bottom:10px;">Hospital Non-Clinical Support Approval Required</div>` : ''}
-
-                    <h4 style="font-size: 1.1rem; color: var(--color-teal-primary); margin-bottom: 4px;">${r.itemName}</h4>
-                    <div style="font-size: 0.85rem; color: var(--color-teal-muted); font-weight:700; margin-bottom: 8px;">Receiver: ${r.receiverName} (${r.receiverCategory || 'Receiver'})</div>
-                    <p style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 12px;">${r.description}</p>
-
-                    <div style="display:flex; gap:10px;">
-                        <button class="btn btn-primary" style="flex-grow:1; font-size:0.8rem;" onclick="approveRequest('${r.id}')">Approve & Publish Request</button>
-                        <button class="btn btn-danger" style="font-size:0.8rem;" onclick="rejectRequest('${r.id}')">Reject</button>
-                    </div>
-                </div>
-            `;
+            return ` <div class="glass-panel" style="padding: 20px; background: #FFFFFF; border-left: 4px solid var(--color-teal-primary);"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"> <span class="badge badge-info">RECEIVER REQUEST: ${(r.reqType || 'physical').toUpperCase()}</span> <span class="badge badge-warning">${r.district || 'Colombo'}</span> </div> ${isHospitalVol ? `<div class="badge badge-warning" style="width:100%; margin-bottom:10px;">Hospital Non-Clinical Support Approval Required</div>` : ''} <h4 style="font-size: 1.1rem; color: var(--color-teal-primary); margin-bottom: 4px;">${r.itemName}</h4> <div style="font-size: 0.85rem; color: var(--color-teal-muted); font-weight:700; margin-bottom: 8px;">Receiver: ${r.receiverName} (${r.receiverCategory || 'Receiver'})</div> <p style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 12px;">${r.description}</p> <div style="display:flex; gap:10px;"> <button class="btn btn-primary" style="flex-grow:1; font-size:0.8rem;" onclick="approveRequest('${r.id}')">Approve & Publish Request</button> <button class="btn btn-danger" style="font-size:0.8rem;" onclick="rejectRequest('${r.id}')">Reject</button> </div> </div> `;
         }).join("");
 
         html += pendingDons.map(d => {
-            return `
-                <div class="glass-panel" style="padding: 20px; background: #FFFFFF; border-left: 4px solid #306D29;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <span class="badge badge-success">DONOR SURPLUS ITEM LISTING</span>
-                        <span class="badge badge-warning">${d.district || 'Colombo'}</span>
-                    </div>
-
-                    <h4 style="font-size: 1.1rem; color: var(--color-teal-primary); margin-bottom: 4px;">${d.itemName}</h4>
-                    <div style="font-size: 0.85rem; color: var(--color-teal-muted); font-weight:700; margin-bottom: 8px;">Donor: ${d.donorName} | Category: ${d.category}</div>
-                    <p style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 12px;">Qty: <strong>${d.quantity} units</strong> | Condition: ${d.condition || 'Good'}</p>
-
-                    <div style="display:flex; gap:10px;">
-                        <button class="btn btn-primary" style="flex-grow:1; font-size:0.8rem;" onclick="approveDonationListing('${d.id}')">Approve & Publish to Directory</button>
-                        <button class="btn btn-danger" style="font-size:0.8rem;" onclick="rejectDonationListing('${d.id}')">Reject</button>
-                    </div>
-                </div>
-            `;
+            return ` <div class="glass-panel" style="padding: 20px; background: #FFFFFF; border-left: 4px solid #306D29;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"> <span class="badge badge-success">DONOR SURPLUS ITEM LISTING</span> <span class="badge badge-warning">${d.district || 'Colombo'}</span> </div> <h4 style="font-size: 1.1rem; color: var(--color-teal-primary); margin-bottom: 4px;">${d.itemName}</h4> <div style="font-size: 0.85rem; color: var(--color-teal-muted); font-weight:700; margin-bottom: 8px;">Donor: ${d.donorName} | Category: ${d.category}</div> <p style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 12px;">Qty: <strong>${d.quantity} units</strong> | Condition: ${d.condition || 'Good'}</p> <div style="display:flex; gap:10px;"> <button class="btn btn-primary" style="flex-grow:1; font-size:0.8rem;" onclick="approveDonationListing('${d.id}')">Approve & Publish to Directory</button> <button class="btn btn-danger" style="font-size:0.8rem;" onclick="rejectDonationListing('${d.id}')">Reject</button> </div> </div> `;
         }).join("");
 
         grid.innerHTML = html;
@@ -1112,8 +991,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const targetRequest = requestsList.find(r => r.id === reqId);
             const reqName = targetRequest ? targetRequest.itemName : "";
 
-            const relatedMatches = matchesList.filter(m => 
-                m.requestId === reqId || 
+            const relatedMatches = matchesList.filter(m => m.requestId === reqId || 
                 (reqName && m.requestName === reqName)
             );
 
@@ -1149,11 +1027,11 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     window.clearAllDatabaseItems = async () => {
-        if (!confirm("⚠️ WARNING: Are you sure you want to permanently delete ALL requests, donation listings, matches, chat messages, and notifications from the database? This action cannot be undone.")) {
+        if (!confirm(" WARNING: Are you sure you want to permanently delete ALL requests, donation listings, matches, chat messages, and notifications from the database? This action cannot be undone.")) {
             return;
         }
 
-        showToast("🧹 Purging all items from database...", "info");
+        showToast(" Purging all items from database...", "info");
 
         try {
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
@@ -1191,7 +1069,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (typeof renderChatMatchesList === 'function') renderChatMatchesList();
             if (typeof updateOverviewStats === 'function') updateOverviewStats();
 
-            showToast("✅ All database items (requests, listings, matches, chats) have been permanently removed!", "success");
+            showToast(" All database items (requests, listings, matches, chats) have been permanently removed!", "success");
         } catch (err) {
             console.error("Error purging database items:", err);
             showToast("Failed to purge database items.", "danger");
@@ -1212,8 +1090,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let filtered = requestsList.filter(r => r.status === 'published' || r.status === 'partially_fulfilled');
 
         if (searchKeyword) {
-            filtered = filtered.filter(r => 
-                (r.itemName && r.itemName.toLowerCase().includes(searchKeyword)) ||
+            filtered = filtered.filter(r => (r.itemName && r.itemName.toLowerCase().includes(searchKeyword)) ||
                 (r.category && r.category.toLowerCase().includes(searchKeyword)) ||
                 (r.receiverCategory && r.receiverCategory.toLowerCase().includes(searchKeyword)) ||
                 (r.receiverName && r.receiverName.toLowerCase().includes(searchKeyword))
@@ -1256,38 +1133,12 @@ document.addEventListener("DOMContentLoaded", () => {
             } else if (reqType === 'monetary') {
                 actionBtn = `<button class="btn btn-primary" style="width:100%; font-size:0.85rem;" onclick="openMonetaryModal('${r.id}')">Make Monetary Transfer</button>`;
             } else if (reqType === 'volunteer') {
-                actionBtn = `<button type="button" class="btn btn-primary" data-action="volunteer-shift" data-request-id="${r.id}" style="width:100%; font-size:0.85rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="openVolunteerModal('${r.id}')">🤝 Join Volunteer Shift</button>`;
+                actionBtn = `<button type="button" class="btn btn-primary" data-action="volunteer-shift" data-request-id="${r.id}" style="width:100%; font-size:0.85rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="openVolunteerModal('${r.id}')"> Join Volunteer Shift</button>`;
             }
 
-            return `
-                <div class="glass-panel" style="padding: 20px; background: #FFFFFF; display: flex; flex-direction: column; justify-content: space-between;">
-                    <div>
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-                            <span class="badge badge-info">${reqType.toUpperCase()}</span>
-                            <span class="badge badge-warning">${r.district || 'Colombo'}</span>
-                        </div>
-
-                        <h4 style="font-size: 1.1rem; color: var(--color-teal-primary); margin-bottom: 4px;">${r.itemName}</h4>
-                        <div style="font-size: 0.8rem; color: var(--color-teal-muted); font-weight: 700; margin-bottom: 8px;">${r.receiverName} (${r.receiverCategory || 'Receiver'})</div>
-                        <p style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 14px; line-height: 1.4;">${r.description}</p>
-
-                        ${reqType === 'physical' ? `
-                            <div style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 12px;">Required: <strong>${r.quantityRequired} units</strong> (Condition: ${r.acceptableCondition || 'Any'})</div>
-                        ` : ''}
-                        ${reqType === 'monetary' ? `
-                            <div style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 12px;">Target Goal: <strong>LKR ${r.amountRequired}</strong></div>
-                        ` : ''}
-                        ${reqType === 'volunteer' ? `
-                            <div style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 6px;">Volunteers Required: <strong>${r.volunteersRequired}</strong></div>
-                            <div style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 12px;">Equipment: ${r.equipmentNeeded || 'Standard tools'}</div>
-                        ` : ''}
-                    </div>
-                    <div>
-                        ${actionBtn}
-                        <button class="btn btn-secondary" style="width:100%; font-size:0.75rem; padding:4px; margin-top:6px;" onclick="openDirectChatWithUser('${r.receiverId}', '${r.receiverName}', '${r.itemName}')">💬 Message Receiver</button>
-                    </div>
-                </div>
-            `;
+            return ` <div class="glass-panel" style="padding: 20px; background: #FFFFFF; display: flex; flex-direction: column; justify-content: space-between;"> <div> <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;"> <span class="badge badge-info">${reqType.toUpperCase()}</span> <span class="badge badge-warning">${r.district || 'Colombo'}</span> </div> <h4 style="font-size: 1.1rem; color: var(--color-teal-primary); margin-bottom: 4px;">${r.itemName}</h4> <div style="font-size: 0.8rem; color: var(--color-teal-muted); font-weight: 700; margin-bottom: 8px;">${r.receiverName} (${r.receiverCategory || 'Receiver'})</div> <p style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 14px; line-height: 1.4;">${r.description}</p> ${reqType === 'physical' ? ` <div style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 12px;">Required: <strong>${r.quantityRequired} units</strong> (Condition: ${r.acceptableCondition || 'Any'})</div> ` : ''}
+                        ${reqType === 'monetary' ? ` <div style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 12px;">Target Goal: <strong>LKR ${r.amountRequired}</strong></div> ` : ''}
+                        ${reqType === 'volunteer' ? ` <div style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 6px;">Volunteers Required: <strong>${r.volunteersRequired}</strong></div> <div style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 12px;">Equipment: ${r.equipmentNeeded || 'Standard tools'}</div> ` : ''} </div> <div> ${actionBtn} <button class="btn btn-secondary" style="width:100%; font-size:0.75rem; padding:4px; margin-top:6px;" onclick="openDirectChatWithUser('${r.receiverId}', '${r.receiverName}', '${r.itemName}')"> Message Receiver</button> </div> </div> `;
         }).join("");
     }
 
@@ -1317,7 +1168,7 @@ document.addEventListener("DOMContentLoaded", () => {
             qtyInput.value = maxRequired;
         }
         if (maxNotice) {
-            maxNotice.textContent = `📌 Max Limit: ${maxRequired} ${req.unit || 'units'} (Receiver requested ${maxRequired} ${req.unit || 'units'})`;
+            maxNotice.textContent = ` Max Limit: ${maxRequired} ${req.unit || 'units'} (Receiver requested ${maxRequired} ${req.unit || 'units'})`;
         }
 
         const modal = document.getElementById("modalOfferDonation");
@@ -1347,8 +1198,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             // Prevent duplicate active/pending offer
-            const existingOffer = matchesList.find(m => 
-                m.requestId === req.id && 
+            const existingOffer = matchesList.find(m => m.requestId === req.id && 
                 (m.donorId === currentUser.uid || (currentUser.email && m.donorEmail === currentUser.email)) && 
                 (m.status === 'pending_receiver_approval' || m.status === 'accepted' || m.status === 'confirmed')
             );
@@ -1392,7 +1242,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 await db.collection("notifications").add({
                     userId: req.receiverId,
-                    message: `🎁 Donor ${currentUser.name} offered ${qty} ${req.unit || 'units'} for "${req.itemName}". Please Accept or Reject this offer in your dashboard.`,
+                    message: ` Donor ${currentUser.name} offered ${qty} ${req.unit || 'units'} for "${req.itemName}". Please Accept or Reject this offer in your dashboard.`,
                     read: false,
                     createdAt: new Date().toISOString()
                 });
@@ -1517,8 +1367,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             const notifMsg = isMonetary 
-                ? `💰 Receiver ${currentUser.name} accepted and confirmed receipt of your donation of LKR ${parseFloat(match.amount || 0).toLocaleString()} for "${match.requestName}". Thank you for your support!`
-                : `✅ Receiver ${currentUser.name} accepted your offer of ${match.quantity} ${match.unit || 'units'} for "${match.requestName}". Please open your dashboard to select your Delivery Method.`;
+                ? ` Receiver ${currentUser.name} accepted and confirmed receipt of your donation of LKR ${parseFloat(match.amount || 0).toLocaleString()} for "${match.requestName}". Thank you for your support!`
+                : ` Receiver ${currentUser.name} accepted your offer of ${match.quantity} ${match.unit || 'units'} for "${match.requestName}". Please open your dashboard to select your Delivery Method.`;
 
             await db.collection("notifications").add({
                 userId: match.donorId,
@@ -1527,7 +1377,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 createdAt: new Date().toISOString()
             });
 
-            showToast(`🎉 ${isMonetary ? 'Fund receipt confirmed!' : 'Offer accepted!'}${reqNotice}`, "success");
+            showToast(` ${isMonetary ? 'Fund receipt confirmed!' : 'Offer accepted!'}${reqNotice}`, "success");
             updateOverviewStats();
             if (typeof renderReceiverRequests === 'function') renderReceiverRequests();
             if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
@@ -1551,7 +1401,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             await helper.db().collection("notifications").add({
                 userId: match.donorId,
-                message: `❌ Receiver ${currentUser.name} declined the offer for "${match.requestName}".`,
+                message: ` Receiver ${currentUser.name} declined the offer for "${match.requestName}".`,
                 read: false,
                 createdAt: new Date().toISOString()
             });
@@ -1619,7 +1469,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     await db.collection("notifications").add({
                         userId: match.receiverId,
-                        message: `🚚 Donor ${currentUser.name} selected Self Delivery for "${match.requestName}" scheduled at ${formatted}. Please Accept, Reject, or Negotiate this schedule.`,
+                        message: ` Donor ${currentUser.name} selected Self Delivery for "${match.requestName}" scheduled at ${formatted}. Please Accept, Reject, or Negotiate this schedule.`,
                         read: false,
                         createdAt: new Date().toISOString()
                     });
@@ -1633,7 +1483,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     await db.collection("notifications").add({
                         userId: match.receiverId,
-                        message: `📍 Donor ${currentUser.name} selected Receiver Pick Up for "${match.requestName}". Please open your dashboard to schedule your preferred pick-up date & time.`,
+                        message: ` Donor ${currentUser.name} selected Receiver Pick Up for "${match.requestName}". Please open your dashboard to schedule your preferred pick-up date & time.`,
                         read: false,
                         createdAt: new Date().toISOString()
                     });
@@ -1681,8 +1531,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const existingReq = matchesList.find(m => 
-            m.donationId === dItem.id && 
+        const existingReq = matchesList.find(m => m.donationId === dItem.id && 
             (m.receiverId === currentUser.uid || (currentUser.email && m.receiverEmail === currentUser.email)) && 
             (m.status === 'pending_donor_approval' || m.status === 'accepted' || m.status === 'confirmed')
         );
@@ -1693,7 +1542,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         try {
-            showToast("⏳ Sending request to donor...", "info");
+            showToast(" Sending request to donor...", "info");
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
             const db = helper.db();
 
@@ -1721,12 +1570,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             await db.collection("notifications").add({
                 userId: dItem.donorId,
-                message: `📌 Receiver ${currentUser.name} requested ${reqQty} ${dItem.unit || 'units'} of your available item "${dItem.itemName}". Please Accept or Reject this request in your dashboard.`,
+                message: ` Receiver ${currentUser.name} requested ${reqQty} ${dItem.unit || 'units'} of your available item "${dItem.itemName}". Please Accept or Reject this request in your dashboard.`,
                 read: false,
                 createdAt: new Date().toISOString()
             });
 
-            showToast("🎉 Item request sent to donor! Waiting for donor approval.", "success");
+            showToast(" Item request sent to donor! Waiting for donor approval.", "success");
             closeRequestAvailableItemModal();
             updateOverviewStats();
             if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
@@ -1747,33 +1596,7 @@ document.addEventListener("DOMContentLoaded", () => {
             modal.className = "modal";
             modal.id = "modalRequestAvailableItem";
             modal.style.zIndex = "999999";
-            modal.innerHTML = `
-                <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:520px; width:90%; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.3);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--color-border); padding-bottom:10px;">
-                        <h3 id="mdlReqItemTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin:0;">Request Material Item</h3>
-                        <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.85rem; font-weight:800; cursor:pointer;" onclick="closeRequestAvailableItemModal()">✕</button>
-                    </div>
-                    <form id="formSubmitItemRequest" onsubmit="event.preventDefault(); submitReceiverItemRequestDirectly();">
-                        <input type="hidden" id="mdlReqDonationId" value="${item.id}">
-                        <div class="form-group" style="margin-bottom:14px;">
-                            <label class="form-label" style="font-weight:700; font-size:0.85rem;">Requested Quantity / Units</label>
-                            <input class="form-control" type="number" id="mdlReqItemQty" min="1" value="${item.quantity || 1}" max="${item.quantity || 1}" required style="font-weight:700; width:100%;">
-                            <div id="lblReqItemMaxNotice" style="font-size:0.75rem; color:var(--color-teal-primary); font-weight:700; margin-top:4px;">📌 Max Stock Available: ${item.quantity || 1} ${item.unit || 'units'}</div>
-                        </div>
-                        <div class="form-group" style="margin-bottom:14px;">
-                            <label class="form-label" style="font-weight:700; font-size:0.85rem;">Delivery Method</label>
-                            <input class="form-control" type="text" value="Self Pick Up (Receiver Pick Up)" readonly style="font-weight:800; background:#F5EFE0; color:var(--color-teal-primary); width:100%;">
-                        </div>
-                        <div style="background:#F5EFE0; padding:12px; border-radius:6px; font-size:0.8rem; color:var(--color-text-dark); margin-bottom:16px; line-height:1.4;">
-                            📌 As a Receiver requesting this available item, an automated notification will be sent to the donor to accept your request.
-                        </div>
-                        <div style="display:flex; gap:10px; justify-content:flex-end; align-items:center;">
-                            <button type="button" class="btn btn-secondary" style="padding:10px 18px; font-size:0.85rem; font-weight:800; cursor:pointer;" onclick="closeRequestAvailableItemModal()">✕ Cancel</button>
-                            <button class="btn btn-primary" type="button" onclick="submitReceiverItemRequestDirectly()" style="font-weight:800; padding:10px 22px; font-size:0.88rem; background:#0D7C7A; color:#FFFFFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 3px 10px rgba(13,124,122,0.3);">🚀 Send Item Request</button>
-                        </div>
-                    </form>
-                </div>
-            `;
+            modal.innerHTML = ` <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:520px; width:90%; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.3);"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--color-border); padding-bottom:10px;"> <h3 id="mdlReqItemTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin:0;">Request Material Item</h3> <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.85rem; font-weight:800; cursor:pointer;" onclick="closeRequestAvailableItemModal()"></button> </div> <form id="formSubmitItemRequest" onsubmit="event.preventDefault(); submitReceiverItemRequestDirectly();"> <input type="hidden" id="mdlReqDonationId" value="${item.id}"> <div class="form-group" style="margin-bottom:14px;"> <label class="form-label" style="font-weight:700; font-size:0.85rem;">Requested Quantity / Units</label> <input class="form-control" type="number" id="mdlReqItemQty" min="1" value="${item.quantity || 1}" max="${item.quantity || 1}" required style="font-weight:700; width:100%;"> <div id="lblReqItemMaxNotice" style="font-size:0.75rem; color:var(--color-teal-primary); font-weight:700; margin-top:4px;"> Max Stock Available: ${item.quantity || 1} ${item.unit || 'units'}</div> </div> <div class="form-group" style="margin-bottom:14px;"> <label class="form-label" style="font-weight:700; font-size:0.85rem;">Delivery Method</label> <input class="form-control" type="text" value="Self Pick Up (Receiver Pick Up)" readonly style="font-weight:800; background:#F5EFE0; color:var(--color-teal-primary); width:100%;"> </div> <div style="background:#F5EFE0; padding:12px; border-radius:6px; font-size:0.8rem; color:var(--color-text-dark); margin-bottom:16px; line-height:1.4;"> As a Receiver requesting this available item, an automated notification will be sent to the donor to accept your request. </div> <div style="display:flex; gap:10px; justify-content:flex-end; align-items:center;"> <button type="button" class="btn btn-secondary" style="padding:10px 18px; font-size:0.85rem; font-weight:800; cursor:pointer;" onclick="closeRequestAvailableItemModal()"> Cancel</button> <button class="btn btn-primary" type="button" onclick="submitReceiverItemRequestDirectly()" style="font-weight:800; padding:10px 22px; font-size:0.88rem; background:#0D7C7A; color:#FFFFFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 3px 10px rgba(13,124,122,0.3);"> Send Item Request</button> </div> </form> </div> `;
             document.body.appendChild(modal);
         }
 
@@ -1792,7 +1615,7 @@ document.addEventListener("DOMContentLoaded", () => {
             qtyInput.value = maxAvail;
         }
         if (maxNotice) {
-            maxNotice.textContent = `📌 Max Stock Available: ${maxAvail} ${item.unit || 'units'}`;
+            maxNotice.textContent = ` Max Stock Available: ${maxAvail} ${item.unit || 'units'}`;
         }
 
         modal.style.setProperty("display", "flex", "important");
@@ -1854,12 +1677,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             await db.collection("notifications").add({
                 userId: match.receiverId,
-                message: `✅ Donor ${currentUser.name} accepted your request for ${match.quantity} ${match.unit || 'units'} of "${match.requestName}"! Please open your dashboard to schedule your Self Pick Up Date & Time.`,
+                message: ` Donor ${currentUser.name} accepted your request for ${match.quantity} ${match.unit || 'units'} of "${match.requestName}"! Please open your dashboard to schedule your Self Pick Up Date & Time.`,
                 read: false,
                 createdAt: new Date().toISOString()
             });
 
-            showToast(`🎉 Request accepted!${itemNotice}`, "success");
+            showToast(` Request accepted!${itemNotice}`, "success");
             updateOverviewStats();
             if (typeof renderDonorListings === 'function') renderDonorListings();
             if (typeof renderDonorMatches === 'function') renderDonorMatches();
@@ -1883,7 +1706,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             await helper.db().collection("notifications").add({
                 userId: match.receiverId,
-                message: `❌ Donor ${currentUser.name} declined your request for "${match.requestName}".`,
+                message: ` Donor ${currentUser.name} declined your request for "${match.requestName}".`,
                 read: false,
                 createdAt: new Date().toISOString()
             });
@@ -1931,7 +1754,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 await db.collection("notifications").add({
                     userId: match.donorId,
-                    message: `📍 Receiver ${currentUser.name} scheduled Self Pick Up for "${match.requestName}" at ${formatted}. Please Accept, Reject, or Negotiate this schedule.`,
+                    message: ` Receiver ${currentUser.name} scheduled Self Pick Up for "${match.requestName}" at ${formatted}. Please Accept, Reject, or Negotiate this schedule.`,
                     read: false,
                     createdAt: new Date().toISOString()
                 });
@@ -1962,7 +1785,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             await helper.db().collection("notifications").add({
                 userId: recipientId,
-                message: `🎉 ${currentUser.name} accepted the scheduled date & time for "${match.requestName}". Match is now fully confirmed!`,
+                message: ` ${currentUser.name} accepted the scheduled date & time for "${match.requestName}". Match is now fully confirmed!`,
                 read: false,
                 createdAt: new Date().toISOString()
             });
@@ -1992,13 +1815,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 matchId: matchId,
                 senderId: currentUser.uid,
                 senderName: currentUser.name,
-                text: `⚠️ Schedule proposal declined by ${currentUser.name}. Let's discuss a suitable date & time here in chat!`,
+                text: ` Schedule proposal declined by ${currentUser.name}. Let's discuss a suitable date & time here in chat!`,
                 createdAt: new Date().toISOString()
             });
 
             await helper.db().collection("notifications").add({
                 userId: recipientId,
-                message: `⚠️ ${currentUser.name} declined the proposed schedule for "${match.requestName}". Opening chat portal to negotiate date & time.`,
+                message: ` ${currentUser.name} declined the proposed schedule for "${match.requestName}". Opening chat portal to negotiate date & time.`,
                 read: false,
                 createdAt: new Date().toISOString()
             });
@@ -2052,7 +1875,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 await db.collection("notifications").add({
                     userId: recipientId,
-                    message: `🔄 ${currentUser.name} proposed a new schedule for "${match.requestName}": ${formatted}. ${reason ? 'Note: "' + reason + '"' : ''}`,
+                    message: ` ${currentUser.name} proposed a new schedule for "${match.requestName}": ${formatted}. ${reason ? 'Note: "' + reason + '"' : ''}`,
                     read: false,
                     createdAt: new Date().toISOString()
                 });
@@ -2077,12 +1900,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const bankBox = document.getElementById("mdlBankDetailsContent");
         const b = req.bankDetails || (usersList.find(u => u.uid === req.receiverId)?.receiverDetails);
         if (b) {
-            bankBox.innerHTML = `
-                <div><strong>Bank Name:</strong> ${b.bankName || 'N/A'}</div>
-                <div><strong>Account Name:</strong> ${b.accountName || 'N/A'}</div>
-                <div><strong>Account Number:</strong> ${b.accountNumber || 'N/A'}</div>
-                <div><strong>Branch:</strong> ${b.bankBranch || 'N/A'}</div>
-            `;
+            bankBox.innerHTML = ` <div><strong>Bank Name:</strong> ${b.bankName || 'N/A'}</div> <div><strong>Account Name:</strong> ${b.accountName || 'N/A'}</div> <div><strong>Account Number:</strong> ${b.accountNumber || 'N/A'}</div> <div><strong>Branch:</strong> ${b.bankBranch || 'N/A'}</div> `;
         } else {
             bankBox.innerHTML = `<div>Bank information verified by Admin. Contact representative via messages.</div>`;
         }
@@ -2151,23 +1969,23 @@ document.addEventListener("DOMContentLoaded", () => {
         if (reqIdEl) reqIdEl.value = req.id;
 
         const titleEl = document.getElementById("mdlVolunteerTitle");
-        if (titleEl) titleEl.textContent = `🤝 Join Volunteer Shift: ${req.itemName}`;
+        if (titleEl) titleEl.textContent = ` Join Volunteer Shift: ${req.itemName}`;
 
         const orgInfoEl = document.getElementById("mdlVolunteerOrgInfo");
-        if (orgInfoEl) orgInfoEl.innerHTML = `🏢 <strong>Organizer / Receiver:</strong> ${req.receiverName} (${req.receiverCategory || 'Organisation'})`;
+        if (orgInfoEl) orgInfoEl.innerHTML = ` <strong>Organizer / Receiver:</strong> ${req.receiverName} (${req.receiverCategory || 'Organisation'})`;
 
         const shiftInfoEl = document.getElementById("mdlVolunteerShiftInfo");
         if (shiftInfoEl) {
-            const shiftTime = req.volDateTime ? ` | 🕒 Time: ${new Date(req.volDateTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}` : '';
+            const shiftTime = req.volDateTime ? ` |  Time: ${new Date(req.volDateTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}` : '';
             const location = req.volLocation || req.district || 'Colombo';
             const reqVol = req.volunteersRequired || 1;
             const assignedVol = req.volunteersAssigned || 0;
-            shiftInfoEl.innerHTML = `📍 <strong>Location:</strong> ${location}${shiftTime}<br>👥 <strong>Volunteers Needed:</strong> ${reqVol} (${assignedVol} filled so far)`;
+            shiftInfoEl.innerHTML = ` <strong>Location:</strong> ${location}${shiftTime}<br> <strong>Volunteers Needed:</strong> ${reqVol} (${assignedVol} filled so far)`;
         }
 
         const equipInfoEl = document.getElementById("mdlVolunteerEquipmentInfo");
         if (equipInfoEl) {
-            equipInfoEl.innerHTML = `🧰 <strong>Equipment & Skills:</strong> ${req.equipmentNeeded || req.skillsRequired || 'Standard non-clinical support'}`;
+            equipInfoEl.innerHTML = ` <strong>Equipment & Skills:</strong> ${req.equipmentNeeded || req.skillsRequired || 'Standard non-clinical support'}`;
         }
 
         const nameInput = document.getElementById("mdlVolunteerName");
@@ -2273,12 +2091,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             await db.collection("notifications").add({
                 userId: req.receiverId,
-                message: `🤝 Volunteer ${currentUser.name} (${volName}, Phone: ${volPhone}) registered ${volCount} volunteer(s) for your shift "${req.itemName}".`,
+                message: ` Volunteer ${currentUser.name} (${volName}, Phone: ${volPhone}) registered ${volCount} volunteer(s) for your shift "${req.itemName}".`,
                 read: false,
                 createdAt: new Date().toISOString()
             });
 
-            showToast(`🎉 Registration confirmed! You registered ${volCount} volunteer(s) for "${req.itemName}".`, "success");
+            showToast(` Registration confirmed! You registered ${volCount} volunteer(s) for "${req.itemName}".`, "success");
             closeVolunteerModal();
             updateOverviewStats();
             if (typeof renderDonorNeeds === 'function') renderDonorNeeds();
@@ -2289,7 +2107,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } finally {
             if (btnSubmit) {
                 btnSubmit.disabled = false;
-                btnSubmit.textContent = "🤝 Confirm Shift Registration";
+                btnSubmit.textContent = " Confirm Shift Registration";
             }
         }
     };
@@ -2313,8 +2131,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let filtered = usersList;
 
         if (search) {
-            filtered = filtered.filter(u => 
-                (u.name && u.name.toLowerCase().includes(search)) ||
+            filtered = filtered.filter(u => (u.name && u.name.toLowerCase().includes(search)) ||
                 (u.email && u.email.toLowerCase().includes(search)) ||
                 (u.role && u.role.toLowerCase().includes(search))
             );
@@ -2325,22 +2142,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (u.status === 'verified') statusBadge = `<span class="badge badge-success">Verified</span>`;
             else if (u.status === 'suspended') statusBadge = `<span class="badge badge-danger">Suspended</span>`;
 
-            return `
-                <tr>
-                    <td><strong>${u.name}</strong></td>
-                    <td>${u.email}</td>
-                    <td>${(u.role || u.accountType || 'user').toUpperCase()} (${u.donorType || u.receiverCategory || 'User'})</td>
-                    <td>${u.district || 'Colombo'}</td>
-                    <td>${statusBadge}</td>
-                    <td>
-                        ${u.status === 'suspended' ? `
-                            <button class="btn btn-primary" style="padding:4px 8px; font-size:0.75rem;" onclick="updateUserStatus('${u.id}', 'verified')">Reactivate</button>
-                        ` : `
-                            <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="updateUserStatus('${u.id}', 'suspended')">Suspend</button>
-                        `}
-                    </td>
-                </tr>
-            `;
+            return ` <tr> <td><strong>${u.name}</strong></td> <td>${u.email}</td> <td>${(u.role || u.accountType || 'user').toUpperCase()} (${u.donorType || u.receiverCategory || 'User'})</td> <td>${u.district || 'Colombo'}</td> <td>${statusBadge}</td> <td> ${u.status === 'suspended' ? ` <button class="btn btn-primary" style="padding:4px 8px; font-size:0.75rem;" onclick="updateUserStatus('${u.id}', 'verified')">Reactivate</button> ` : ` <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="updateUserStatus('${u.id}', 'suspended')">Suspend</button> `} </td> </tr> `;
         }).join("");
     }
 
@@ -2372,23 +2174,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         grid.innerHTML = pending.map(u => {
-            return `
-                <div class="glass-panel" style="padding: 20px; background: #FFFFFF;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <span class="badge badge-warning">PENDING VERIFICATION</span>
-                        <span style="font-size:0.8rem; font-weight:700; color:var(--color-teal-primary);">${(u.role||u.accountType||'user').toUpperCase()}</span>
-                    </div>
-
-                    <h4 style="font-size: 1.1rem; color: var(--color-teal-primary); margin-bottom: 4px;">${u.name}</h4>
-                    <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 8px;">Email: ${u.email} | Phone: ${u.phone || 'N/A'}</div>
-                    <div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 12px;">District: <strong>${u.district || 'Colombo'}</strong></div>
-
-                    <div style="display:flex; gap:10px; margin-top:16px;">
-                        <button class="btn btn-primary" style="flex-grow:1; font-size:0.8rem;" onclick="updateUserStatus('${u.id}', 'verified')">Approve Account</button>
-                        <button class="btn btn-danger" style="font-size:0.8rem;" onclick="updateUserStatus('${u.id}', 'rejected')">Reject</button>
-                    </div>
-                </div>
-            `;
+            return ` <div class="glass-panel" style="padding: 20px; background: #FFFFFF;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"> <span class="badge badge-warning">PENDING VERIFICATION</span> <span style="font-size:0.8rem; font-weight:700; color:var(--color-teal-primary);">${(u.role||u.accountType||'user').toUpperCase()}</span> </div> <h4 style="font-size: 1.1rem; color: var(--color-teal-primary); margin-bottom: 4px;">${u.name}</h4> <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 8px;">Email: ${u.email} | Phone: ${u.phone || 'N/A'}</div> <div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 12px;">District: <strong>${u.district || 'Colombo'}</strong></div> <div style="display:flex; gap:10px; margin-top:16px;"> <button class="btn btn-primary" style="flex-grow:1; font-size:0.8rem;" onclick="updateUserStatus('${u.id}', 'verified')">Approve Account</button> <button class="btn btn-danger" style="font-size:0.8rem;" onclick="updateUserStatus('${u.id}', 'rejected')">Reject</button> </div> </div> `;
         }).join("");
     }
 
@@ -2549,8 +2335,8 @@ document.addEventListener("DOMContentLoaded", () => {
             else if (m.status === 'rejected') statusBadge = `<span class="badge badge-danger">Declined</span>`;
             else if (m.status === 'pending_receiver' || m.status === 'pending_receiver_approval') {
                 statusBadge = m.type === 'monetary' 
-                    ? `<span class="badge badge-warning">💰 Awaiting Your Fund Confirmation</span>`
-                    : `<span class="badge badge-warning">🎁 Offer Pending Your Approval</span>`;
+                    ? `<span class="badge badge-warning"> Awaiting Your Fund Confirmation</span>`
+                    : `<span class="badge badge-warning"> Offer Pending Your Approval</span>`;
             }
             else if (m.status === 'accepted_pending_delivery_method') statusBadge = `<span class="badge badge-info">Offer Accepted (Waiting for Donor Delivery Selection)</span>`;
             else if (m.status === 'pending_receiver_pickup_schedule') statusBadge = `<span class="badge badge-warning">Pick Up Schedule Required</span>`;
@@ -2573,9 +2359,9 @@ document.addEventListener("DOMContentLoaded", () => {
             if (m.scheduledDateTime && m.type !== 'volunteer') {
                 const formatted = new Date(m.scheduledDateTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
                 if (!isPickUp) {
-                    scheduleInfo = `<div style="font-size:0.8rem; color:var(--color-teal-primary); font-weight:700; margin-top:4px; margin-bottom:6px;">🚚 Scheduled Donor Self Delivery: ${formatted}</div>`;
+                    scheduleInfo = `<div style="font-size:0.8rem; color:var(--color-teal-primary); font-weight:700; margin-top:4px; margin-bottom:6px;"> Scheduled Donor Self Delivery: ${formatted}</div>`;
                 } else {
-                    scheduleInfo = `<div style="font-size:0.8rem; color:var(--color-secondary); font-weight:700; margin-top:4px; margin-bottom:6px;">📍 Scheduled Pick Up: ${formatted}</div>`;
+                    scheduleInfo = `<div style="font-size:0.8rem; color:var(--color-secondary); font-weight:700; margin-top:4px; margin-bottom:6px;"> Scheduled Pick Up: ${formatted}</div>`;
                 }
             }
 
@@ -2583,62 +2369,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (m.type === 'volunteer') {
                 if (m.status === 'pending_receiver' || m.status === 'pending_receiver_approval' || m.status === 'pending') {
-                    actionButtonsHtml += `
-                        <button type="button" class="btn btn-primary" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="acceptDonationOffer('${m.id}')">🤝 Accept Volunteer Offer</button>
-                    `;
+                    actionButtonsHtml += ` <button type="button" class="btn btn-primary" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="acceptDonationOffer('${m.id}')"> Accept Volunteer Offer</button> `;
                 }
             } else if (m.type === 'monetary' || (m.amount && !m.quantity)) {
                 if (m.status === 'pending_receiver' || m.status === 'pending_receiver_approval' || m.status === 'pending') {
-                    actionButtonsHtml += `
-                        <button type="button" class="btn btn-primary" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="acceptDonationOffer('${m.id}')">💰 Confirm & Accept Fund Receipt</button>
-                    `;
+                    actionButtonsHtml += ` <button type="button" class="btn btn-primary" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="acceptDonationOffer('${m.id}')"> Confirm & Accept Fund Receipt</button> `;
                 }
             } else {
                 // Physical parcel items
                 if (m.status === 'pending_receiver' || m.status === 'pending_receiver_approval' || m.status === 'pending') {
-                    actionButtonsHtml += `
-                        <button type="button" class="btn btn-primary" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="acceptDonationOffer('${m.id}')">🎁 Accept Donation Offer</button>
-                    `;
+                    actionButtonsHtml += ` <button type="button" class="btn btn-primary" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="acceptDonationOffer('${m.id}')"> Accept Donation Offer</button> `;
                 } else if (m.status === 'pending_receiver_pickup_schedule' || m.status === 'accepted_pending_receiver_schedule') {
-                    actionButtonsHtml += `
-                        <button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openScheduleReceiverPickupModal('${m.id}')">Schedule Pick Up Date & Time</button>
-                    `;
+                    actionButtonsHtml += ` <button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openScheduleReceiverPickupModal('${m.id}')">Schedule Pick Up Date & Time</button> `;
                 } else if (m.status === 'donor_scheduled_delivery') {
-                    actionButtonsHtml += `
-                        <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="acceptSchedule('${m.id}')">Accept Schedule</button>
-                        <button class="btn btn-danger" style="padding:4px 10px; font-size:0.75rem;" onclick="rejectSchedule('${m.id}')">Reject Schedule</button>
-                    `;
+                    actionButtonsHtml += ` <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="acceptSchedule('${m.id}')">Accept Schedule</button> <button class="btn btn-danger" style="padding:4px 10px; font-size:0.75rem;" onclick="rejectSchedule('${m.id}')">Reject Schedule</button> `;
                 } else if (m.status === 'schedule_negotiating' && m.proposedBy !== currentUser.uid) {
-                    actionButtonsHtml += `
-                        <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="acceptSchedule('${m.id}')">Accept Proposed Time</button>
-                        <button class="btn btn-danger" style="padding:4px 10px; font-size:0.75rem;" onclick="rejectSchedule('${m.id}')">Reject Proposal</button>
-                    `;
+                    actionButtonsHtml += ` <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="acceptSchedule('${m.id}')">Accept Proposed Time</button> <button class="btn btn-danger" style="padding:4px 10px; font-size:0.75rem;" onclick="rejectSchedule('${m.id}')">Reject Proposal</button> `;
                 }
 
                 if (m.status === 'confirmed') {
                     if (isPickUp) {
-                        actionButtonsHtml += `
-                            <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startDeliverySession('${m.id}')">🚚 Start Pick-Up Journey</button>
-                        `;
+                        actionButtonsHtml += ` <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startDeliverySession('${m.id}')"> Start Pick-Up Journey</button> `;
                     } else {
-                        actionButtonsHtml += `
-                            <span style="font-size:0.78rem; color:var(--color-teal-primary); font-weight:700; background:#E0F2F1; padding:4px 8px; border-radius:4px; border:1px solid #B2DFDB;">⏳ Waiting for donor to start delivery journey</span>
-                        `;
+                        actionButtonsHtml += ` <span style="font-size:0.78rem; color:var(--color-teal-primary); font-weight:700; background:#E0F2F1; padding:4px 8px; border-radius:4px; border:1px solid #B2DFDB;"> Waiting for donor to start delivery journey</span> `;
                     }
                 }
 
                 if (m.status === 'in_transit' || m.status === 'delivered' || m.status === 'confirmed') {
-                    actionButtonsHtml += `
-                        <button class="btn btn-success" style="padding:7px 18px; font-size:0.82rem; font-weight:800; background:#0D7C7A; color:#FFFFFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="toggleInlineEvidenceDrawer('${m.id}')">📸 Confirm Receipt & Upload Evidence</button>
-                    `;
+                    actionButtonsHtml += ` <button class="btn btn-success" style="padding:7px 18px; font-size:0.82rem; font-weight:800; background:#0D7C7A; color:#FFFFFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="toggleInlineEvidenceDrawer('${m.id}')"> Confirm Receipt & Upload Evidence</button> `;
                 }
             }
 
             let liveLocBtn = '';
             if (m.type !== 'volunteer' && (m.status === 'in_transit' || m.status === 'delivered')) {
-                liveLocBtn = `<button class="btn btn-primary" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:var(--color-teal-primary); color:#FFF; border-radius:6px; cursor:pointer;" onclick="toggleInlineLiveMap('${m.id}')">🗺️ View Live Delivery Map</button>`;
+                liveLocBtn = `<button class="btn btn-primary" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:var(--color-teal-primary); color:#FFF; border-radius:6px; cursor:pointer;" onclick="toggleInlineLiveMap('${m.id}')"> View Live Delivery Map</button>`;
                 if (isPickUp) {
-                    liveLocBtn += `<button class="btn btn-warning" style="padding:6px 12px; font-size:0.8rem; font-weight:800; margin-left:4px; border-radius:6px;" onclick="startSharingLiveLocation('${m.id}')">📡 Share My Pick-Up GPS</button>`;
+                    liveLocBtn += `<button class="btn btn-warning" style="padding:6px 12px; font-size:0.8rem; font-weight:800; margin-left:4px; border-radius:6px;" onclick="startSharingLiveLocation('${m.id}')"> Share My Pick-Up GPS</button>`;
                 }
             }
 
@@ -2653,30 +2419,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let sessionBadge = m.deliverySessionId ? `<div style="font-size:0.75rem; font-weight:700; color:var(--color-teal-primary); margin-top:2px;">Session ID: ${m.deliverySessionId}</div>` : '';
 
-            return `
-                <div class="glass-panel" style="padding: 16px; margin-bottom: 12px; background: #FFFFFF;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <span style="font-weight:700; color:var(--color-teal-primary);">${m.requestName}</span>
-                        ${statusBadge}
-                    </div>
-                    <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 6px;">Donor: <strong>${m.donorName}</strong> ${sessionBadge}</div>
-                    <div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 8px;">${details}</div>
-                    ${scheduleInfo}
-
-                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px;">
-                        ${actionButtonsHtml}
+            return ` <div class="glass-panel" style="padding: 16px; margin-bottom: 12px; background: #FFFFFF;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"> <span style="font-weight:700; color:var(--color-teal-primary);">${m.requestName}</span> ${statusBadge} </div> <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 6px;">Donor: <strong>${m.donorName}</strong> ${sessionBadge}</div> <div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 8px;">${details}</div> ${scheduleInfo} <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px;"> ${actionButtonsHtml}
                         ${liveLocBtn}
-                        ${evidenceBtn}
-                        <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem;" onclick="startChatWithPartner('${m.id}')">💬 Message Donor</button>
-                    </div>
-
-                    <!-- Inline Expandable Evidence Upload Drawer -->
-                    <div id="inlineEvidenceDrawer_${m.id}" style="display:none; margin-top:14px; padding:16px; border-radius:10px; background:#F8FAFA; border:2px solid var(--color-teal-primary); box-shadow:0 4px 14px rgba(13,124,122,0.15);"></div>
-
-                    <!-- Inline Expandable Live Map -->
-                    <div id="inlineLiveMap_${m.id}" style="display:none; margin-top:14px; border-radius:10px; overflow:hidden; border:2px solid var(--color-teal-primary); box-shadow:0 4px 14px rgba(13,124,122,0.15);"></div>
-                </div>
-            `;
+                        ${evidenceBtn} <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem;" onclick="startChatWithPartner('${m.id}')"> Message Donor</button> </div> <!-- Inline Expandable Evidence Upload Drawer --> <div id="inlineEvidenceDrawer_${m.id}" style="display:none; margin-top:14px; padding:16px; border-radius:10px; background:#F8FAFA; border:2px solid var(--color-teal-primary); box-shadow:0 4px 14px rgba(13,124,122,0.15);"></div> <!-- Inline Expandable Live Map --> <div id="inlineLiveMap_${m.id}" style="display:none; margin-top:14px; border-radius:10px; overflow:hidden; border:2px solid var(--color-teal-primary); box-shadow:0 4px 14px rgba(13,124,122,0.15);"></div> </div> `;
         }).join("");
     }
 
@@ -2710,104 +2455,53 @@ document.addEventListener("DOMContentLoaded", () => {
             if (m.scheduledDateTime) {
                 const formatted = new Date(m.scheduledDateTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
                 if (!isPickUp) {
-                    scheduleInfo = `<div style="font-size:0.8rem; color:var(--color-teal-primary); font-weight:700; margin-top:4px; margin-bottom:6px;">🚚 Scheduled Self Delivery: ${formatted}</div>`;
+                    scheduleInfo = `<div style="font-size:0.8rem; color:var(--color-teal-primary); font-weight:700; margin-top:4px; margin-bottom:6px;"> Scheduled Self Delivery: ${formatted}</div>`;
                 } else {
-                    scheduleInfo = `<div style="font-size:0.8rem; color:var(--color-secondary); font-weight:700; margin-top:4px; margin-bottom:6px;">📍 Scheduled Pick Up: ${formatted}</div>`;
+                    scheduleInfo = `<div style="font-size:0.8rem; color:var(--color-secondary); font-weight:700; margin-top:4px; margin-bottom:6px;"> Scheduled Pick Up: ${formatted}</div>`;
                 }
             }
 
             let actionButtonsHtml = '';
 
             if (m.status === 'pending_donor_approval') {
-                actionButtonsHtml += `
-                    <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="acceptReceiverItemRequest('${m.id}')">Accept Request</button>
-                    <button class="btn btn-danger" style="padding:4px 10px; font-size:0.75rem;" onclick="rejectReceiverItemRequest('${m.id}')">Decline</button>
-                `;
+                actionButtonsHtml += ` <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="acceptReceiverItemRequest('${m.id}')">Accept Request</button> <button class="btn btn-danger" style="padding:4px 10px; font-size:0.75rem;" onclick="rejectReceiverItemRequest('${m.id}')">Decline</button> `;
             } else if (m.status === 'accepted_pending_delivery_method') {
-                actionButtonsHtml += `
-                    <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openDonorDeliverySelectionModal('${m.id}')">Select Delivery Method</button>
-                `;
+                actionButtonsHtml += ` <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openDonorDeliverySelectionModal('${m.id}')">Select Delivery Method</button> `;
             } else if (m.status === 'receiver_scheduled_pickup') {
-                actionButtonsHtml += `
-                    <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="acceptSchedule('${m.id}')">Accept Pick Up Schedule</button>
-                    <button class="btn btn-danger" style="padding:4px 10px; font-size:0.75rem;" onclick="rejectSchedule('${m.id}')">Reject Schedule</button>
-                `;
+                actionButtonsHtml += ` <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="acceptSchedule('${m.id}')">Accept Pick Up Schedule</button> <button class="btn btn-danger" style="padding:4px 10px; font-size:0.75rem;" onclick="rejectSchedule('${m.id}')">Reject Schedule</button> `;
             } else if (m.status === 'schedule_negotiating' && m.proposedBy !== currentUser.uid) {
-                actionButtonsHtml += `
-                    <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="acceptSchedule('${m.id}')">Accept Proposed Time</button>
-                    <button class="btn btn-danger" style="padding:4px 10px; font-size:0.75rem;" onclick="rejectSchedule('${m.id}')">Reject Proposal</button>
-                `;
+                actionButtonsHtml += ` <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="acceptSchedule('${m.id}')">Accept Proposed Time</button> <button class="btn btn-danger" style="padding:4px 10px; font-size:0.75rem;" onclick="rejectSchedule('${m.id}')">Reject Proposal</button> `;
             }
 
             if (m.status === 'confirmed') {
                 if (isPickUp) {
-                    actionButtonsHtml += `
-                        <span style="font-size:0.78rem; color:var(--color-teal-primary); font-weight:700; background:#E0F2F1; padding:4px 8px; border-radius:4px; border:1px solid #B2DFDB;">⏳ Waiting for receiver to start pick-up journey</span>
-                    `;
+                    actionButtonsHtml += ` <span style="font-size:0.78rem; color:var(--color-teal-primary); font-weight:700; background:#E0F2F1; padding:4px 8px; border-radius:4px; border:1px solid #B2DFDB;"> Waiting for receiver to start pick-up journey</span> `;
                 } else {
-                    actionButtonsHtml += `
-                        <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startDeliverySession('${m.id}')">🚚 Start Delivery Journey</button>
-                    `;
+                    actionButtonsHtml += ` <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startDeliverySession('${m.id}')"> Start Delivery Journey</button> `;
                 }
             } else if (m.status === 'donor_scheduled_delivery') {
-                actionButtonsHtml += `
-                    <span style="font-size:0.78rem; color:var(--color-primary); font-weight:700; background:#FFF8E7; padding:4px 8px; border-radius:4px; border:1px solid #FFE082;">⏳ Waiting for receiver to agree to schedule</span>
-                `;
+                actionButtonsHtml += ` <span style="font-size:0.78rem; color:var(--color-primary); font-weight:700; background:#FFF8E7; padding:4px 8px; border-radius:4px; border:1px solid #FFE082;"> Waiting for receiver to agree to schedule</span> `;
             } else if (m.status === 'in_transit') {
-                actionButtonsHtml += `
-                    <button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="markDeliveryDelivered('${m.id}')">📦 Mark Package Handed Over</button>
-                `;
+                actionButtonsHtml += ` <button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="markDeliveryDelivered('${m.id}')"> Mark Package Handed Over</button> `;
             }
 
             let liveLocBtn = '';
             if (m.status === 'in_transit') {
                 if (!isPickUp) {
-                    liveLocBtn = `<button class="btn btn-warning" style="padding:5px 12px; font-size:0.78rem; font-weight:800;" onclick="startSharingLiveLocation('${m.id}')">📡 Stream My Live Location</button>`;
+                    liveLocBtn = `<button class="btn btn-warning" style="padding:5px 12px; font-size:0.78rem; font-weight:800;" onclick="startSharingLiveLocation('${m.id}')"> Stream My Live Location</button>`;
                 } else {
-                    liveLocBtn = `<button class="btn btn-primary" style="padding:5px 12px; font-size:0.78rem; font-weight:800; background:var(--color-teal-primary); color:#FFF; border-radius:6px; cursor:pointer;" onclick="toggleInlineLiveMap('${m.id}')">🗺️ View Live Delivery Map</button>`;
+                    liveLocBtn = `<button class="btn btn-primary" style="padding:5px 12px; font-size:0.78rem; font-weight:800; background:var(--color-teal-primary); color:#FFF; border-radius:6px; cursor:pointer;" onclick="toggleInlineLiveMap('${m.id}')"> View Live Delivery Map</button>`;
                 }
             }
 
             let donorEvidenceHtml = '';
             if (m.handoverEvidenceUrl) {
-                donorEvidenceHtml = `
-                    <div style="margin-top:12px; padding:12px; background:#F0FDF4; border:1px solid #86EFAC; border-radius:8px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <span style="font-size:0.82rem; font-weight:800; color:#15803D;">📷 Receiver Uploaded Handover Evidence:</span>
-                            <span style="font-size:0.75rem; color:#166534; font-weight:700; background:#DCFCE7; padding:2px 8px; border-radius:4px;">Receipt Confirmed</span>
-                        </div>
-                        <div style="text-align:center; cursor:pointer;" data-action="view-evidence" data-match-id="${m.id}" onclick="openEvidenceImageViewer('${m.id}')">
-                            <img src="${m.handoverEvidenceUrl}" alt="Handover Evidence" style="max-height:160px; max-width:100%; border-radius:6px; border:2px solid #15803D; object-fit:contain; box-shadow:0 2px 6px rgba(0,0,0,0.1);" />
-                        </div>
-                        ${m.handoverNotes ? `<div style="font-size:0.8rem; color:#14532D; margin-top:6px;"><strong>Receiver Notes:</strong> "${m.handoverNotes}"</div>` : ''}
-                        <div style="margin-top:8px; text-align:right;">
-                            <button type="button" class="btn btn-success" data-action="view-evidence" data-match-id="${m.id}" style="padding:5px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 6px rgba(13,124,122,0.3);" onclick="openEvidenceImageViewer('${m.id}')">🖼️ Inspect Handover Photo</button>
-                        </div>
-                    </div>
-                `;
+                donorEvidenceHtml = ` <div style="margin-top:12px; padding:12px; background:#F0FDF4; border:1px solid #86EFAC; border-radius:8px;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"> <span style="font-size:0.82rem; font-weight:800; color:#15803D;"> Receiver Uploaded Handover Evidence:</span> <span style="font-size:0.75rem; color:#166534; font-weight:700; background:#DCFCE7; padding:2px 8px; border-radius:4px;">Receipt Confirmed</span> </div> <div style="text-align:center; cursor:pointer;" data-action="view-evidence" data-match-id="${m.id}" onclick="openEvidenceImageViewer('${m.id}')"> <img src="${m.handoverEvidenceUrl}" alt="Handover Evidence" style="max-height:160px; max-width:100%; border-radius:6px; border:2px solid #15803D; object-fit:contain; box-shadow:0 2px 6px rgba(0,0,0,0.1);" /> </div> ${m.handoverNotes ? `<div style="font-size:0.8rem; color:#14532D; margin-top:6px;"><strong>Receiver Notes:</strong> "${m.handoverNotes}"</div>` : ''} <div style="margin-top:8px; text-align:right;"> <button type="button" class="btn btn-success" data-action="view-evidence" data-match-id="${m.id}" style="padding:5px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 6px rgba(13,124,122,0.3);" onclick="openEvidenceImageViewer('${m.id}')"> Inspect Handover Photo</button> </div> </div> `;
             }
 
-            return `
-                <div class="glass-panel" style="padding: 16px; margin-bottom: 12px; background: #FFFFFF;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <span style="font-weight:700; color:var(--color-teal-primary);">${m.requestName}</span>
-                        ${statusBadge}
-                    </div>
-                    <div style="font-size: 0.85rem; color: var(--color-teal-muted); font-weight:700; margin-bottom:6px;">Receiver: ${m.receiverName}</div>
-                    <div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 8px;">Quantity: <strong>${m.quantity} ${m.unit || 'units'}</strong></div>
-                    ${scheduleInfo}
-                    ${donorEvidenceHtml}
-
-                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px;">
-                        ${actionButtonsHtml}
-                        ${liveLocBtn}
-                        <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" onclick="startChatWithPartner('${m.id}')">💬 Message Receiver</button>
-                    </div>
-
-                    <!-- Inline Expandable Live Map -->
-                    <div id="inlineLiveMap_${m.id}" style="display:none; margin-top:14px; border-radius:10px; overflow:hidden; border:2px solid var(--color-teal-primary); box-shadow:0 4px 14px rgba(13,124,122,0.15);"></div>
-                </div>
-            `;
+            return ` <div class="glass-panel" style="padding: 16px; margin-bottom: 12px; background: #FFFFFF;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"> <span style="font-weight:700; color:var(--color-teal-primary);">${m.requestName}</span> ${statusBadge} </div> <div style="font-size: 0.85rem; color: var(--color-teal-muted); font-weight:700; margin-bottom:6px;">Receiver: ${m.receiverName}</div> <div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 8px;">Quantity: <strong>${m.quantity} ${m.unit || 'units'}</strong></div> ${scheduleInfo}
+                    ${donorEvidenceHtml} <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px;"> ${actionButtonsHtml}
+                        ${liveLocBtn} <button class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem;" onclick="startChatWithPartner('${m.id}')"> Message Receiver</button> </div> <!-- Inline Expandable Live Map --> <div id="inlineLiveMap_${m.id}" style="display:none; margin-top:14px; border-radius:10px; overflow:hidden; border:2px solid var(--color-teal-primary); box-shadow:0 4px 14px rgba(13,124,122,0.15);"></div> </div> `;
         }).join("");
     }
 
@@ -2818,7 +2512,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!match) return;
 
             if (match.status === 'donor_scheduled_delivery') {
-                showToast("⚠️ The receiver must first accept your scheduled delivery date before you can start the delivery journey.", "warning");
+                showToast(" The receiver must first accept your scheduled delivery date before you can start the delivery journey.", "warning");
                 return;
             }
 
@@ -2835,12 +2529,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             await helper.db().collection("notifications").add({
                 userId: recipientId,
-                message: `🚚 ${currentUser.name} has started the ${actionTitle} for "${match.requestName}" (Session ID: ${sessionId}). Live GPS tracking is active!`,
+                message: ` ${currentUser.name} has started the ${actionTitle} for "${match.requestName}" (Session ID: ${sessionId}). Live GPS tracking is active!`,
                 read: false,
                 createdAt: new Date().toISOString()
             });
 
-            showToast(`🚚 ${actionTitle.toUpperCase()} STARTED! Session ID: ${sessionId}. Live GPS tracking is active!`, "success");
+            showToast(` ${actionTitle.toUpperCase()} STARTED! Session ID: ${sessionId}. Live GPS tracking is active!`, "success");
             updateOverviewStats();
         } catch (err) {
             showToast("Failed to start delivery session.", "danger");
@@ -2862,12 +2556,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             await helper.db().collection("notifications").add({
                 userId: recipientId,
-                message: `📦 ${currentUser.name} marked "${match.requestName}" as handed over / delivered. Please confirm receipt to complete match.`,
+                message: ` ${currentUser.name} marked "${match.requestName}" as handed over / delivered. Please confirm receipt to complete match.`,
                 read: false,
                 createdAt: new Date().toISOString()
             });
 
-            showToast("📦 Package marked as handed over/delivered. Awaiting partner receipt confirmation.", "success");
+            showToast(" Package marked as handed over/delivered. Awaiting partner receipt confirmation.", "success");
             updateOverviewStats();
         } catch (err) {
             showToast("Failed to update status.", "danger");
@@ -2877,7 +2571,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.completeDeliveryHandoverNow = async (matchId) => {
         try {
             console.log("Completing delivery handover for matchId:", matchId);
-            showToast("⏳ Confirming package receipt...", "info");
+            showToast(" Confirming package receipt...", "info");
 
             let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId || m.requestId === matchId || m.donationId === matchId);
 
@@ -2919,14 +2613,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
 
-            showToast("🎉 Order Completed! Package receipt confirmed successfully.", "success");
+            showToast(" Order Completed! Package receipt confirmed successfully.", "success");
             if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
             if (typeof renderDonorMatches === 'function') renderDonorMatches();
             if (typeof updateOverviewStats === 'function') updateOverviewStats();
             if (typeof renderReceiverHistory === 'function') renderReceiverHistory();
         } catch (err) {
             console.error("completeDeliveryHandoverNow notice:", err);
-            showToast("🎉 Order Completed! Package receipt confirmed.", "success");
+            showToast(" Order Completed! Package receipt confirmed.", "success");
             if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
             if (typeof renderDonorMatches === 'function') renderDonorMatches();
         }
@@ -2935,7 +2629,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.finalizePackageReceiptOrder = async (matchId) => {
         try {
             console.log("Finalizing package receipt order for matchId:", matchId);
-            showToast("⏳ Confirming package receipt...", "info");
+            showToast(" Confirming package receipt...", "info");
 
             let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId || m.requestId === matchId || m.donationId === matchId);
 
@@ -2978,14 +2672,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
 
-            showToast("🎉 Order Completed! Package receipt confirmed successfully.", "success");
+            showToast(" Order Completed! Package receipt confirmed successfully.", "success");
             if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
             if (typeof renderDonorMatches === 'function') renderDonorMatches();
             if (typeof updateOverviewStats === 'function') updateOverviewStats();
             if (typeof renderReceiverHistory === 'function') renderReceiverHistory();
         } catch (err) {
             console.error("finalizePackageReceiptOrder error:", err);
-            showToast("🎉 Order Completed! Package receipt confirmed.", "success");
+            showToast(" Order Completed! Package receipt confirmed.", "success");
             if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
         }
     };
@@ -3019,32 +2713,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const itemName = match ? (match.itemName || match.requestName || "Items") : "Items";
 
         container.style.display = 'block';
-        container.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #B2DFDB; padding-bottom:8px;">
-                <div style="font-weight:800; color:var(--color-teal-primary); font-size:0.95rem;">📸 Mandatory Handover Evidence: ${itemName}</div>
-                <button type="button" class="btn btn-secondary" style="padding:3px 10px; font-size:0.75rem; font-weight:800; cursor:pointer;" onclick="toggleInlineEvidenceDrawer('${matchId}')">✕ Close</button>
-            </div>
-            <div style="margin-bottom:12px;">
-                <label style="font-size:0.85rem; font-weight:700; display:block; margin-bottom:4px;">1. Select Photo from Device <span style="color:#E53E3E;">* (Required)</span></label>
-                <input type="file" id="inlineEvidenceFile_${matchId}" accept="image/*" class="form-control" style="margin-bottom:6px; width:100%;">
-                <div id="inlinePreviewBox_${matchId}" style="display:none; text-align:center; margin-top:8px; margin-bottom:8px;">
-                    <img id="inlinePreviewImg_${matchId}" style="max-height:160px; max-width:100%; border-radius:8px; border:2px solid var(--color-teal-primary); object-fit:contain;" />
-                </div>
-                <small style="color:var(--color-text-muted); display:block; margin-top:4px;">Or paste direct image URL below <span style="color:#E53E3E;">*</span>:</small>
-                <input type="url" id="inlineEvidenceUrl_${matchId}" class="form-control" placeholder="https://example.com/package-evidence.jpg" style="margin-top:4px; width:100%;">
-            </div>
-            <div style="margin-bottom:12px;">
-                <label style="font-size:0.85rem; font-weight:700; display:block; margin-bottom:4px;">2. Handover Notes / Feedback (Optional)</label>
-                <textarea id="inlineEvidenceNotes_${matchId}" class="form-control" rows="2" placeholder="e.g. Received in perfect condition." style="width:100%;"></textarea>
-            </div>
-            <div style="background:#FFF5F5; border:1px solid #FEB2B2; padding:10px 12px; border-radius:6px; font-size:0.78rem; color:#C53030; font-weight:700; margin-bottom:12px; line-height:1.4;">
-                ⚠️ Mandatory Evidence: You must attach a photo of the received items before your receipt can be confirmed.
-            </div>
-            <div style="display:flex; justify-content:flex-end; gap:8px;">
-                <button type="button" class="btn btn-secondary" style="padding:8px 16px; font-size:0.82rem; font-weight:700; cursor:pointer;" onclick="toggleInlineEvidenceDrawer('${matchId}')">✕ Cancel</button>
-                <button type="button" class="btn btn-primary" style="padding:8px 20px; font-size:0.85rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 3px 10px rgba(13,124,122,0.3);" onclick="submitInlineEvidence('${matchId}')">✅ Submit Evidence & Complete Order</button>
-            </div>
-        `;
+        container.innerHTML = ` <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #B2DFDB; padding-bottom:8px;"> <div style="font-weight:800; color:var(--color-teal-primary); font-size:0.95rem;"> Mandatory Handover Evidence: ${itemName}</div> <button type="button" class="btn btn-secondary" style="padding:3px 10px; font-size:0.75rem; font-weight:800; cursor:pointer;" onclick="toggleInlineEvidenceDrawer('${matchId}')"> Close</button> </div> <div style="margin-bottom:12px;"> <label style="font-size:0.85rem; font-weight:700; display:block; margin-bottom:4px;">1. Select Photo from Device <span style="color:#E53E3E;">* (Required)</span></label> <input type="file" id="inlineEvidenceFile_${matchId}" accept="image/*" class="form-control" style="margin-bottom:6px; width:100%;"> <div id="inlinePreviewBox_${matchId}" style="display:none; text-align:center; margin-top:8px; margin-bottom:8px;"> <img id="inlinePreviewImg_${matchId}" style="max-height:160px; max-width:100%; border-radius:8px; border:2px solid var(--color-teal-primary); object-fit:contain;" /> </div> <small style="color:var(--color-text-muted); display:block; margin-top:4px;">Or paste direct image URL below <span style="color:#E53E3E;">*</span>:</small> <input type="url" id="inlineEvidenceUrl_${matchId}" class="form-control" placeholder="https://example.com/package-evidence.jpg" style="margin-top:4px; width:100%;"> </div> <div style="margin-bottom:12px;"> <label style="font-size:0.85rem; font-weight:700; display:block; margin-bottom:4px;">2. Handover Notes / Feedback (Optional)</label> <textarea id="inlineEvidenceNotes_${matchId}" class="form-control" rows="2" placeholder="e.g. Received in perfect condition." style="width:100%;"></textarea> </div> <div style="background:#FFF5F5; border:1px solid #FEB2B2; padding:10px 12px; border-radius:6px; font-size:0.78rem; color:#C53030; font-weight:700; margin-bottom:12px; line-height:1.4;"> Mandatory Evidence: You must attach a photo of the received items before your receipt can be confirmed. </div> <div style="display:flex; justify-content:flex-end; gap:8px;"> <button type="button" class="btn btn-secondary" style="padding:8px 16px; font-size:0.82rem; font-weight:700; cursor:pointer;" onclick="toggleInlineEvidenceDrawer('${matchId}')"> Cancel</button> <button type="button" class="btn btn-primary" style="padding:8px 20px; font-size:0.85rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 3px 10px rgba(13,124,122,0.3);" onclick="submitInlineEvidence('${matchId}')"> Submit Evidence & Complete Order</button> </div> `;
 
         // Bind image file selection
         const fileInput = document.getElementById(`inlineEvidenceFile_${matchId}`);
@@ -3075,12 +2744,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // ENFORCE MANDATORY EVIDENCE
         if (!evidenceUrl) {
-            showToast("⚠️ Image Evidence Required: Please select a photo or paste an image URL to confirm receipt.", "warning");
+            showToast(" Image Evidence Required: Please select a photo or paste an image URL to confirm receipt.", "warning");
             return;
         }
 
         try {
-            showToast("⏳ Submitting picture evidence & completing order...", "info");
+            showToast(" Submitting picture evidence & completing order...", "info");
             const targetDocId = await resolveFirestoreMatchDocId(matchId);
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
             const db = helper.db();
@@ -3124,7 +2793,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 } catch(e) {}
             }
 
-            showToast("🎉 Handover photo submitted! Order completed successfully.", "success");
+            showToast(" Handover photo submitted! Order completed successfully.", "success");
             const container = document.getElementById(`inlineEvidenceDrawer_${matchId}`);
             if (container) container.style.display = 'none';
 
@@ -3158,29 +2827,14 @@ document.addEventListener("DOMContentLoaded", () => {
             modal.id = "modalEvidenceImageViewer";
             modal.style.zIndex = "99999999";
             modal.style.background = "rgba(0,0,0,0.75)";
-            modal.innerHTML = `
-                <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:680px; width:95%; border-radius:12px; box-shadow:0 12px 35px rgba(0,0,0,0.4); max-height:90vh; display:flex; flex-direction:column;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--color-border); padding-bottom:10px;">
-                        <h3 id="mdlImageViewerTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin:0;">📷 Handover Evidence Photo</h3>
-                        <button type="button" class="btn btn-secondary" style="padding:4px 12px; font-size:0.9rem; font-weight:800; cursor:pointer;" onclick="closeEvidenceImageViewer()">✕ Close</button>
-                    </div>
-                    <div style="flex:1; overflow-y:auto; text-align:center; padding:10px 0;">
-                        <img id="mdlImageViewerImg" src="" alt="Handover Evidence" style="max-width:100%; max-height:55vh; border-radius:8px; border:2px solid var(--color-teal-primary); object-fit:contain; box-shadow:0 4px 15px rgba(0,0,0,0.15);" />
-                        <div id="mdlImageViewerNotes" style="margin-top:12px; font-size:0.85rem; color:#2D3748; background:#F7FAFC; padding:10px; border-radius:6px; text-align:left; border-left:4px solid var(--color-teal-primary);"></div>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding-top:10px; border-top:1px solid var(--color-border);">
-                        <a id="mdlImageViewerDownload" href="#" download="handover-evidence.jpg" class="btn btn-primary" style="padding:6px 14px; font-size:0.82rem; font-weight:800; background:#0D7C7A; color:#FFF; text-decoration:none; border-radius:6px;">⬇️ Download Full Resolution</a>
-                        <button type="button" class="btn btn-secondary" style="padding:6px 14px; font-size:0.82rem; font-weight:700;" onclick="closeEvidenceImageViewer()">Close</button>
-                    </div>
-                </div>
-            `;
+            modal.innerHTML = ` <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:680px; width:95%; border-radius:12px; box-shadow:0 12px 35px rgba(0,0,0,0.4); max-height:90vh; display:flex; flex-direction:column;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--color-border); padding-bottom:10px;"> <h3 id="mdlImageViewerTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin:0;"> Handover Evidence Photo</h3> <button type="button" class="btn btn-secondary" style="padding:4px 12px; font-size:0.9rem; font-weight:800; cursor:pointer;" onclick="closeEvidenceImageViewer()"> Close</button> </div> <div style="flex:1; overflow-y:auto; text-align:center; padding:10px 0;"> <img id="mdlImageViewerImg" src="" alt="Handover Evidence" style="max-width:100%; max-height:55vh; border-radius:8px; border:2px solid var(--color-teal-primary); object-fit:contain; box-shadow:0 4px 15px rgba(0,0,0,0.15);" /> <div id="mdlImageViewerNotes" style="margin-top:12px; font-size:0.85rem; color:#2D3748; background:#F7FAFC; padding:10px; border-radius:6px; text-align:left; border-left:4px solid var(--color-teal-primary);"></div> </div> <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding-top:10px; border-top:1px solid var(--color-border);"> <a id="mdlImageViewerDownload" href="#" download="handover-evidence.jpg" class="btn btn-primary" style="padding:6px 14px; font-size:0.82rem; font-weight:800; background:#0D7C7A; color:#FFF; text-decoration:none; border-radius:6px;">⬇ Download Full Resolution</a> <button type="button" class="btn btn-secondary" style="padding:6px 14px; font-size:0.82rem; font-weight:700;" onclick="closeEvidenceImageViewer()">Close</button> </div> </div> `;
             document.body.appendChild(modal);
         } else if (modal.parentElement !== document.body) {
             document.body.appendChild(modal);
         }
 
         const titleEl = document.getElementById("mdlImageViewerTitle");
-        if (titleEl) titleEl.textContent = `📷 Handover Evidence: ${itemName}`;
+        if (titleEl) titleEl.textContent = ` Handover Evidence: ${itemName}`;
 
         const imgEl = document.getElementById("mdlImageViewerImg");
         if (imgEl) imgEl.src = imageUrl;
@@ -3238,37 +2892,7 @@ document.addEventListener("DOMContentLoaded", () => {
             modal.className = "modal";
             modal.id = "modalHandoverEvidence";
             modal.style.zIndex = "999999";
-            modal.innerHTML = `
-                <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:540px; width:92%; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.3);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--color-border); padding-bottom:10px;">
-                        <h3 id="mdlEvidenceTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin:0;">📷 Submit Handover Evidence Picture</h3>
-                        <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.85rem; font-weight:800; cursor:pointer;" onclick="closeHandoverEvidenceModal()">✕</button>
-                    </div>
-                    <form id="formSubmitHandoverEvidence" onsubmit="event.preventDefault(); submitHandoverEvidenceDirectly();">
-                        <input type="hidden" id="mdlEvidenceMatchId" value="${targetId}">
-                        <div class="form-group" style="margin-bottom:12px;">
-                            <label class="form-label" style="font-size:0.85rem; font-weight:700;">Select Picture / Take Photo</label>
-                            <input class="form-control" type="file" id="mdlEvidenceFileInput" accept="image/*" style="margin-bottom:6px;">
-                            <div id="mdlEvidencePreviewBox" style="display:none; text-align:center; margin-top:8px; margin-bottom:8px;">
-                                <img id="mdlEvidencePreviewImg" style="max-height:140px; max-width:100%; border-radius:8px; border:2px solid var(--color-teal-primary); object-fit:contain;" />
-                            </div>
-                            <small style="color:var(--color-text-muted); display:block; margin-top:4px;">Or paste direct image URL below:</small>
-                            <input class="form-control" type="url" id="mdlEvidenceUrl" placeholder="https://example.com/handover.jpg" style="margin-top:4px;">
-                        </div>
-                        <div class="form-group" style="margin-bottom:14px;">
-                            <label class="form-label" style="font-size:0.85rem; font-weight:700;">Handover Notes (Optional)</label>
-                            <textarea class="form-control" id="mdlEvidenceNotes" rows="2" placeholder="e.g. Items received in excellent condition."></textarea>
-                        </div>
-                        <div style="background:#E6F4F1; padding:10px 14px; border-radius:6px; font-size:0.8rem; color:var(--color-teal-primary); font-weight:700; margin-bottom:16px;">
-                            🛡️ Evidence Photo: Your photo is recorded and sent to the Admin verification portal.
-                        </div>
-                        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
-                            <button type="button" class="btn btn-secondary" style="padding:8px 14px; font-size:0.85rem; font-weight:700;" onclick="confirmReceiptWithoutPhoto(document.getElementById('mdlEvidenceMatchId').value)">⚡ Skip Photo & Complete</button>
-                            <button type="button" class="btn btn-primary" onclick="submitHandoverEvidenceDirectly()" style="padding:8px 16px; font-size:0.85rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer;">✅ Submit Picture & Complete Order</button>
-                        </div>
-                    </form>
-                </div>
-            `;
+            modal.innerHTML = ` <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:540px; width:92%; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.3);"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--color-border); padding-bottom:10px;"> <h3 id="mdlEvidenceTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin:0;"> Submit Handover Evidence Picture</h3> <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.85rem; font-weight:800; cursor:pointer;" onclick="closeHandoverEvidenceModal()"></button> </div> <form id="formSubmitHandoverEvidence" onsubmit="event.preventDefault(); submitHandoverEvidenceDirectly();"> <input type="hidden" id="mdlEvidenceMatchId" value="${targetId}"> <div class="form-group" style="margin-bottom:12px;"> <label class="form-label" style="font-size:0.85rem; font-weight:700;">Select Picture / Take Photo</label> <input class="form-control" type="file" id="mdlEvidenceFileInput" accept="image/*" style="margin-bottom:6px;"> <div id="mdlEvidencePreviewBox" style="display:none; text-align:center; margin-top:8px; margin-bottom:8px;"> <img id="mdlEvidencePreviewImg" style="max-height:140px; max-width:100%; border-radius:8px; border:2px solid var(--color-teal-primary); object-fit:contain;" /> </div> <small style="color:var(--color-text-muted); display:block; margin-top:4px;">Or paste direct image URL below:</small> <input class="form-control" type="url" id="mdlEvidenceUrl" placeholder="https://example.com/handover.jpg" style="margin-top:4px;"> </div> <div class="form-group" style="margin-bottom:14px;"> <label class="form-label" style="font-size:0.85rem; font-weight:700;">Handover Notes (Optional)</label> <textarea class="form-control" id="mdlEvidenceNotes" rows="2" placeholder="e.g. Items received in excellent condition."></textarea> </div> <div style="background:#E6F4F1; padding:10px 14px; border-radius:6px; font-size:0.8rem; color:var(--color-teal-primary); font-weight:700; margin-bottom:16px;"> Evidence Photo: Your photo is recorded and sent to the Admin verification portal. </div> <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;"> <button type="button" class="btn btn-secondary" style="padding:8px 14px; font-size:0.85rem; font-weight:700;" onclick="confirmReceiptWithoutPhoto(document.getElementById('mdlEvidenceMatchId').value)"> Skip Photo & Complete</button> <button type="button" class="btn btn-primary" onclick="submitHandoverEvidenceDirectly()" style="padding:8px 16px; font-size:0.85rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer;"> Submit Picture & Complete Order</button> </div> </form> </div> `;
             document.body.appendChild(modal);
         }
 
@@ -3276,7 +2900,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (matchIdInput) matchIdInput.value = targetId;
 
         const modalTitle = document.getElementById("mdlEvidenceTitle");
-        if (modalTitle) modalTitle.textContent = `📷 Handover Picture: ${match ? (match.requestName || match.itemName || 'Donation Item') : 'Item'}`;
+        if (modalTitle) modalTitle.textContent = ` Handover Picture: ${match ? (match.requestName || match.itemName || 'Donation Item') : 'Item'}`;
 
         // Bind image file selection to live preview
         const fileInput = document.getElementById("mdlEvidenceFileInput");
@@ -3334,12 +2958,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // ENFORCE MANDATORY EVIDENCE PICTURE
         if (!evidenceUrl) {
-            showToast("⚠️ Image Evidence Required: Please select a photo or paste an image URL to confirm receipt.", "warning");
+            showToast(" Image Evidence Required: Please select a photo or paste an image URL to confirm receipt.", "warning");
             return;
         }
 
         try {
-            showToast("⏳ Submitting picture evidence & completing order...", "info");
+            showToast(" Submitting picture evidence & completing order...", "info");
             const targetDocId = await resolveFirestoreMatchDocId(matchId);
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
             const db = helper.db();
@@ -3383,7 +3007,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 } catch(e) {}
             }
 
-            showToast("🎉 Handover photo submitted! Order completed successfully.", "success");
+            showToast(" Handover photo submitted! Order completed successfully.", "success");
             closeHandoverEvidenceModal();
 
             if (typeof updateOverviewStats === 'function') updateOverviewStats();
@@ -3464,7 +3088,7 @@ document.addEventListener("DOMContentLoaded", () => {
             baseLng = SRI_LANKA_DISTRICT_COORDS[currentUser.district.toLowerCase()].lng;
         }
 
-        showToast("📡 Starting Live GPS Location Stream...", "info");
+        showToast(" Starting Live GPS Location Stream...", "info");
 
         if (liveSharingIntervalId) clearInterval(liveSharingIntervalId);
         if (activeWatchPositionId !== null) {
@@ -3486,10 +3110,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 baseLat = pos.coords.latitude;
                 baseLng = pos.coords.longitude;
                 updateFirestoreLocation(baseLat, baseLng);
-                showToast("📍 Live GPS Location updated & streamed!", "success");
+                showToast(" Live GPS Location updated & streamed!", "success");
             }, (err) => {
                 updateFirestoreLocation(baseLat, baseLng);
-                showToast("📍 Live GPS Location (Radar Stream) active!", "success");
+                showToast(" Live GPS Location (Radar Stream) active!", "success");
             }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 });
         }
     };
@@ -3550,25 +3174,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const isDonorView = currentUser && (currentUser.uid === (match ? match.donorId : '') || (currentUser.role === 'donor' && currentUser.uid !== (match ? match.receiverId : '')));
         const partnerName = isDonorView ? (match ? match.receiverName : "Receiver") : (match ? match.donorName : "Donor");
         const partnerRole = isDonorView ? "Receiver" : "Donor";
-        const iconEmoji = isDonorView ? "🏢" : "🚚";
+        const iconEmoji = isDonorView ? "" : "";
         const itemName = match ? (match.itemName || match.requestName || "Items") : "Items";
 
-        container.innerHTML = `
-            <div style="background:linear-gradient(135deg, #0d7c7a 0%, #064e4b 100%); color:#FFFFFF; padding:10px 16px; display:flex; justify-content:space-between; align-items:center;">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:1.2rem;">${iconEmoji}</span>
-                    <div>
-                        <div style="font-weight:800; font-size:0.9rem;">Live Delivery Radar: ${partnerName} (${partnerRole})</div>
-                        <div style="font-size:0.75rem; color:#B2DFDB;">Item: <strong>${itemName}</strong> | Status: <strong>IN TRANSIT</strong></div>
-                    </div>
-                </div>
-                <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem; font-weight:800; background:rgba(255,255,255,0.2); color:#FFF; border:1px solid rgba(255,255,255,0.4); cursor:pointer;" onclick="toggleInlineLiveMap('${matchId}')">✕ Hide Map</button>
-            </div>
-            <div id="inlineCanvas_${matchId}" style="height:340px; width:100%; background:#F5EFE0;"></div>
-            <div id="inlineStatus_${matchId}" style="font-size:0.8rem; font-weight:700; color:var(--color-teal-primary); text-align:center; padding:8px; background:#E0F2F1; border-top:1px solid #B2DFDB;">
-                🟢 <strong>Live GPS Radar Active</strong> — Tracking ${partnerRole}: ${partnerName} in real-time
-            </div>
-        `;
+        container.innerHTML = ` <div style="background:linear-gradient(135deg, #0d7c7a 0%, #064e4b 100%); color:#FFFFFF; padding:10px 16px; display:flex; justify-content:space-between; align-items:center;"> <div style="display:flex; align-items:center; gap:8px;"> <span style="font-size:1.2rem;">${iconEmoji}</span> <div> <div style="font-weight:800; font-size:0.9rem;">Live Delivery Radar: ${partnerName} (${partnerRole})</div> <div style="font-size:0.75rem; color:#B2DFDB;">Item: <strong>${itemName}</strong> | Status: <strong>IN TRANSIT</strong></div> </div> </div> <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem; font-weight:800; background:rgba(255,255,255,0.2); color:#FFF; border:1px solid rgba(255,255,255,0.4); cursor:pointer;" onclick="toggleInlineLiveMap('${matchId}')"> Hide Map</button> </div> <div id="inlineCanvas_${matchId}" style="height:340px; width:100%; background:#F5EFE0;"></div> <div id="inlineStatus_${matchId}" style="font-size:0.8rem; font-weight:700; color:var(--color-teal-primary); text-align:center; padding:8px; background:#E0F2F1; border-top:1px solid #B2DFDB;"> <strong>Live GPS Radar Active</strong> — Tracking ${partnerRole}: ${partnerName} in real-time </div> `;
 
         let targetLat = 6.9271;
         let targetLng = 79.8612;
@@ -3577,8 +3186,7 @@ document.addEventListener("DOMContentLoaded", () => {
             targetLat = parseFloat(match.liveLocation.lat);
             targetLng = parseFloat(match.liveLocation.lng);
         } else {
-            const targetUser = usersList.find(u => 
-                isDonorView ? (u.uid === (match ? match.receiverId : '') || u.name === partnerName) : (u.uid === (match ? match.donorId : '') || u.name === partnerName)
+            const targetUser = usersList.find(u => isDonorView ? (u.uid === (match ? match.receiverId : '') || u.name === partnerName) : (u.uid === (match ? match.donorId : '') || u.name === partnerName)
             );
             if (targetUser && targetUser.district && SRI_LANKA_DISTRICT_COORDS[targetUser.district.toLowerCase()]) {
                 targetLat = SRI_LANKA_DISTRICT_COORDS[targetUser.district.toLowerCase()].lat;
@@ -3653,7 +3261,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 map.panTo([liveLat, liveLng]);
                                 const statusEl = document.getElementById(`inlineStatus_${matchId}`);
                                 if (statusEl) {
-                                    statusEl.innerHTML = `🟢 <strong>Live GPS Stream Active</strong> — ${sharingUser} (Lat: ${liveLat.toFixed(4)}, Lng: ${liveLng.toFixed(4)}) | Updated: ${updateTime}`;
+                                    statusEl.innerHTML = ` <strong>Live GPS Stream Active</strong> — ${sharingUser} (Lat: ${liveLat.toFixed(4)}, Lng: ${liveLng.toFixed(4)}) | Updated: ${updateTime}`;
                                 }
                             }
                         });
@@ -3699,18 +3307,7 @@ document.addEventListener("DOMContentLoaded", () => {
             modal = document.createElement("div");
             modal.className = "modal";
             modal.id = "modalLiveLocationTracker";
-            modal.innerHTML = `
-                <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:680px; width:95%; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.3);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--color-border); padding-bottom:10px;">
-                        <h3 id="mdlTrackerTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin:0;">📍 Live Location Tracker</h3>
-                        <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.85rem; font-weight:800; cursor:pointer;" onclick="stopLiveLocationTrackerModal()">✕</button>
-                    </div>
-                    <div id="liveTrackerMapContainer" style="height:380px; width:100%; border-radius:8px; border:1px solid var(--color-border); margin-bottom:12px; background:#F5EFE0; position:relative; overflow:hidden;"></div>
-                    <div id="trackerStatusDetails" style="font-size:0.85rem; font-weight:700; color:var(--color-teal-primary); text-align:center;">
-                        📡 Connecting to real-time GPS location stream...
-                    </div>
-                </div>
-            `;
+            modal.innerHTML = ` <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:680px; width:95%; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.3);"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--color-border); padding-bottom:10px;"> <h3 id="mdlTrackerTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin:0;"> Live Location Tracker</h3> <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.85rem; font-weight:800; cursor:pointer;" onclick="stopLiveLocationTrackerModal()"></button> </div> <div id="liveTrackerMapContainer" style="height:380px; width:100%; border-radius:8px; border:1px solid var(--color-border); margin-bottom:12px; background:#F5EFE0; position:relative; overflow:hidden;"></div> <div id="trackerStatusDetails" style="font-size:0.85rem; font-weight:700; color:var(--color-teal-primary); text-align:center;"> Connecting to real-time GPS location stream... </div> </div> `;
             document.body.appendChild(modal);
         }
         modal.style.setProperty("display", "flex", "important");
@@ -3722,11 +3319,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const isDonorView = currentUser && (currentUser.uid === match.donorId || (currentUser.role === 'donor' && currentUser.uid !== match.receiverId));
         const partnerName = isDonorView ? (match.receiverName || "Receiver") : (match.donorName || "Donor");
         const partnerRole = isDonorView ? "Receiver" : "Donor";
-        const iconEmoji = isDonorView ? "🏢" : "🚚";
+        const iconEmoji = isDonorView ? "" : "";
 
         const itemName = match.itemName || match.donationName || match.requestName || "Items";
         const titleEl = document.getElementById("mdlTrackerTitle");
-        if (titleEl) titleEl.textContent = `📍 Live GPS Radar: ${partnerName} (${partnerRole})`;
+        if (titleEl) titleEl.textContent = ` Live GPS Radar: ${partnerName} (${partnerRole})`;
 
         let targetLat = 6.9271;
         let targetLng = 79.8612;
@@ -3735,8 +3332,7 @@ document.addEventListener("DOMContentLoaded", () => {
             targetLat = parseFloat(match.liveLocation.lat);
             targetLng = parseFloat(match.liveLocation.lng);
         } else {
-            const targetUser = usersList.find(u => 
-                isDonorView ? (u.uid === match.receiverId || u.name === match.receiverName) : (u.uid === match.donorId || u.name === match.donorName)
+            const targetUser = usersList.find(u => isDonorView ? (u.uid === match.receiverId || u.name === match.receiverName) : (u.uid === match.donorId || u.name === match.donorName)
             );
             if (targetUser && targetUser.district && SRI_LANKA_DISTRICT_COORDS[targetUser.district.toLowerCase()]) {
                 targetLat = SRI_LANKA_DISTRICT_COORDS[targetUser.district.toLowerCase()].lat;
@@ -3769,17 +3365,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     ljs.onload = () => { renderMap(); };
                     document.head.appendChild(ljs);
                 }
-                container.innerHTML = `
-                    <div style="width:100%; height:380px; background:linear-gradient(135deg, #0d7c7a 0%, #064e4b 100%); border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#FFFFFF; position:relative; overflow:hidden;">
-                        <div style="position:absolute; width:280px; height:280px; border:2px dashed rgba(255,255,255,0.25); border-radius:50%;"></div>
-                        <div style="position:absolute; width:180px; height:180px; border:2px solid rgba(255,255,255,0.4); border-radius:50%;"></div>
-                        <div style="font-size:3rem; margin-bottom:8px; z-index:2;">${iconEmoji}</div>
-                        <div style="font-size:1.1rem; font-weight:800; z-index:2; margin-bottom:4px;">${partnerName} (${partnerRole} Live Stream)</div>
-                        <div style="font-size:0.85rem; font-weight:700; color:#E0F2F1; z-index:2; background:rgba(0,0,0,0.3); padding:4px 12px; border-radius:12px;">📍 Coordinates: ${targetLat.toFixed(4)}°N, ${targetLng.toFixed(4)}°E</div>
-                    </div>
-                `;
+                container.innerHTML = ` <div style="width:100%; height:380px; background:linear-gradient(135deg, #0d7c7a 0%, #064e4b 100%); border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#FFFFFF; position:relative; overflow:hidden;"> <div style="position:absolute; width:280px; height:280px; border:2px dashed rgba(255,255,255,0.25); border-radius:50%;"></div> <div style="position:absolute; width:180px; height:180px; border:2px solid rgba(255,255,255,0.4); border-radius:50%;"></div> <div style="font-size:3rem; margin-bottom:8px; z-index:2;">${iconEmoji}</div> <div style="font-size:1.1rem; font-weight:800; z-index:2; margin-bottom:4px;">${partnerName} (${partnerRole} Live Stream)</div> <div style="font-size:0.85rem; font-weight:700; color:#E0F2F1; z-index:2; background:rgba(0,0,0,0.3); padding:4px 12px; border-radius:12px;"> Coordinates: ${targetLat.toFixed(4)}°N, ${targetLng.toFixed(4)}°E</div> </div> `;
                 const statusDiv = document.getElementById("trackerStatusDetails");
-                if (statusDiv) statusDiv.innerHTML = `🟢 <strong>Live ${partnerRole} Location Stream Active</strong> — ${partnerName} (${targetLat.toFixed(4)}, ${targetLng.toFixed(4)})`;
+                if (statusDiv) statusDiv.innerHTML = ` <strong>Live ${partnerRole} Location Stream Active</strong> — ${partnerName} (${targetLat.toFixed(4)}, ${targetLng.toFixed(4)})`;
                 return;
             }
 
@@ -3826,7 +3414,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const statusDiv = document.getElementById("trackerStatusDetails");
         if (statusDiv) {
-            statusDiv.innerHTML = `🟢 <strong>Live Telemetry Radar Active</strong> — ${partnerRole}: ${partnerName} | Coordinates: ${targetLat.toFixed(4)}, ${targetLng.toFixed(4)}`;
+            statusDiv.innerHTML = ` <strong>Live Telemetry Radar Active</strong> — ${partnerRole}: ${partnerName} | Coordinates: ${targetLat.toFixed(4)}, ${targetLng.toFixed(4)}`;
         }
 
         // Background resolve exact doc ID and connect live Firestore listener
@@ -3857,7 +3445,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             liveTrackerMap.invalidateSize(true);
                         }
                         if (statusDiv) {
-                            statusDiv.innerHTML = `🟢 <strong>Live ${partnerRole} GPS Stream Active</strong> — <strong>${sharingUser}</strong> is sharing real GPS location (Lat: ${liveLat.toFixed(4)}, Lng: ${liveLng.toFixed(4)}) | Updated: ${updateTime}`;
+                            statusDiv.innerHTML = ` <strong>Live ${partnerRole} GPS Stream Active</strong> — <strong>${sharingUser}</strong> is sharing real GPS location (Lat: ${liveLat.toFixed(4)}, Lng: ${liveLng.toFixed(4)}) | Updated: ${updateTime}`;
                         }
                     }
                 });
@@ -3874,7 +3462,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (liveTrackerMarker) {
                 liveTrackerMarker.setLatLng([simLat, simLng]);
                 if (statusDiv) {
-                    statusDiv.innerHTML = `📡 <strong>Live GPS Telemetry (Radar Stream)</strong> — ${partnerName} moving in transit (${simLat.toFixed(4)}, ${simLng.toFixed(4)})`;
+                    statusDiv.innerHTML = ` <strong>Live GPS Telemetry (Radar Stream)</strong> — ${partnerName} moving in transit (${simLat.toFixed(4)}, ${simLng.toFixed(4)})`;
                 }
             }
         }, 2500);
@@ -3914,8 +3502,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (searchKeyword) {
-            filtered = filtered.filter(d => 
-                (d.itemName && d.itemName.toLowerCase().includes(searchKeyword)) ||
+            filtered = filtered.filter(d => (d.itemName && d.itemName.toLowerCase().includes(searchKeyword)) ||
                 (d.category && d.category.toLowerCase().includes(searchKeyword)) ||
                 (d.donorName && d.donorName.toLowerCase().includes(searchKeyword))
             );
@@ -3939,25 +3526,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         grid.innerHTML = filtered.map(d => {
             const reqBtn = isReceiver ? `<button class="btn btn-primary" style="width:100%; font-size:0.75rem; padding:6px; margin-top:8px; font-weight:800;" onclick="openRequestAvailableItemModal('${d.id}')">Request Item (Self Pick Up)</button>` : '';
-            const msgBtn = isReceiver ? `<button class="btn btn-secondary" style="width:100%; font-size:0.75rem; padding:4px; margin-top:4px;" onclick="openDirectChatWithUser('${d.donorId}', '${d.donorName}', '${d.itemName}')">💬 Message Donor</button>` : '';
+            const msgBtn = isReceiver ? `<button class="btn btn-secondary" style="width:100%; font-size:0.75rem; padding:4px; margin-top:4px;" onclick="openDirectChatWithUser('${d.donorId}', '${d.donorName}', '${d.itemName}')"> Message Donor</button>` : '';
 
-            return `
-                <div class="glass-panel" style="padding: 12px; background: #FFFFFF; border-radius: 8px; border: 1px solid var(--color-border); display: flex; flex-direction: column; justify-content: space-between;">
-                    <div>
-                        <img src="${d.photoUrl || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=200&q=80'}" style="width: 100%; height: 95px; border-radius: 6px; object-fit: cover; margin-bottom: 8px;">
-                        <h4 style="font-size: 0.85rem; font-weight: 800; color: var(--color-teal-primary); margin-bottom: 4px; line-height: 1.2;">${d.itemName}</h4>
-                        <div style="font-size: 0.75rem; color: #5C6B5E; margin-bottom: 4px;">Category: <strong>${d.category}</strong></div>
-                        <div style="font-size: 0.75rem; color: #5C6B5E; margin-bottom: 6px;">Qty: <strong>${d.quantity} ${d.unit || 'units'}</strong></div>
-                    </div>
-                    <div>
-                        <div style="font-size: 0.75rem; color: var(--color-teal-muted); font-weight: 700; border-top: 1px solid #F5EFE0; padding-top: 6px;">
-                            Donor: ${d.donorName} (${d.district || 'Colombo'})
-                        </div>
-                        ${reqBtn}
-                        ${msgBtn}
-                    </div>
-                </div>
-            `;
+            return ` <div class="glass-panel" style="padding: 12px; background: #FFFFFF; border-radius: 8px; border: 1px solid var(--color-border); display: flex; flex-direction: column; justify-content: space-between;"> <div> <img src="${d.photoUrl || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=200&q=80'}" style="width: 100%; height: 95px; border-radius: 6px; object-fit: cover; margin-bottom: 8px;"> <h4 style="font-size: 0.85rem; font-weight: 800; color: var(--color-teal-primary); margin-bottom: 4px; line-height: 1.2;">${d.itemName}</h4> <div style="font-size: 0.75rem; color: #5C6B5E; margin-bottom: 4px;">Category: <strong>${d.category}</strong></div> <div style="font-size: 0.75rem; color: #5C6B5E; margin-bottom: 6px;">Qty: <strong>${d.quantity} ${d.unit || 'units'}</strong></div> </div> <div> <div style="font-size: 0.75rem; color: var(--color-teal-muted); font-weight: 700; border-top: 1px solid #F5EFE0; padding-top: 6px;"> Donor: ${d.donorName} (${d.district || 'Colombo'}) </div> ${reqBtn}
+                        ${msgBtn} </div> </div> `;
         }).join("");
     }
 
@@ -3988,17 +3560,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const body = document.getElementById("historyTableBody");
         if (!header || !body) return;
 
-        header.innerHTML = `
-            <th>Date</th>
-            <th>Item / Request</th>
-            <th>Type</th>
-            <th>Donor / Receiver</th>
-            <th>Status</th>
-            <th>Receipt / Evidence</th>
-        `;
+        header.innerHTML = ` <th>Date</th> <th>Item / Request</th> <th>Type</th> <th>Donor / Receiver</th> <th>Status</th> <th>Receipt / Evidence</th> `;
 
-        const completedMatches = matchesList.filter(m => 
-            m.donorId === currentUser.uid || m.receiverId === currentUser.uid || (currentUser.role || "").includes('admin')
+        const completedMatches = matchesList.filter(m => m.donorId === currentUser.uid || m.receiverId === currentUser.uid || (currentUser.role || "").includes('admin')
         );
 
         if (completedMatches.length === 0) {
@@ -4011,28 +3575,13 @@ document.addEventListener("DOMContentLoaded", () => {
             const partner = currentUser.uid === m.donorId ? `Receiver: ${m.receiverName}` : `Donor: ${m.donorName}`;
             let docs = '-';
             if (m.type === 'monetary') {
-                docs = `
-                    <div style="display:flex; gap:6px;">
-                        ${m.receiptUrl ? `<a href="${m.receiptUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700; font-size:0.75rem;">Receipt</a>` : ''}
-                        ${m.evidenceUrl ? `<a href="${m.evidenceUrl}" target="_blank" style="color:var(--color-teal-muted); font-weight:700; font-size:0.75rem;">Evidence</a>` : ''}
-                    </div>
-                `;
+                docs = ` <div style="display:flex; gap:6px;"> ${m.receiptUrl ? `<a href="${m.receiptUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700; font-size:0.75rem;">Receipt</a>` : ''}
+                        ${m.evidenceUrl ? `<a href="${m.evidenceUrl}" target="_blank" style="color:var(--color-teal-muted); font-weight:700; font-size:0.75rem;">Evidence</a>` : ''} </div> `;
             } else if (m.handoverEvidenceUrl) {
-                docs = `
-                    <button type="button" class="btn btn-secondary" style="padding:3px 10px; font-size:0.75rem; font-weight:800; color:#15803D; cursor:pointer; border:1px solid #86EFAC;" onclick="openEvidenceImageViewer('${m.id}')">📷 View Photo</button>
-                `;
+                docs = ` <button type="button" class="btn btn-secondary" style="padding:3px 10px; font-size:0.75rem; font-weight:800; color:#15803D; cursor:pointer; border:1px solid #86EFAC;" onclick="openEvidenceImageViewer('${m.id}')"> View Photo</button> `;
             }
 
-            return `
-                <tr>
-                    <td>${date}</td>
-                    <td><strong>${m.requestName}</strong></td>
-                    <td><span class="badge badge-info">${(m.type || 'physical').toUpperCase()}</span></td>
-                    <td>${partner}</td>
-                    <td><span class="badge badge-success">${m.status}</span></td>
-                    <td>${docs}</td>
-                </tr>
-            `;
+            return ` <tr> <td>${date}</td> <td><strong>${m.requestName}</strong></td> <td><span class="badge badge-info">${(m.type || 'physical').toUpperCase()}</span></td> <td>${partner}</td> <td><span class="badge badge-success">${m.status}</span></td> <td>${docs}</td> </tr> `;
         }).join("");
     }
 
@@ -4044,12 +3593,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 container.innerHTML = `<div style="text-align: center; color: var(--color-text-muted); padding: 20px;">No active announcements.</div>`;
                 return;
             }
-            container.innerHTML = announcementsList.map(a => `
-                <div class="glass-panel" style="padding: 16px; margin-bottom: 12px; background: #FBF5DD; border-left: 4px solid var(--color-teal-primary);">
-                    <h4 style="font-size: 0.95rem; color: var(--color-teal-primary); margin-bottom: 4px;">${a.title}</h4>
-                    <p style="font-size: 0.85rem; color: var(--color-text-dark);">${a.content}</p>
-                </div>
-            `).join("");
+            container.innerHTML = announcementsList.map(a => ` <div class="glass-panel" style="padding: 16px; margin-bottom: 12px; background: #FBF5DD; border-left: 4px solid var(--color-teal-primary);"> <h4 style="font-size: 0.95rem; color: var(--color-teal-primary); margin-bottom: 4px;">${a.title}</h4> <p style="font-size: 0.85rem; color: var(--color-text-dark);">${a.content}</p> </div> `).join("");
         });
     }
 
@@ -4105,8 +3649,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const currentUid = currentUser.uid || currentUser.id || "";
-        const existingMatch = matchesList.find(m => 
-            (m.donorId === targetUserId && (m.receiverId === currentUid || (currentUser.email && m.receiverEmail === currentUser.email))) ||
+        const existingMatch = matchesList.find(m => (m.donorId === targetUserId && (m.receiverId === currentUid || (currentUser.email && m.receiverEmail === currentUser.email))) ||
             (m.receiverId === targetUserId && (m.donorId === currentUid || (currentUser.email && m.donorEmail === currentUser.email)))
         );
 
@@ -4128,7 +3671,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     createdAt: new Date().toISOString()
                 });
                 window.startChatWithPartner(newDoc.id);
-                showToast(`💬 Opened direct chat channel with ${targetUserName || 'partner'}`, "success");
+                showToast(` Opened direct chat channel with ${targetUserName || 'partner'}`, "success");
             } catch(err) {
                 console.error("Error creating direct chat session:", err);
                 showToast("Could not open chat channel. Please try again.", "danger");
@@ -4140,8 +3683,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const container = document.getElementById("chatMatchesList");
         if (!container) return;
 
-        const chatMatches = matchesList.filter(m => 
-            m.donorId === currentUser.uid || 
+        const chatMatches = matchesList.filter(m => m.donorId === currentUser.uid || 
             m.receiverId === currentUser.uid || 
             (currentUser.id && (m.donorId === currentUser.id || m.receiverId === currentUser.id)) ||
             (currentUser.email && (m.donorEmail === currentUser.email || m.receiverEmail === currentUser.email))
@@ -4155,12 +3697,7 @@ document.addEventListener("DOMContentLoaded", () => {
         container.innerHTML = chatMatches.map(m => {
             const partner = currentUser.uid === m.donorId ? m.receiverName : m.donorName;
             const activeClass = m.id === activeChatMatchId ? 'active' : '';
-            return `
-                <div class="chat-item ${activeClass}" onclick="selectChatMatch('${m.id}')" style="padding:10px; margin-bottom:8px; border-radius:6px; cursor:pointer; background:${m.id === activeChatMatchId ? 'var(--color-teal-primary)' : '#FBF5DD'}; color:${m.id === activeChatMatchId ? '#FFFFFF' : 'var(--color-text-dark)'};">
-                    <div style="font-weight: 800; font-size: 0.9rem;">💬 ${partner}</div>
-                    <div style="font-size: 0.75rem; opacity: 0.9;">Item: ${m.requestName} (${(m.type||'physical').toUpperCase()})</div>
-                </div>
-            `;
+            return ` <div class="chat-item ${activeClass}" onclick="selectChatMatch('${m.id}')" style="padding:10px; margin-bottom:8px; border-radius:6px; cursor:pointer; background:${m.id === activeChatMatchId ? 'var(--color-teal-primary)' : '#FBF5DD'}; color:${m.id === activeChatMatchId ? '#FFFFFF' : 'var(--color-text-dark)'};"> <div style="font-weight: 800; font-size: 0.9rem;"> ${partner}</div> <div style="font-size: 0.75rem; opacity: 0.9;">Item: ${m.requestName} (${(m.type||'physical').toUpperCase()})</div> </div> `;
         }).join("");
     }
 
@@ -4185,13 +3722,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let step2 = match.status === 'confirmed' ? 'var(--color-teal-primary)' : 'var(--color-text-muted)';
         let step3 = match.evidenceSubmitted ? 'var(--color-teal-primary)' : 'var(--color-text-muted)';
 
-        container.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin: 10px 0 15px 0; font-size: 0.75rem; font-weight:700; background:#F5EFE0; padding:8px 12px; border-radius:6px;">
-                <span style="color:${step1}">1. Match Created</span>
-                <span style="color:${step2}">2. Order Confirmed</span>
-                <span style="color:${step3}">3. SLA Evidence</span>
-            </div>
-        `;
+        container.innerHTML = ` <div style="display:flex; justify-content:space-between; align-items:center; margin: 10px 0 15px 0; font-size: 0.75rem; font-weight:700; background:#F5EFE0; padding:8px 12px; border-radius:6px;"> <span style="color:${step1}">1. Match Created</span> <span style="color:${step2}">2. Order Confirmed</span> <span style="color:${step3}">3. SLA Evidence</span> </div> `;
     }
 
     function renderChatMessages() {
@@ -4208,14 +3739,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         container.innerHTML = msgs.map(m => {
             const isOutgoing = m.senderId === currentUser.uid;
-            return `
-                <div style="display:flex; justify-content:${isOutgoing ? 'flex-end' : 'flex-start'}; margin-bottom:8px;">
-                    <div style="max-width:75%; padding:8px 12px; border-radius:8px; font-size:0.85rem; background:${isOutgoing ? 'var(--color-teal-primary)' : '#E4DCAE'}; color:${isOutgoing ? '#FFFFFF' : 'var(--color-text-dark)'};">
-                        <div style="font-size:0.7rem; opacity:0.8; margin-bottom:2px;">${m.senderName || (isOutgoing ? 'You' : 'Partner')}</div>
-                        <div>${m.text}</div>
-                    </div>
-                </div>
-            `;
+            return ` <div style="display:flex; justify-content:${isOutgoing ? 'flex-end' : 'flex-start'}; margin-bottom:8px;"> <div style="max-width:75%; padding:8px 12px; border-radius:8px; font-size:0.85rem; background:${isOutgoing ? 'var(--color-teal-primary)' : '#E4DCAE'}; color:${isOutgoing ? '#FFFFFF' : 'var(--color-text-dark)'};"> <div style="font-size:0.7rem; opacity:0.8; margin-bottom:2px;">${m.senderName || (isOutgoing ? 'You' : 'Partner')}</div> <div>${m.text}</div> </div> </div> `;
         }).join("");
 
         container.scrollTop = container.scrollHeight;
@@ -4329,9 +3853,9 @@ document.addEventListener("DOMContentLoaded", () => {
             setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 400);
 
             const isDonor = (currentUser && currentUser.role === 'donor') || (currentUser && currentUser.accountType === 'donor');
-            const myTitle = isDonor ? `📍 Depot: ${currentUser ? currentUser.name : 'Your Depot'}` : `🏢 Facility: ${currentUser ? currentUser.name : 'Your Facility'}`;
+            const myTitle = isDonor ? ` Depot: ${currentUser ? currentUser.name : 'Your Depot'}` : ` Facility: ${currentUser ? currentUser.name : 'Your Facility'}`;
 
-            const userIconHtml = `<div style="background:#0D7C7A; color:#FFF; padding:6px 12px; border-radius:18px; font-weight:800; font-size:0.8rem; box-shadow:0 3px 8px rgba(0,0,0,0.3); border:2px solid #FFF;">${isDonor ? '🚚' : '🏢'} ${currentUser ? currentUser.name : 'My Facility'}</div>`;
+            const userIconHtml = `<div style="background:#0D7C7A; color:#FFF; padding:6px 12px; border-radius:18px; font-weight:800; font-size:0.8rem; box-shadow:0 3px 8px rgba(0,0,0,0.3); border:2px solid #FFF;">${isDonor ? '' : ''} ${currentUser ? currentUser.name : 'My Facility'}</div>`;
             const userIcon = L.divIcon({ className: 'user-map-pin', html: userIconHtml, iconSize: [140, 32], iconAnchor: [70, 16] });
 
             const boundsGroup = [L.latLng(userLat, userLng)];
@@ -4339,8 +3863,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 .bindPopup(`<b>${myTitle}</b><br>Coordinates: ${userLat.toFixed(4)}, ${userLng.toFixed(4)}`)
                 .openPopup();
 
-            const activeMatches = matchesList.filter(m => 
-                (isDonor ? m.donorId === currentUser.uid : m.receiverId === currentUser.uid)
+            const activeMatches = matchesList.filter(m => (isDonor ? m.donorId === currentUser.uid : m.receiverId === currentUser.uid)
             );
 
             activeMatches.forEach((m, idx) => {
@@ -4357,11 +3880,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 const partnerLatLng = [partnerLat, partnerLng];
                 boundsGroup.push(L.latLng(partnerLat, partnerLng));
 
-                const partnerIconHtml = `<div style="background:#E67E22; color:#FFF; padding:5px 10px; border-radius:16px; font-weight:800; font-size:0.75rem; box-shadow:0 3px 8px rgba(0,0,0,0.3); border:2px solid #FFF;">${isDonor ? '🏢' : '🚚'} ${partnerName} (${distanceKm} km)</div>`;
+                const partnerIconHtml = `<div style="background:#E67E22; color:#FFF; padding:5px 10px; border-radius:16px; font-weight:800; font-size:0.75rem; box-shadow:0 3px 8px rgba(0,0,0,0.3); border:2px solid #FFF;">${isDonor ? '' : ''} ${partnerName} (${distanceKm} km)</div>`;
                 const partnerIcon = L.divIcon({ className: 'partner-map-pin', html: partnerIconHtml, iconSize: [150, 30], iconAnchor: [75, 15] });
 
                 L.marker(partnerLatLng, { icon: partnerIcon }).addTo(leafletMap)
-                    .bindPopup(`<b>${isDonor ? '🏢 Receiver Facility' : '🚚 Donor'}: ${partnerName}</b><br>Dispatch: ${m.requestName || 'Donation Item'}<br>Geographic Distance: <strong>${distanceKm} km away</strong>`);
+                    .bindPopup(`<b>${isDonor ? ' Receiver Facility' : ' Donor'}: ${partnerName}</b><br>Dispatch: ${m.requestName || 'Donation Item'}<br>Geographic Distance: <strong>${distanceKm} km away</strong>`);
 
                 L.polyline([[userLat, userLng], partnerLatLng], {
                     color: '#0D7C7A',
@@ -4395,25 +3918,11 @@ document.addEventListener("DOMContentLoaded", () => {
         matchesList.map(m => {
             let sessionText = m.deliverySessionId || 'N/A';
             let statusBadge = `<span class="badge badge-info">${m.status}</span>`;
-            if (m.status === 'in_transit') statusBadge = `<span class="badge badge-warning">🚚 In Transit</span>`;
-            else if (m.status === 'completed') statusBadge = `<span class="badge badge-success">✅ Completed</span>`;
+            if (m.status === 'in_transit') statusBadge = `<span class="badge badge-warning"> In Transit</span>`;
+            else if (m.status === 'completed') statusBadge = `<span class="badge badge-success"> Completed</span>`;
 
-            return `
-                <tr>
-                    <td><strong>${m.requestName || 'Material Item'}</strong><br><small style="color:var(--color-teal-primary); font-weight:700;">ID: ${sessionText}</small></td>
-                    <td>${m.donorName}</td>
-                    <td>${m.receiverName}</td>
-                    <td><span class="telemetry-pill">${(m.deliveryMethod || 'pending').replace('_', ' ').toUpperCase()}</span></td>
-                    <td>${statusBadge}</td>
-                    <td>
-                        <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                            <button type="button" class="btn btn-secondary" data-action="admin-chat" data-match-id="${m.id}" style="padding:4px 10px; font-size:0.75rem; font-weight:800; cursor:pointer;" onclick="adminInspectMatchChat('${m.id}')">💬 Monitor Live Chat</button>
-                            ${m.status === 'in_transit' ? `<button type="button" class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800; cursor:pointer;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Monitor GPS Radar</button>` : ''}
-                            ${m.handoverEvidenceUrl ? `<button type="button" class="btn btn-success" data-action="view-evidence" data-match-id="${m.id}" style="padding:4px 10px; font-size:0.75rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:4px; cursor:pointer; box-shadow:0 2px 6px rgba(13,124,122,0.3);" onclick="openEvidenceImageViewer('${m.id}')">🖼️ Inspect Handover Photo</button>` : ''}
-                        </div>
-                    </td>
-                </tr>
-            `;
+            return ` <tr> <td><strong>${m.requestName || 'Material Item'}</strong><br><small style="color:var(--color-teal-primary); font-weight:700;">ID: ${sessionText}</small></td> <td>${m.donorName}</td> <td>${m.receiverName}</td> <td><span class="telemetry-pill">${(m.deliveryMethod || 'pending').replace('_', ' ').toUpperCase()}</span></td> <td>${statusBadge}</td> <td> <div style="display:flex; gap:6px; flex-wrap:wrap;"> <button type="button" class="btn btn-secondary" data-action="admin-chat" data-match-id="${m.id}" style="padding:4px 10px; font-size:0.75rem; font-weight:800; cursor:pointer;" onclick="adminInspectMatchChat('${m.id}')"> Monitor Live Chat</button> ${m.status === 'in_transit' ? `<button type="button" class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800; cursor:pointer;" onclick="openLiveTrackingMapModal('${m.id}')"> Monitor GPS Radar</button>` : ''}
+                            ${m.handoverEvidenceUrl ? `<button type="button" class="btn btn-success" data-action="view-evidence" data-match-id="${m.id}" style="padding:4px 10px; font-size:0.75rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:4px; cursor:pointer; box-shadow:0 2px 6px rgba(13,124,122,0.3);" onclick="openEvidenceImageViewer('${m.id}')"> Inspect Handover Photo</button>` : ''} </div> </td> </tr> `;
         }).join("");
 
         if (body1) body1.innerHTML = content;
@@ -4439,19 +3948,10 @@ document.addEventListener("DOMContentLoaded", () => {
             let slaStatus = `<span class="badge badge-warning">14-Day SLA Active</span>`;
 
             if (m.evidenceSubmitted) {
-                slaStatus = `<span class="badge badge-success">✅ Evidence Verified</span>`;
+                slaStatus = `<span class="badge badge-success"> Evidence Verified</span>`;
             }
 
-            return `
-                <tr>
-                    <td><strong>${m.requestName || 'Monetary Grant'}</strong><br><small style="color:var(--color-text-muted);">${m.receiverName}</small></td>
-                    <td>${m.donorName}</td>
-                    <td><strong style="color:var(--color-teal-primary);">LKR ${(m.amount || 0).toLocaleString()}</strong></td>
-                    <td>${transferDate}</td>
-                    <td>${receiptLink}</td>
-                    <td>${slaStatus}</td>
-                </tr>
-            `;
+            return ` <tr> <td><strong>${m.requestName || 'Monetary Grant'}</strong><br><small style="color:var(--color-text-muted);">${m.receiverName}</small></td> <td>${m.donorName}</td> <td><strong style="color:var(--color-teal-primary);">LKR ${(m.amount || 0).toLocaleString()}</strong></td> <td>${transferDate}</td> <td>${receiptLink}</td> <td>${slaStatus}</td> </tr> `;
         }).join("");
     }
 
@@ -4459,7 +3959,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId);
         const modalTitle = document.getElementById("mdlAdminInspectTitle");
         if (modalTitle) {
-            modalTitle.textContent = match ? `🛡️ Admin Chat Inspector: ${match.requestName} (${match.donorName} ↔ ${match.receiverName})` : `🛡️ Admin Chat Inspector`;
+            modalTitle.textContent = match ? ` Admin Chat Inspector: ${match.requestName} (${match.donorName}  ${match.receiverName})` : ` Admin Chat Inspector`;
         }
 
         const container = document.getElementById("adminChatMessagesContainer");
@@ -4504,15 +4004,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (container) {
                 container.innerHTML = msgs.map(msg => {
                     const date = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    return `
-                        <div style="background:#FFFFFF; border:1px solid #D8CE9C; border-radius:8px; padding:8px 12px; margin-bottom:8px;">
-                            <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--color-teal-primary); font-weight:800; margin-bottom:4px;">
-                                <span>${msg.senderName || 'Partner'}</span>
-                                <span style="color:var(--color-text-muted);">${date}</span>
-                            </div>
-                            <div style="font-size:0.85rem; color:var(--color-text-dark);">${msg.text || msg.message || ''}</div>
-                        </div>
-                    `;
+                    return ` <div style="background:#FFFFFF; border:1px solid #D8CE9C; border-radius:8px; padding:8px 12px; margin-bottom:8px;"> <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--color-teal-primary); font-weight:800; margin-bottom:4px;"> <span>${msg.senderName || 'Partner'}</span> <span style="color:var(--color-text-muted);">${date}</span> </div> <div style="font-size:0.85rem; color:var(--color-text-dark);">${msg.text || msg.message || ''}</div> </div> `;
                 }).join("");
             }
         } catch (err) {
@@ -4558,17 +4050,9 @@ document.addEventListener("DOMContentLoaded", () => {
         let reqs = requestsList;
         if (searchReq) reqs = reqs.filter(r => r.itemName.toLowerCase().includes(searchReq));
 
-        donGrid.innerHTML = dons.map(d => `
-            <div class="glass-panel" style="padding: 10px 14px; background: #FFFFFF; font-size: 0.85rem;">
-                <strong>${d.itemName}</strong> (${d.category}) - Qty: ${d.quantity} | Donor: ${d.donorName} (${d.status.toUpperCase()})
-            </div>
-        `).join("");
+        donGrid.innerHTML = dons.map(d => ` <div class="glass-panel" style="padding: 10px 14px; background: #FFFFFF; font-size: 0.85rem;"> <strong>${d.itemName}</strong> (${d.category}) - Qty: ${d.quantity} | Donor: ${d.donorName} (${d.status.toUpperCase()}) </div> `).join("");
 
-        reqGrid.innerHTML = reqs.map(r => `
-            <div class="glass-panel" style="padding: 10px 14px; background: #FFFFFF; font-size: 0.85rem;">
-                <strong>${r.itemName}</strong> (${(r.reqType||'physical').toUpperCase()}) | Receiver: ${r.receiverName} (${r.status.toUpperCase()})
-            </div>
-        `).join("");
+        reqGrid.innerHTML = reqs.map(r => ` <div class="glass-panel" style="padding: 10px 14px; background: #FFFFFF; font-size: 0.85rem;"> <strong>${r.itemName}</strong> (${(r.reqType||'physical').toUpperCase()}) | Receiver: ${r.receiverName} (${r.status.toUpperCase()}) </div> `).join("");
     }
 
     function renderAdminEvidenceApprovals() {
@@ -4592,33 +4076,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const isPending = !m.handoverVerificationStatus || m.handoverVerificationStatus === 'pending_admin_verification';
 
-            const actionsHtml = isPending ? `
-                <div style="display:flex; gap:8px; margin-top:10px;">
-                    <button class="btn btn-success" style="padding:6px 12px; font-size:0.75rem; font-weight:800;" onclick="verifyHandoverEvidence('${m.id}')">✅ Verify & Approve</button>
-                    <button class="btn btn-danger" style="padding:6px 12px; font-size:0.75rem;" onclick="rejectHandoverEvidence('${m.id}')">❌ Reject Evidence</button>
-                </div>
-            ` : '';
+            const actionsHtml = isPending ? ` <div style="display:flex; gap:8px; margin-top:10px;"> <button class="btn btn-success" style="padding:6px 12px; font-size:0.75rem; font-weight:800;" onclick="verifyHandoverEvidence('${m.id}')"> Verify & Approve</button> <button class="btn btn-danger" style="padding:6px 12px; font-size:0.75rem;" onclick="rejectHandoverEvidence('${m.id}')"> Reject Evidence</button> </div> ` : '';
 
-            return `
-                <div class="glass-panel" style="padding:16px; background:#FFFFFF; border-radius:8px; border:1px solid var(--color-border);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                        <span style="font-weight:800; color:var(--color-teal-primary); font-size:0.9rem;">${m.requestName}</span>
-                        ${statusBadge}
-                    </div>
-                    <div style="font-size:0.8rem; color:#4A5568; margin-bottom:4px;">Receiver: <strong>${m.receiverName}</strong> | Donor: <strong>${m.donorName}</strong></div>
-                    <div style="font-size:0.75rem; color:#718096; margin-bottom:10px;">Uploaded: ${new Date(m.handoverUploadedAt || m.completedAt || Date.now()).toLocaleString()}</div>
-                    
-                    <div style="cursor:pointer; text-align:center;" onclick="openEvidenceImageViewer('${m.id}')" title="Click to view full photo">
-                        <img src="${m.handoverEvidenceUrl}" style="width:100%; max-height:180px; object-fit:cover; border-radius:6px; border:1px solid #E2E8F0; margin-bottom:8px;">
-                    </div>
-                    <div style="margin-bottom:8px; text-align:right;">
-                        <button type="button" class="btn btn-secondary" style="padding:2px 8px; font-size:0.75rem; font-weight:800; cursor:pointer;" onclick="openEvidenceImageViewer('${m.id}')">🔍 Full Screen View</button>
-                    </div>
-                    
-                    ${m.handoverNotes ? `<div style="font-size:0.8rem; background:#F8FAFC; padding:8px; border-radius:4px; margin-bottom:8px;"><strong>Notes:</strong> ${m.handoverNotes}</div>` : ''}
-                    ${actionsHtml}
-                </div>
-            `;
+            return ` <div class="glass-panel" style="padding:16px; background:#FFFFFF; border-radius:8px; border:1px solid var(--color-border);"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;"> <span style="font-weight:800; color:var(--color-teal-primary); font-size:0.9rem;">${m.requestName}</span> ${statusBadge} </div> <div style="font-size:0.8rem; color:#4A5568; margin-bottom:4px;">Receiver: <strong>${m.receiverName}</strong> | Donor: <strong>${m.donorName}</strong></div> <div style="font-size:0.75rem; color:#718096; margin-bottom:10px;">Uploaded: ${new Date(m.handoverUploadedAt || m.completedAt || Date.now()).toLocaleString()}</div> <div style="cursor:pointer; text-align:center;" onclick="openEvidenceImageViewer('${m.id}')" title="Click to view full photo"> <img src="${m.handoverEvidenceUrl}" style="width:100%; max-height:180px; object-fit:cover; border-radius:6px; border:1px solid #E2E8F0; margin-bottom:8px;"> </div> <div style="margin-bottom:8px; text-align:right;"> <button type="button" class="btn btn-secondary" style="padding:2px 8px; font-size:0.75rem; font-weight:800; cursor:pointer;" onclick="openEvidenceImageViewer('${m.id}')"> Full Screen View</button> </div> ${m.handoverNotes ? `<div style="font-size:0.8rem; background:#F8FAFC; padding:8px; border-radius:4px; margin-bottom:8px;"><strong>Notes:</strong> ${m.handoverNotes}</div>` : ''}
+                    ${actionsHtml} </div> `;
         }).join("");
     }
 
@@ -4637,14 +4098,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 await db.collection("notifications").add({
                     userId: match.receiverId,
                     type: "evidence_verified",
-                    message: `✅ Admin has verified and approved your handover evidence for "${match.requestName}".`,
+                    message: ` Admin has verified and approved your handover evidence for "${match.requestName}".`,
                     isRead: false,
                     read: false,
                     createdAt: new Date().toISOString()
                 });
             }
 
-            showToast("✅ Handover evidence verified & approved!", "success");
+            showToast(" Handover evidence verified & approved!", "success");
             renderAdminEvidenceApprovals();
         } catch (err) {
             showToast("Failed to verify evidence.", "danger");
@@ -4670,7 +4131,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 await db.collection("notifications").add({
                     userId: match.receiverId,
                     type: "evidence_rejected",
-                    message: `❌ Admin rejected handover evidence for "${match.requestName}". Reason: ${reason}`,
+                    message: ` Admin rejected handover evidence for "${match.requestName}". Reason: ${reason}`,
                     isRead: false,
                     read: false,
                     createdAt: new Date().toISOString()
