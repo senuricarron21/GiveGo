@@ -2196,10 +2196,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let liveLocBtn = '';
             if (m.status === 'in_transit') {
-                if (m.deliveryMethod === 'self_delivery') {
-                    liveLocBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Track Donor Delivery Live</button>`;
-                } else if (m.deliveryMethod === 'receiver_pickup') {
-                    liveLocBtn = `<button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startSharingLiveLocation('${m.id}')">📡 Share My Live Pick-Up Location</button>`;
+                liveLocBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Track Donor Delivery Live</button>`;
+                if (m.deliveryMethod === 'receiver_pickup') {
+                    liveLocBtn += `<button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800; margin-left:4px;" onclick="startSharingLiveLocation('${m.id}')">📡 Share My Pick-Up GPS</button>`;
                 }
             }
 
@@ -2602,9 +2601,21 @@ document.addEventListener("DOMContentLoaded", () => {
         'kegalle': { lat: 7.2513, lng: 80.3464 }
     };
 
-    window.openLiveTrackingMapModal = (matchId) => {
+    window.openLiveTrackingMapModal = async (matchId) => {
         let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId);
         
+        try {
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            if (helper && helper.db) {
+                const docSnap = await helper.db().collection("matches").doc(matchId).get();
+                if (docSnap.exists) {
+                    match = { id: docSnap.id, ...docSnap.data() };
+                }
+            }
+        } catch (fetchErr) {
+            console.warn("Direct match fetch notice:", fetchErr);
+        }
+
         if (!match) {
             const don = donationsList.find(d => d.id === matchId || d.deliverySessionId === matchId);
             const req = requestsList.find(r => r.id === matchId || r.deliverySessionId === matchId);
