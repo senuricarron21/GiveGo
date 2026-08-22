@@ -2238,10 +2238,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 `;
             }
 
-            if (m.status === 'delivered' || m.status === 'in_transit' || m.status === 'confirmed' || m.status === 'donor_scheduled_delivery') {
-                actionButtonsHtml += `
-                    <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="confirmPhysicalReceipt('${m.id}')">✅ Confirm Receipt (Complete)</button>
-                `;
+            if (m.status === 'confirmed') {
+                if (m.deliveryMethod === 'receiver_pickup') {
+                    actionButtonsHtml += `
+                        <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startDeliverySession('${m.id}')">🚚 Start Pick-Up Journey</button>
+                    `;
+                } else {
+                    actionButtonsHtml += `
+                        <span style="font-size:0.78rem; color:var(--color-teal-primary); font-weight:700; background:#E0F2F1; padding:4px 8px; border-radius:4px; border:1px solid #B2DFDB;">⏳ Waiting for donor to start delivery journey</span>
+                    `;
+                }
             }
 
             let liveLocBtn = '';
@@ -2344,9 +2350,15 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             if (m.status === 'confirmed') {
-                actionButtonsHtml += `
-                    <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startDeliverySession('${m.id}')">🚚 Start Delivery Journey</button>
-                `;
+                if (m.deliveryMethod === 'receiver_pickup') {
+                    actionButtonsHtml += `
+                        <span style="font-size:0.78rem; color:var(--color-teal-primary); font-weight:700; background:#E0F2F1; padding:4px 8px; border-radius:4px; border:1px solid #B2DFDB;">⏳ Waiting for receiver to start pick-up journey</span>
+                    `;
+                } else {
+                    actionButtonsHtml += `
+                        <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startDeliverySession('${m.id}')">🚚 Start Delivery Journey</button>
+                    `;
+                }
             } else if (m.status === 'donor_scheduled_delivery') {
                 actionButtonsHtml += `
                     <span style="font-size:0.78rem; color:var(--color-primary); font-weight:700; background:#FFF8E7; padding:4px 8px; border-radius:4px; border:1px solid #FFE082;">⏳ Waiting for receiver to agree to schedule</span>
@@ -2399,6 +2411,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const sessionId = "DEL-" + Math.floor(10000 + Math.random() * 90000);
             const recipientId = currentUser.uid === match.donorId ? match.receiverId : match.donorId;
+            const isReceiverPickup = match.deliveryMethod === 'receiver_pickup';
+            const actionTitle = isReceiverPickup ? "pick-up journey" : "delivery journey";
 
             await helper.db().collection("matches").doc(matchId).update({
                 status: "in_transit",
@@ -2408,12 +2422,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             await helper.db().collection("notifications").add({
                 userId: recipientId,
-                message: `🚚 ${currentUser.name} has started the delivery journey for "${match.requestName}" (Session ID: ${sessionId}). Live GPS location map is active!`,
+                message: `🚚 ${currentUser.name} has started the ${actionTitle} for "${match.requestName}" (Session ID: ${sessionId}). Live GPS tracking is active!`,
                 read: false,
                 createdAt: new Date().toISOString()
             });
 
-            showToast(`🚚 Delivery journey started! Session ID: ${sessionId}. Click "Stream My Live Location" to stream GPS coordinates.`, "success");
+            showToast(`🚚 ${actionTitle.toUpperCase()} STARTED! Session ID: ${sessionId}. Live GPS tracking is active!`, "success");
             updateOverviewStats();
         } catch (err) {
             showToast("Failed to start delivery session.", "danger");
