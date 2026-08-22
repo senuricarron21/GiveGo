@@ -6,8 +6,8 @@
     <title>Dashboard | GiveGo</title>
     
     <!-- CSS styles -->
-    <link rel="stylesheet" href="css/styles.css?v=8.0">
-    <link rel="stylesheet" href="css/dashboard.css?v=8.0">
+    <link rel="stylesheet" href="css/styles.css?v=9.0">
+    <link rel="stylesheet" href="css/dashboard.css?v=9.0">
     
     <!-- Leaflet.js CSS for Real Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
@@ -819,28 +819,29 @@
             </form>
         </div>
     <!-- Modal: Receiver Upload Handover Evidence Image -->
-    <div class="modal" id="modalHandoverEvidence">
-        <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:520px; width:90%;">
+    <div class="modal" id="modalHandoverEvidence" style="z-index:999999;">
+        <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:540px; width:92%; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.3);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--color-border); padding-bottom:10px;">
-                <h3 id="mdlEvidenceTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem;">📷 Upload Handover Evidence Image</h3>
-                <button type="button" class="btn btn-secondary" style="padding:2px 8px; font-size:0.75rem;" onclick="document.getElementById('modalHandoverEvidence').classList.remove('active')">✕</button>
+                <h3 id="mdlEvidenceTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin:0;">📷 Handover Evidence & Receipt Confirmation</h3>
+                <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.85rem; font-weight:800; cursor:pointer;" onclick="closeHandoverEvidenceModal()">✕</button>
             </div>
             <form id="formSubmitHandoverEvidence">
                 <input type="hidden" id="mdlEvidenceMatchId">
-                <div class="form-group">
-                    <label class="form-label">Handover Evidence Photo / Document Image</label>
-                    <input class="form-control" type="file" id="mdlEvidenceFile" accept="image/*" style="margin-bottom:8px;">
-                    <small style="color:var(--color-text-muted); display:block; margin-bottom:12px;">Or paste direct image URL below:</small>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label class="form-label" style="font-size:0.85rem; font-weight:700;">Handover Notes / Feedback (Optional)</label>
+                    <textarea class="form-control" id="mdlEvidenceNotes" rows="2" placeholder="e.g. Items received in excellent condition."></textarea>
+                </div>
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label class="form-label" style="font-size:0.85rem; font-weight:700;">Evidence Photo URL (Optional)</label>
                     <input class="form-control" type="url" id="mdlEvidenceUrl" placeholder="https://images.unsplash.com/photo-...">
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Handover Notes (Optional)</label>
-                    <textarea class="form-control" id="mdlEvidenceNotes" rows="2" placeholder="e.g. Received 10 boxes of books in excellent condition."></textarea>
+                <div style="background:#E6F4F1; padding:10px 14px; border-radius:6px; font-size:0.8rem; color:var(--color-teal-primary); font-weight:700; margin-bottom:16px;">
+                    🛡️ Handover Confirmation: Once confirmed, the order is completed and recorded across dashboards.
                 </div>
-                <div style="background:#E6F4F1; padding:12px; border-radius:6px; font-size:0.8rem; color:var(--color-teal-primary); font-weight:700; margin-bottom:16px;">
-                    🛡️ Admin Verification: Uploaded evidence photos are automatically submitted to the Admin Command Center for official verification.
+                <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+                    <button type="button" class="btn btn-secondary" style="padding:8px 14px; font-size:0.85rem; font-weight:700;" onclick="confirmReceiptWithoutPhoto(document.getElementById('mdlEvidenceMatchId').value)">⚡ Complete Without Photo</button>
+                    <button type="submit" class="btn btn-primary" style="padding:8px 16px; font-size:0.85rem; font-weight:800;">✅ Submit & Confirm Receipt</button>
                 </div>
-                <button class="btn btn-primary" type="submit" style="width:100%; font-weight:800; padding:12px;">Confirm & Submit Evidence to Admin</button>
             </form>
         </div>
     </div>
@@ -925,8 +926,8 @@
 
     <!-- Core Javascript Files -->
     <script src="js/firebase-config.js"></script>
-    <script src="js/auth.js?v=8.0"></script>
-    <script src="js/app.js?v=8.0"></script>
+    <script src="js/auth.js?v=9.0"></script>
+    <script src="js/app.js?v=9.0"></script>
     
     <script>
         document.getElementById("btnLogout").addEventListener("click", () => {

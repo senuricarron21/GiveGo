@@ -2533,7 +2533,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             <input type="text" id="mdlEvidenceUrl" class="input-control" placeholder="https://example.com/photo.jpg">
                         </div>
                         <div style="display:flex; gap:10px; justify-content:flex-end;">
-                            <button type="button" class="btn btn-secondary" onclick="confirmReceiptWithoutPhoto(document.getElementById('mdlEvidenceMatchId').value)">Confirm Without Photo</button>
+                            <button type="button" class="btn btn-secondary" onclick="confirmReceiptWithoutPhoto(document.getElementById('mdlEvidenceMatchId').value)">⚡ Complete Without Photo</button>
                             <button type="submit" class="btn btn-primary">✅ Submit & Confirm Receipt</button>
                         </div>
                     </form>
@@ -2548,22 +2548,29 @@ document.addEventListener("DOMContentLoaded", () => {
         const modalTitle = document.getElementById("mdlEvidenceTitle");
         if (modalTitle) modalTitle.textContent = `📷 Handover Evidence: ${match ? (match.requestName || match.itemName || 'Donation Item') : 'Item'}`;
 
-        modal.style.display = "flex";
-        modal.style.visibility = "visible";
-        modal.style.opacity = "1";
-        modal.style.zIndex = "999999";
+        modal.style.setProperty("display", "flex", "important");
+        modal.style.setProperty("visibility", "visible", "important");
+        modal.style.setProperty("opacity", "1", "important");
+        modal.style.setProperty("z-index", "999999", "important");
         modal.classList.add("active");
     };
 
     window.confirmReceiptWithoutPhoto = async (matchId) => {
         try {
+            const targetDocId = await resolveFirestoreMatchDocId(matchId);
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
             const db = helper.db();
 
-            let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId);
-            const targetId = match ? match.id : matchId;
+            let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId || m.id === targetDocId);
+            
+            // Immediate in-memory state update
+            if (match) {
+                match.status = "completed";
+                match.deliveryStatus = "delivered_and_confirmed";
+                match.completedAt = new Date().toISOString();
+            }
 
-            await db.collection("matches").doc(targetId).update({
+            await db.collection("matches").doc(targetDocId).update({
                 status: "completed",
                 deliveryStatus: "delivered_and_confirmed",
                 completedAt: new Date().toISOString(),
@@ -2614,15 +2621,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!matchId) return;
 
-        let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId);
-        const targetId = match ? match.id : matchId;
-        let evidenceUrl = urlInput || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=600&q=80';
-
         try {
+            const targetDocId = await resolveFirestoreMatchDocId(matchId);
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
             const db = helper.db();
 
-            await db.collection("matches").doc(targetId).update({
+            let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId || m.id === targetDocId);
+            let evidenceUrl = urlInput || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=600&q=80';
+
+            if (match) {
+                match.status = "completed";
+                match.deliveryStatus = "delivered_and_confirmed";
+                match.completedAt = new Date().toISOString();
+            }
+
+            await db.collection("matches").doc(targetDocId).update({
                 status: "completed",
                 deliveryStatus: "delivered_and_confirmed",
                 handoverEvidenceUrl: evidenceUrl,
