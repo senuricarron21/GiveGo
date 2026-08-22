@@ -2443,6 +2443,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
 
+            let donorEvidenceHtml = '';
+            if (m.handoverEvidenceUrl) {
+                donorEvidenceHtml = `
+                    <div style="margin-top:12px; padding:12px; background:#F0FDF4; border:1px solid #86EFAC; border-radius:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <span style="font-size:0.82rem; font-weight:800; color:#15803D;">📷 Receiver Uploaded Handover Evidence:</span>
+                            <span style="font-size:0.75rem; color:#166534; font-weight:700; background:#DCFCE7; padding:2px 8px; border-radius:4px;">Receipt Confirmed</span>
+                        </div>
+                        <a href="${m.handoverEvidenceUrl}" target="_blank" title="Click to view full image in new tab" style="display:inline-block; margin-top:4px;">
+                            <img src="${m.handoverEvidenceUrl}" alt="Handover Evidence" style="max-height:160px; max-width:100%; border-radius:6px; border:2px solid #15803D; object-fit:contain; box-shadow:0 2px 6px rgba(0,0,0,0.1);" />
+                        </a>
+                        ${m.handoverNotes ? `<div style="font-size:0.8rem; color:#14532D; margin-top:6px;"><strong>Receiver Notes:</strong> "${m.handoverNotes}"</div>` : ''}
+                    </div>
+                `;
+            }
+
             return `
                 <div class="glass-panel" style="padding: 16px; margin-bottom: 12px; background: #FFFFFF;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -2452,6 +2468,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div style="font-size: 0.85rem; color: var(--color-teal-muted); font-weight:700; margin-bottom:6px;">Receiver: ${m.receiverName}</div>
                     <div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 8px;">Quantity: <strong>${m.quantity} ${m.unit || 'units'}</strong></div>
                     ${scheduleInfo}
+                    ${donorEvidenceHtml}
 
                     <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px;">
                         ${actionButtonsHtml}
@@ -3584,6 +3601,10 @@ document.addEventListener("DOMContentLoaded", () => {
                         ${m.evidenceUrl ? `<a href="${m.evidenceUrl}" target="_blank" style="color:var(--color-teal-muted); font-weight:700; font-size:0.75rem;">Evidence</a>` : ''}
                     </div>
                 `;
+            } else if (m.handoverEvidenceUrl) {
+                docs = `
+                    <a href="${m.handoverEvidenceUrl}" target="_blank" style="color:#15803D; font-weight:800; font-size:0.75rem; text-decoration:underline;">📷 View Handover Photo</a>
+                `;
             }
 
             return `
@@ -3972,6 +3993,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <div style="display:flex; gap:6px; flex-wrap:wrap;">
                             <button class="btn btn-secondary" style="padding:3px 8px; font-size:0.75rem;" onclick="adminInspectMatchChat('${m.id}')">👁️ View Live Chat</button>
                             ${m.status === 'in_transit' ? `<button class="btn btn-warning" style="padding:3px 8px; font-size:0.75rem; font-weight:800;" onclick="openLiveTrackingMapModal('${m.id}')">📍 Monitor GPS Radar</button>` : ''}
+                            ${m.handoverEvidenceUrl ? `<a href="${m.handoverEvidenceUrl}" target="_blank" class="btn btn-success" style="padding:3px 8px; font-size:0.75rem; font-weight:800; background:#0D7C7A; color:#FFF;">📷 Photo Evidence</a>` : ''}
                         </div>
                     </td>
                 </tr>
