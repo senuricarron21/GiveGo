@@ -2668,16 +2668,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let liveSharingIntervalId = null;
 
-    window.startSharingLiveLocation = (matchId) => {
-        let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId);
-        const statusLower = match ? (match.status || '').toLowerCase() : 'in_transit';
-        
-        if (!statusLower.includes('transit')) {
-            showToast("⚠️ Live GPS location sharing is active after starting delivery journey (In Transit).", "warning");
+    async function resolveFirestoreMatchDocId(matchId) {
+        try {
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            if (!helper || !helper.db) return matchId;
+            const db = helper.db();
+
+            const directSnap = await db.collection("matches").doc(matchId).get();
+            if (directSnap.exists) return directSnap.id;
+
+            const qSession = await db.collection("matches").where("deliverySessionId", "==", matchId).get();
+            if (!qSession.empty) return qSession.docs[0].id;
+
+            const localMatch = matchesList.find(m => m.id === matchId || m.deliverySessionId === matchId || String(m.id) === String(matchId));
+            if (localMatch && localMatch.id) {
+                const localSnap = await db.collection("matches").doc(localMatch.id).get();
+                if (localSnap.exists) return localSnap.id;
+            }
+        } catch (e) {
+            console.warn("Match doc resolution notice:", e);
         }
+        return matchId;
+    }
 
-        const targetDocId = match ? match.id : matchId;
-
+    window.startSharingLiveLocation = async (matchId) => {
+        const targetDocId = await resolveFirestoreMatchDocId(matchId);
+        let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId);
+        
         const updateFirestoreLocation = async (lat, lng) => {
             try {
                 const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
@@ -2702,6 +2719,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (match && match.location && match.location.lat) {
             baseLat = parseFloat(match.location.lat);
             baseLng = parseFloat(match.location.lng);
+        } else if (currentUser && currentUser.district && SRI_LANKA_DISTRICT_COORDS[currentUser.district.toLowerCase()]) {
+            baseLat = SRI_LANKA_DISTRICT_COORDS[currentUser.district.toLowerCase()].lat;
+            baseLng = SRI_LANKA_DISTRICT_COORDS[currentUser.district.toLowerCase()].lng;
         }
 
         showToast("📡 Starting Live GPS Location Stream...", "info");
@@ -2712,6 +2732,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         let streamStep = 0;
+        updateFirestoreLocation(baseLat, baseLng);
+
         liveSharingIntervalId = setInterval(() => {
             streamStep++;
             const curLat = baseLat + (Math.sin(streamStep * 0.25) * 0.0015);
@@ -2763,12 +2785,13 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     window.openLiveTrackingMapModal = async (matchId) => {
-        let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId);
+        const targetDocId = await resolveFirestoreMatchDocId(matchId);
+        let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId || m.id === targetDocId);
         
         try {
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
             if (helper && helper.db) {
-                const docSnap = await helper.db().collection("matches").doc(matchId).get();
+                const docSnap = await helper.db().collection("matches").doc(targetDocId).get();
                 if (docSnap.exists) {
                     match = { id: docSnap.id, ...docSnap.data() };
                 }
@@ -2781,8 +2804,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const don = donationsList.find(d => d.id === matchId || d.deliverySessionId === matchId);
             const req = requestsList.find(r => r.id === matchId || r.deliverySessionId === matchId);
             match = {
-                id: matchId,
-                donorName: don ? (don.donorName || "melamiyaaa") : (req ? (req.donorName || "melamiyaaa") : "melamiyaaa"),
+                id: targetDocId,
+                donorName: don ? (don.donorName || "Donor") : (req ? (req.donorName || "Donor") : "Donor"),
                 receiverName: currentUser ? currentUser.name : "Receiver",
                 itemName: don ? don.itemName : (req ? req.itemName : "Donation Package"),
                 status: "in_transit",
@@ -2895,9 +2918,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     attribution: '&copy; OpenStreetMap contributors'
                 }).addTo(liveTrackerMap);
 
-                setTimeout(() => { if (liveTrackerMap) liveTrackerMap.invalidateSize(); }, 50);
-                setTimeout(() => { if (liveTrackerMap) liveTrackerMap.invalidateSize(); }, 250);
-                setTimeout(() => { if (liveTrackerMap) liveTrackerMap.invalidateSize(); }, 500);
+                const triggerInvalidate = () => { if (liveTrackerMap) liveTrackerMap.invalidateSize(true); };
+                triggerInvalidate();
+                setTimeout(triggerInvalidate, 100);
+                setTimeout(triggerInvalidate, 300);
+                setTimeout(triggerInvalidate, 600);
+                setTimeout(triggerInvalidate, 1200);
 
                 const customMarkerHtml = `<div style="background:var(--color-teal-primary); color:#FFFFFF; padding:6px 12px; border-radius:20px; font-weight:800; font-size:0.85rem; box-shadow:0 4px 12px rgba(13,124,122,0.4); display:flex; align-items:center; gap:6px; border:2px solid #FFFFFF;">${iconEmoji} ${partnerName}</div>`;
                 const vehicleIcon = L.divIcon({
@@ -2922,12 +2948,12 @@ document.addEventListener("DOMContentLoaded", () => {
             statusDiv.innerHTML = `🟢 <strong>Live Telemetry Radar Active</strong> — ${partnerRole}: ${partnerName} | Coordinates: ${targetLat.toFixed(4)}, ${targetLng.toFixed(4)}`;
         }
 
-        // Real-time Firebase Listener
+        // Real-time Firebase Listener on exact document ID
         const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
         if (trackerUnsubscribe) trackerUnsubscribe();
 
         if (helper && helper.db) {
-            trackerUnsubscribe = helper.db().collection("matches").doc(matchId).onSnapshot((doc) => {
+            trackerUnsubscribe = helper.db().collection("matches").doc(targetDocId).onSnapshot((doc) => {
                 const data = doc.data();
                 if (data && data.liveLocation && data.liveLocation.lat && data.liveLocation.lng) {
                     if (liveTrackerSimulationInterval) {
@@ -2946,7 +2972,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                     if (liveTrackerMap) {
                         liveTrackerMap.panTo(newLatLng);
-                        liveTrackerMap.invalidateSize();
+                        liveTrackerMap.invalidateSize(true);
                     }
                     if (statusDiv) {
                         statusDiv.innerHTML = `🟢 <strong>Live ${partnerRole} GPS Stream Active</strong> — <strong>${sharingUser}</strong> is sharing real GPS location (Lat: ${liveLat.toFixed(4)}, Lng: ${liveLng.toFixed(4)}) | Updated: ${updateTime}`;
@@ -2973,12 +2999,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
         }, 2500);
-
     };
 
     window.stopLiveLocationTrackerModal = () => {
         if (trackerUnsubscribe) {
-            trackerUnsubscribe();
+            try { trackerUnsubscribe(); } catch(e) {}
             trackerUnsubscribe = null;
         }
         if (liveTrackerSimulationInterval) {
