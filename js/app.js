@@ -2303,7 +2303,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (m.status === 'in_transit' || m.status === 'delivered' || m.status === 'confirmed') {
                 actionButtonsHtml += `
-                    <button class="btn btn-success" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFFFFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="finalizePackageReceiptOrder('${m.id}')">🎉 Confirm Package Received</button>
+                    <button class="btn btn-success" data-action="mark-received" data-match-id="${m.id}" style="padding:6px 14px; font-size:0.82rem; font-weight:800; background:#0D7C7A; color:#FFFFFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="markItemsAsReceivedNow('${m.id}')">✅ I Received the Items</button>
                     <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; font-weight:700; cursor:pointer;" onclick="openHandoverEvidenceModal('${m.id}')">📷 Attach Photo Evidence</button>
                 `;
             }
@@ -2642,6 +2642,19 @@ document.addEventListener("DOMContentLoaded", () => {
             if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
         }
     };
+
+    window.markItemsAsReceivedNow = window.finalizePackageReceiptOrder;
+
+    // Delegated click handler for mark-received
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-action="mark-received"]');
+        if (btn) {
+            const matchId = btn.getAttribute('data-match-id');
+            if (matchId && typeof window.markItemsAsReceivedNow === 'function') {
+                window.markItemsAsReceivedNow(matchId);
+            }
+        }
+    });
 
     window.openHandoverEvidenceModal = (matchId) => {
         let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId || m.requestId === matchId || m.donationId === matchId);
