@@ -2417,7 +2417,41 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         grid.innerHTML = pending.map(u => {
-            return ` <div class="glass-panel" style="padding: 20px; background: #FFFFFF;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"> <span class="badge badge-warning">PENDING VERIFICATION</span> <span style="font-size:0.8rem; font-weight:700; color:var(--color-teal-primary);">${(u.role||u.accountType||'user').toUpperCase()}</span> </div> <h4 style="font-size: 1.1rem; color: var(--color-teal-primary); margin-bottom: 4px;">${u.name}</h4> <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 8px;">Email: ${u.email} | Phone: ${u.phone || 'N/A'}</div> <div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 12px;">District: <strong>${u.district || 'Colombo'}</strong></div> <div style="display:flex; gap:10px; margin-top:16px;"> <button class="btn btn-primary" style="flex-grow:1; font-size:0.8rem;" onclick="updateUserStatus('${u.id}', 'verified')">Approve Account</button> <button class="btn btn-danger" style="font-size:0.8rem;" onclick="updateUserStatus('${u.id}', 'rejected')">Reject</button> </div> </div> `;
+            const roleDisplay = (u.role || u.accountType || 'user').toUpperCase();
+            const subtype = u.donorType ? `Donor (${u.donorType})` : (u.receiverCategory ? `Receiver (${u.receiverCategory})` : roleDisplay);
+            const address = u.address || (u.receiverDetails && u.receiverDetails.address) || 'Not provided';
+            const regNum = u.registrationNumber || (u.orgDetails && u.orgDetails.registrationNumber) || (u.receiverDetails && u.receiverDetails.registrationNumber) || 'N/A';
+            
+            let docLinks = '';
+            if (u.orgDetails && u.orgDetails.brDocUrl && u.orgDetails.brDocUrl.length > 50) {
+                docLinks += `<div style="margin-top:6px;"><a href="${u.orgDetails.brDocUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700; font-size:0.8rem; text-decoration:underline;">View BR Document</a></div>`;
+            }
+            if (u.receiverDetails) {
+                if (u.receiverDetails.registrationDocUrl && u.receiverDetails.registrationDocUrl.length > 50) {
+                    docLinks += `<div style="margin-top:4px;"><a href="${u.receiverDetails.registrationDocUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700; font-size:0.8rem; text-decoration:underline;">View Registration Certificate</a></div>`;
+                }
+                if (u.receiverDetails.bankDocUrl && u.receiverDetails.bankDocUrl.length > 50) {
+                    docLinks += `<div style="margin-top:4px;"><a href="${u.receiverDetails.bankDocUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700; font-size:0.8rem; text-decoration:underline;">View Bank Account Proof</a></div>`;
+                }
+            }
+
+            return `
+                <div class="glass-panel" style="padding: 20px; background: #FFFFFF; border-radius:10px; border:1px solid var(--color-border); margin-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <span class="badge badge-warning">PENDING VERIFICATION</span>
+                        <span style="font-size:0.8rem; font-weight:800; color:var(--color-teal-primary);">${subtype}</span>
+                    </div>
+                    <h4 style="font-size: 1.15rem; color: var(--color-teal-primary); margin:0 0 6px 0; font-weight:800;">${u.name}</h4>
+                    <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 4px;">Email: <strong>${u.email}</strong> | Phone: <strong>${u.phone || 'N/A'}</strong></div>
+                    <div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 4px;">District: <strong>${u.district || 'Colombo'}</strong> | Address: <strong>${address}</strong></div>
+                    <div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 6px;">Registration No: <strong>${regNum}</strong></div>
+                    ${docLinks}
+                    <div style="display:flex; gap:10px; margin-top:16px;">
+                        <button class="btn btn-primary" style="flex-grow:1; font-size:0.85rem; font-weight:800;" onclick="updateUserStatus('${u.id || u.uid}', 'verified')">Approve Account</button>
+                        <button class="btn btn-danger" style="font-size:0.85rem; font-weight:800;" onclick="updateUserStatus('${u.id || u.uid}', 'rejected')">Reject</button>
+                    </div>
+                </div>
+            `;
         }).join("");
     }
 

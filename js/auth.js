@@ -77,10 +77,10 @@ document.addEventListener("DOMContentLoaded", () => {
                             status = "verified";
                         } else if (data.role) {
                             role = data.role;
-                            status = data.status || (role === 'donor' ? 'verified' : 'pending');
+                            status = data.status || "pending";
                         } else if (data.accountType) {
                             role = data.accountType.includes('receiver') ? 'receiver' : 'donor';
-                            status = role === 'donor' ? 'verified' : 'pending';
+                            status = data.status || "pending";
                         }
 
                         profileData = {
@@ -128,10 +128,28 @@ document.addEventListener("DOMContentLoaded", () => {
                         });
                     }
 
-                    if (profileData.status === 'suspended') {
-                        await helper.auth().signOut();
-                        showToast("Your account has been suspended pending administrator review.", "danger");
-                        return;
+                    if (role !== 'admin') {
+                        if (profileData.status === 'pending') {
+                            await helper.auth().signOut();
+                            localStorage.removeItem("givego_user");
+                            sessionStorage.clear();
+                            showToast("Your account is pending Administrator approval. Please wait for an Admin to verify and approve your account before logging in.", "warning");
+                            return;
+                        }
+                        if (profileData.status === 'suspended') {
+                            await helper.auth().signOut();
+                            localStorage.removeItem("givego_user");
+                            sessionStorage.clear();
+                            showToast("Your account has been suspended pending administrator review.", "danger");
+                            return;
+                        }
+                        if (profileData.status === 'rejected') {
+                            await helper.auth().signOut();
+                            localStorage.removeItem("givego_user");
+                            sessionStorage.clear();
+                            showToast("Your registration application was not approved by the Administrator.", "danger");
+                            return;
+                        }
                     }
 
                     try {
@@ -237,12 +255,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 let role = "donor";
                 let donorType = "";
-                let status = "pending";
+                let status = "pending"; // All new registrations must be approved by Admin before login
 
                 if (accountType === 'donor_individual') {
                     role = "donor";
                     donorType = "individual";
-                    status = "verified";
+                    status = "pending";
                 } else if (accountType === 'donor_org') {
                     role = "donor";
                     donorType = "organisation";
@@ -278,71 +296,25 @@ document.addEventListener("DOMContentLoaded", () => {
                     orgDetails: orgDetails || null,
                     receiverDetails: receiverDetails || null,
                     location,
-                    status,
+                    status: "pending",
                     createdAt: new Date().toISOString()
                 };
 
                 await db.collection("users").doc(authUser.uid).set(userDocData);
 
+                // Sign out immediately so pending user cannot access dashboard until approved
                 try {
-                    localStorage.setItem("givego_user", JSON.stringify({
-                        uid: authUser.uid,
-                        email: authUser.email,
-                        name: name,
-                        role: role,
-                        donorType,
-                        receiverCategory,
-                        phone,
-                        district: district || "Colombo",
-                        address: address || "",
-                        city: city || "",
-                        postalCode: postalCode || "",
-                        registrationNumber: regNum,
-                        receiverDetails: receiverDetails || null,
-                        orgDetails: orgDetails || null,
-                        categories: categories || "All Categories",
-                        status: status,
-                        location: location
-                    }));
-                    const syncResponse = await fetch("api/auth_session.php?action=login", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            uid: authUser.uid,
-                            email: authUser.email,
-                            name: name,
-                            role: role,
-                            donorType,
-                            receiverCategory,
-                            phone,
-                            district: district || "Colombo",
-                            address: address || "",
-                            city: city || "",
-                            postalCode: postalCode || "",
-                            registrationNumber: regNum,
-                            receiverDetails: receiverDetails || null,
-                            orgDetails: orgDetails || null,
-                            categories: categories || "All Categories",
-                            status: status,
-                            location: location
-                        })
-                    });
-                    if (syncResponse.ok) {
-                        const text = await syncResponse.text();
-                        if (text) JSON.parse(text);
-                    }
-                } catch (syncErr) {
-                    console.warn("Session sync skipped (static host environment):", syncErr);
+                    await auth.signOut();
+                    localStorage.removeItem("givego_user");
+                    sessionStorage.clear();
+                } catch (soErr) {
+                    console.warn("Sign out after registration:", soErr);
                 }
 
-                if (status === 'pending') {
-                    showToast("Registration successful. Account pending Admin verification.", "success");
-                } else {
-                    showToast("Registration successful. Welcome to GiveGo.", "success");
-                }
+                showToast("Registration submitted! Your account is currently pending Admin verification. You will be able to log in once an Administrator approves your account.", "info");
                 setTimeout(() => {
-                    window.location.href = "dashboard.html";
-                }, 800);
+                    window.location.href = "index.html";
+                }, 2000);
             } catch (error) {
                 let friendlyMsg = error.message;
                 if (error.code === 'auth/email-already-in-use') {
