@@ -2248,7 +2248,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         container.innerHTML = myOffers.map(m => {
             let statusBadge = `<span class="badge badge-warning">${m.status}</span>`;
-            if (m.status === 'confirmed') statusBadge = `<span class="badge badge-success">Confirmed</span>`;
+            if (m.status === 'confirmed') statusBadge = `<span class="badge badge-success">Schedule Confirmed by Receiver</span>`;
+            else if (m.status === 'donor_scheduled_delivery') statusBadge = `<span class="badge badge-warning">Awaiting Receiver Schedule Agreement</span>`;
             else if (m.status === 'in_transit') statusBadge = `<span class="badge badge-info">In Transit (Delivery Active)</span>`;
             else if (m.status === 'delivered') statusBadge = `<span class="badge badge-success">Delivered (Pending Receiver Confirmation)</span>`;
             else if (m.status === 'completed') statusBadge = `<span class="badge badge-success">Completed</span>`;
@@ -2293,9 +2294,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 `;
             }
 
-            if (m.status === 'confirmed' || m.status === 'donor_scheduled_delivery') {
+            if (m.status === 'confirmed') {
                 actionButtonsHtml += `
                     <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="startDeliverySession('${m.id}')">🚚 Start Delivery Journey</button>
+                `;
+            } else if (m.status === 'donor_scheduled_delivery') {
+                actionButtonsHtml += `
+                    <span style="font-size:0.78rem; color:var(--color-primary); font-weight:700; background:#FFF8E7; padding:4px 8px; border-radius:4px; border:1px solid #FFE082;">⏳ Waiting for receiver to agree to schedule</span>
                 `;
             } else if (m.status === 'in_transit') {
                 actionButtonsHtml += `
@@ -2337,6 +2342,11 @@ document.addEventListener("DOMContentLoaded", () => {
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
             const match = matchesList.find(m => m.id === matchId);
             if (!match) return;
+
+            if (match.status === 'donor_scheduled_delivery') {
+                showToast("⚠️ The receiver must first accept your scheduled delivery date before you can start the delivery journey.", "warning");
+                return;
+            }
 
             const sessionId = "DEL-" + Math.floor(10000 + Math.random() * 90000);
             const recipientId = currentUser.uid === match.donorId ? match.receiverId : match.donorId;
