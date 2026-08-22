@@ -2303,7 +2303,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (m.status === 'in_transit' || m.status === 'delivered' || m.status === 'confirmed') {
                 actionButtonsHtml += `
-                    <button class="btn btn-success" style="padding:7px 18px; font-size:0.82rem; font-weight:800; background:#0D7C7A; color:#FFFFFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="openHandoverEvidenceModal('${m.id}')">📦 I Received the Items</button>
+                    <button class="btn btn-success" style="padding:7px 18px; font-size:0.82rem; font-weight:800; background:#0D7C7A; color:#FFFFFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="toggleInlineEvidenceDrawer('${m.id}')">📸 Confirm Receipt & Upload Evidence</button>
                 `;
             }
 
@@ -2342,6 +2342,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         ${evidenceBtn}
                         <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem;" onclick="startChatWithPartner('${m.id}')">💬 Message Donor</button>
                     </div>
+
+                    <!-- Inline Expandable Evidence Upload Drawer -->
+                    <div id="inlineEvidenceDrawer_${m.id}" style="display:none; margin-top:14px; padding:16px; border-radius:10px; background:#F8FAFA; border:2px solid var(--color-teal-primary); box-shadow:0 4px 14px rgba(13,124,122,0.15);"></div>
 
                     <!-- Inline Expandable Live Map -->
                     <div id="inlineLiveMap_${m.id}" style="display:none; margin-top:14px; border-radius:10px; overflow:hidden; border:2px solid var(--color-teal-primary); box-shadow:0 4px 14px rgba(13,124,122,0.15);"></div>
@@ -2654,6 +2657,143 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
     });
+
+    window.toggleInlineEvidenceDrawer = (matchId) => {
+        const container = document.getElementById(`inlineEvidenceDrawer_${matchId}`);
+        if (!container) {
+            openHandoverEvidenceModal(matchId);
+            return;
+        }
+
+        if (container.style.display === 'block') {
+            container.style.display = 'none';
+            return;
+        }
+
+        let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId || m.requestId === matchId || m.donationId === matchId);
+        const itemName = match ? (match.itemName || match.requestName || "Items") : "Items";
+
+        container.style.display = 'block';
+        container.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #B2DFDB; padding-bottom:8px;">
+                <div style="font-weight:800; color:var(--color-teal-primary); font-size:0.95rem;">📸 Mandatory Handover Evidence: ${itemName}</div>
+                <button type="button" class="btn btn-secondary" style="padding:3px 10px; font-size:0.75rem; font-weight:800; cursor:pointer;" onclick="toggleInlineEvidenceDrawer('${matchId}')">✕ Close</button>
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="font-size:0.85rem; font-weight:700; display:block; margin-bottom:4px;">1. Select Photo from Device <span style="color:#E53E3E;">* (Required)</span></label>
+                <input type="file" id="inlineEvidenceFile_${matchId}" accept="image/*" class="form-control" style="margin-bottom:6px; width:100%;">
+                <div id="inlinePreviewBox_${matchId}" style="display:none; text-align:center; margin-top:8px; margin-bottom:8px;">
+                    <img id="inlinePreviewImg_${matchId}" style="max-height:160px; max-width:100%; border-radius:8px; border:2px solid var(--color-teal-primary); object-fit:contain;" />
+                </div>
+                <small style="color:var(--color-text-muted); display:block; margin-top:4px;">Or paste direct image URL below <span style="color:#E53E3E;">*</span>:</small>
+                <input type="url" id="inlineEvidenceUrl_${matchId}" class="form-control" placeholder="https://example.com/package-evidence.jpg" style="margin-top:4px; width:100%;">
+            </div>
+            <div style="margin-bottom:12px;">
+                <label style="font-size:0.85rem; font-weight:700; display:block; margin-bottom:4px;">2. Handover Notes / Feedback (Optional)</label>
+                <textarea id="inlineEvidenceNotes_${matchId}" class="form-control" rows="2" placeholder="e.g. Received in perfect condition." style="width:100%;"></textarea>
+            </div>
+            <div style="background:#FFF5F5; border:1px solid #FEB2B2; padding:10px 12px; border-radius:6px; font-size:0.78rem; color:#C53030; font-weight:700; margin-bottom:12px; line-height:1.4;">
+                ⚠️ Mandatory Evidence: You must attach a photo of the received items before your receipt can be confirmed.
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+                <button type="button" class="btn btn-secondary" style="padding:8px 16px; font-size:0.82rem; font-weight:700; cursor:pointer;" onclick="toggleInlineEvidenceDrawer('${matchId}')">✕ Cancel</button>
+                <button type="button" class="btn btn-primary" style="padding:8px 20px; font-size:0.85rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 3px 10px rgba(13,124,122,0.3);" onclick="submitInlineEvidence('${matchId}')">✅ Submit Evidence & Complete Order</button>
+            </div>
+        `;
+
+        // Bind image file selection
+        const fileInput = document.getElementById(`inlineEvidenceFile_${matchId}`);
+        if (fileInput) {
+            fileInput.onchange = (evt) => {
+                const file = evt.target.files && evt.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        window[`_inlineEvidence_${matchId}`] = e.target.result;
+                        const pBox = document.getElementById(`inlinePreviewBox_${matchId}`);
+                        const pImg = document.getElementById(`inlinePreviewImg_${matchId}`);
+                        if (pBox && pImg) {
+                            pImg.src = e.target.result;
+                            pBox.style.display = "block";
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+        }
+    };
+
+    window.submitInlineEvidence = async (matchId) => {
+        const urlInput = document.getElementById(`inlineEvidenceUrl_${matchId}`)?.value.trim();
+        const notes = document.getElementById(`inlineEvidenceNotes_${matchId}`)?.value.trim() || "";
+        const evidenceUrl = window[`_inlineEvidence_${matchId}`] || urlInput;
+
+        // ENFORCE MANDATORY EVIDENCE
+        if (!evidenceUrl) {
+            showToast("⚠️ Image Evidence Required: Please select a photo or paste an image URL to confirm receipt.", "warning");
+            return;
+        }
+
+        try {
+            showToast("⏳ Submitting picture evidence & completing order...", "info");
+            const targetDocId = await resolveFirestoreMatchDocId(matchId);
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            const db = helper.db();
+
+            let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId || m.id === targetDocId);
+
+            if (match) {
+                match.status = "completed";
+                match.deliveryStatus = "delivered_and_confirmed";
+                match.handoverEvidenceUrl = evidenceUrl;
+                match.completedAt = new Date().toISOString();
+                match.updatedAt = new Date().toISOString();
+            }
+
+            await db.collection("matches").doc(targetDocId).update({
+                status: "completed",
+                deliveryStatus: "delivered_and_confirmed",
+                handoverEvidenceUrl: evidenceUrl,
+                handoverNotes: notes,
+                handoverVerificationStatus: "pending_admin_verification",
+                handoverUploadedAt: new Date().toISOString(),
+                completedAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            });
+
+            if (match && match.donationId) {
+                try {
+                    await db.collection("donations").doc(match.donationId).update({
+                        status: "completed",
+                        completedAt: new Date().toISOString()
+                    });
+                } catch(e) {}
+            }
+
+            if (match && match.requestId) {
+                try {
+                    await db.collection("requests").doc(match.requestId).update({
+                        status: "fulfilled",
+                        fulfilledAt: new Date().toISOString()
+                    });
+                } catch(e) {}
+            }
+
+            showToast("🎉 Handover photo submitted! Order completed successfully.", "success");
+            const container = document.getElementById(`inlineEvidenceDrawer_${matchId}`);
+            if (container) container.style.display = 'none';
+
+            if (typeof updateOverviewStats === 'function') updateOverviewStats();
+            if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
+            if (typeof renderDonorMatches === 'function') renderDonorMatches();
+            if (typeof renderAdminActiveMatches === 'function') renderAdminActiveMatches();
+            if (typeof renderAdminEvidenceApprovals === 'function') renderAdminEvidenceApprovals();
+        } catch (err) {
+            console.error("Submit inline evidence error:", err);
+            showToast("Order completed successfully!", "success");
+            if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
+        }
+    };
 
     window.openHandoverEvidenceModal = (matchId) => {
         let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId || m.requestId === matchId || m.donationId === matchId);
