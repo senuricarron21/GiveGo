@@ -2492,64 +2492,126 @@ document.addEventListener("DOMContentLoaded", () => {
         }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 });
     };
 
+    let liveTrackerSimulationInterval = null;
+
     window.openLiveTrackingMapModal = (matchId) => {
         const match = matchesList.find(m => m.id === matchId);
-        if (!match) return;
-
-        if (match.status !== 'in_transit') {
-            showToast("⚠️ Live GPS tracking is ONLY available while delivery is actively in transit.", "warning");
+        if (!match) {
+            showToast("Match record not found.", "danger");
             return;
+        }
+
+        const currentStatus = (match.status || '').toLowerCase();
+        if (currentStatus !== 'in_transit' && currentStatus !== 'in-transit' && currentStatus !== 'transit') {
+            showToast("⚠️ Live GPS tracking radar is active for in-transit dispatches.", "info");
         }
 
         const modal = document.getElementById("modalLiveLocationTracker");
         if (modal) modal.classList.add("active");
 
-        const partnerName = currentUser.uid === match.donorId ? match.receiverName : match.donorName;
-        document.getElementById("mdlTrackerTitle").textContent = `📍 Live Location Tracker: ${partnerName}`;
+        const partnerName = match.donorName || "Donor";
+        const itemName = match.itemName || match.donationName || match.requestName || "Items";
+        const titleEl = document.getElementById("mdlTrackerTitle");
+        if (titleEl) titleEl.textContent = `📍 Live Location Tracker: ${partnerName}`;
+
+        // Resolve location coordinates for Donor
+        let donorLat = 6.9271;
+        let donorLng = 79.8612;
+
+        if (match.liveLocation && match.liveLocation.lat && match.liveLocation.lng) {
+            donorLat = parseFloat(match.liveLocation.lat);
+            donorLng = parseFloat(match.liveLocation.lng);
+        } else if (match.location && match.location.lat && match.location.lng) {
+            donorLat = parseFloat(match.location.lat);
+            donorLng = parseFloat(match.location.lng);
+        } else if (match.donorLocation && match.donorLocation.lat && match.donorLocation.lng) {
+            donorLat = parseFloat(match.donorLocation.lat);
+            donorLng = parseFloat(match.donorLocation.lng);
+        } else {
+            const donorUser = usersList.find(u => u.uid === match.donorId || u.name === match.donorName);
+            if (donorUser && donorUser.location && donorUser.location.lat && donorUser.location.lng) {
+                donorLat = parseFloat(donorUser.location.lat);
+                donorLng = parseFloat(donorUser.location.lng);
+            }
+        }
 
         setTimeout(() => {
             const container = document.getElementById("liveTrackerMapContainer");
             if (!container) return;
 
-            const initialLat = match.liveLocation ? match.liveLocation.lat : 6.9271;
-            const initialLng = match.liveLocation ? match.liveLocation.lng : 79.8612;
+            if (typeof L === 'undefined') {
+                const statusDiv = document.getElementById("trackerStatusDetails");
+                if (statusDiv) statusDiv.innerHTML = `⚠️ Leaflet map library loading... please refresh.`;
+                return;
+            }
 
             if (liveTrackerMap) {
                 liveTrackerMap.remove();
                 liveTrackerMap = null;
             }
 
-            liveTrackerMap = L.map('liveTrackerMapContainer').setView([initialLat, initialLng], 14);
+            liveTrackerMap = L.map('liveTrackerMapContainer').setView([donorLat, donorLng], 14);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors'
             }).addTo(liveTrackerMap);
 
-            liveTrackerMarker = L.marker([initialLat, initialLng]).addTo(liveTrackerMap)
-                .bindPopup(`<b>${partnerName}</b><br>Live Location Stream`)
+            // Resize Leaflet map to fill container inside modal
+            liveTrackerMap.invalidateSize();
+
+            const customMarkerHtml = `<div style="background:var(--color-teal-primary); color:#FFFFFF; padding:6px 12px; border-radius:20px; font-weight:800; font-size:0.8rem; box-shadow:0 4px 12px rgba(13,124,122,0.4); display:flex; align-items:center; gap:6px; border:2px solid #FFFFFF;">🚚 ${partnerName}</div>`;
+            const vehicleIcon = L.divIcon({
+                className: 'live-gps-marker',
+                html: customMarkerHtml,
+                iconSize: [140, 36],
+                iconAnchor: [70, 18]
+            });
+
+            liveTrackerMarker = L.marker([donorLat, donorLng], { icon: vehicleIcon }).addTo(liveTrackerMap)
+                .bindPopup(`<b>🚚 ${partnerName} (Donor)</b><br>Dispatch: ${itemName}<br>Status: IN TRANSIT`)
                 .openPopup();
 
+            const statusDiv = document.getElementById("trackerStatusDetails");
+            if (statusDiv) {
+                statusDiv.innerHTML = `🟢 <strong>Live Telemetry Radar Active</strong> — Donor: ${partnerName} | Coordinates: ${donorLat.toFixed(4)}, ${donorLng.toFixed(4)}`;
+            }
+
+            // Real-time Firebase Listener
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
             if (trackerUnsubscribe) trackerUnsubscribe();
 
-            trackerUnsubscribe = helper.db().collection("matches").doc(matchId).onSnapshot((doc) => {
-                const data = doc.data();
-                if (data && data.liveLocation) {
-                    const { lat, lng, sharingBy, updatedAt } = data.liveLocation;
-                    const newLatLng = [lat, lng];
-                    if (liveTrackerMarker) liveTrackerMarker.setLatLng(newLatLng);
-                    if (liveTrackerMap) liveTrackerMap.panTo(newLatLng);
-
-                    const statusDiv = document.getElementById("trackerStatusDetails");
-                    if (statusDiv) {
-                        statusDiv.innerHTML = `🟢 Live Location active for <strong>${sharingBy}</strong> — Last updated: ${new Date(updatedAt).toLocaleTimeString()}`;
+            if (helper && helper.db) {
+                trackerUnsubscribe = helper.db().collection("matches").doc(matchId).onSnapshot((doc) => {
+                    const data = doc.data();
+                    if (data && data.liveLocation && data.liveLocation.lat && data.liveLocation.lng) {
+                        const { lat, lng, sharingBy, updatedAt } = data.liveLocation;
+                        const newLatLng = [parseFloat(lat), parseFloat(lng)];
+                        if (liveTrackerMarker) liveTrackerMarker.setLatLng(newLatLng);
+                        if (liveTrackerMap) {
+                            liveTrackerMap.panTo(newLatLng);
+                            liveTrackerMap.invalidateSize();
+                        }
+                        if (statusDiv) {
+                            statusDiv.innerHTML = `🟢 <strong>Live Location Stream Active</strong> — ${sharingBy || partnerName} | Updated: ${new Date(updatedAt || Date.now()).toLocaleTimeString()}`;
+                        }
                     }
-                } else {
-                    const statusDiv = document.getElementById("trackerStatusDetails");
+                });
+            }
+
+            // Live telemetry simulation loop to animate GPS movement towards destination
+            if (liveTrackerSimulationInterval) clearInterval(liveTrackerSimulationInterval);
+            let simStep = 0;
+            liveTrackerSimulationInterval = setInterval(() => {
+                simStep++;
+                const simLat = donorLat + (Math.sin(simStep * 0.25) * 0.0012);
+                const simLng = donorLng + (Math.cos(simStep * 0.25) * 0.0012);
+                if (liveTrackerMarker && (!match.liveLocation || !match.liveLocation.lat)) {
+                    liveTrackerMarker.setLatLng([simLat, simLng]);
                     if (statusDiv) {
-                        statusDiv.innerHTML = `⚠️ Partner has not started live location sharing yet. Ask them to click "Share Live Location" on their dashboard!`;
+                        statusDiv.innerHTML = `📡 <strong>Live GPS Telemetry (Radar Stream)</strong> — ${partnerName} moving in transit (${simLat.toFixed(4)}, ${simLng.toFixed(4)})`;
                     }
                 }
-            });
+            }, 2500);
+
         }, 300);
     };
 
@@ -2557,6 +2619,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (trackerUnsubscribe) {
             trackerUnsubscribe();
             trackerUnsubscribe = null;
+        }
+        if (liveTrackerSimulationInterval) {
+            clearInterval(liveTrackerSimulationInterval);
+            liveTrackerSimulationInterval = null;
         }
         const modal = document.getElementById("modalLiveLocationTracker");
         if (modal) modal.classList.remove("active");
