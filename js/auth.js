@@ -77,10 +77,12 @@ document.addEventListener("DOMContentLoaded", () => {
                             status = "verified";
                         } else if (data.role) {
                             role = data.role;
-                            status = data.status || "pending";
+                            const isOrg = data.donorType === 'organisation' || (data.accountType && data.accountType.includes('org')) || !!data.orgDetails || role === 'receiver';
+                            status = data.status || (role === 'donor' && !isOrg ? 'verified' : 'pending');
                         } else if (data.accountType) {
                             role = data.accountType.includes('receiver') ? 'receiver' : 'donor';
-                            status = data.status || "pending";
+                            const isOrg = data.accountType.includes('org') || data.accountType.includes('receiver');
+                            status = data.status || (role === 'donor' && !isOrg ? 'verified' : 'pending');
                         }
 
                         profileData = {
@@ -89,14 +91,15 @@ document.addEventListener("DOMContentLoaded", () => {
                             name: data.name || name,
                             role: role,
                             status: status,
-                            donorType: data.donorType || "individual",
+                            donorType: data.donorType || (role === 'donor' ? 'individual' : ''),
                             receiverCategory: data.receiverCategory || "",
                             phone: data.phone || "",
                             district: data.district || "Colombo",
                             address: data.address || (data.receiverDetails && data.receiverDetails.address) || "",
                             city: data.city || "",
                             postalCode: data.postalCode || "",
-                            registrationNumber: data.registrationNumber || (data.orgDetails && data.orgDetails.registrationNumber) || (data.receiverDetails && data.receiverDetails.registrationNumber) || "",
+                            registrationNumber: data.registrationNumber || (data.orgDetails && data.orgDetails.registrationNumber) || (data.receiverDetails && data.receiverDetails.registrationNumber) || (data.nicNumber) || "",
+                            nicNumber: data.nicNumber || "",
                             receiverDetails: data.receiverDetails || null,
                             orgDetails: data.orgDetails || null,
                             categories: data.categories || "All Categories",
@@ -129,11 +132,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
 
                     if (role !== 'admin') {
-                        if (profileData.status === 'pending') {
+                        const isOrg = profileData.donorType === 'organisation' || (profileData.accountType && profileData.accountType.includes('org')) || !!profileData.orgDetails || role === 'receiver';
+
+                        if (profileData.status === 'pending' && isOrg) {
                             await helper.auth().signOut();
                             localStorage.removeItem("givego_user");
                             sessionStorage.clear();
-                            showToast("Your account is pending Administrator approval. Please wait for an Admin to verify and approve your account before logging in.", "warning");
+                            showToast("Your organisation account is pending Administrator approval. Please wait for an Admin to verify and approve your account before logging in.", "warning");
                             return;
                         }
                         if (profileData.status === 'suspended') {
@@ -255,13 +260,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 const location = payload.location || districtCoordinates[district || "Colombo"] || { lat: 6.9271, lng: 79.8612 };
 
                 let role = "donor";
-                let donorType = "";
-                let status = "pending"; // All new registrations must be approved by Admin before login
+                let donorType = "individual";
+                let status = "verified";
 
                 if (accountType === 'donor_individual') {
                     role = "donor";
                     donorType = "individual";
-                    status = "pending";
+                    status = "verified";
                 } else if (accountType === 'donor_org') {
                     role = "donor";
                     donorType = "organisation";
@@ -302,25 +307,35 @@ document.addEventListener("DOMContentLoaded", () => {
                     orgDetails: orgDetails || null,
                     receiverDetails: receiverDetails || null,
                     location,
-                    status: "pending",
+                    status: status,
                     createdAt: new Date().toISOString()
                 };
 
                 await db.collection("users").doc(authUser.uid).set(userDocData);
 
-                // Sign out immediately so pending user cannot access dashboard until approved
-                try {
-                    await auth.signOut();
-                    localStorage.removeItem("givego_user");
-                    sessionStorage.clear();
-                } catch (soErr) {
-                    console.warn("Sign out after registration:", soErr);
-                }
+                if (status === 'verified') {
+                    try {
+                        localStorage.setItem("givego_user", JSON.stringify(userDocData));
+                    } catch (lsErr) {}
 
-                showToast("Registration submitted! Your account is currently pending Admin verification. You will be able to log in once an Administrator approves your account.", "info");
-                setTimeout(() => {
-                    window.location.href = "index.html";
-                }, 2000);
+                    showToast("Registration successful! Welcome to GiveGo.", "success");
+                    setTimeout(() => {
+                        window.location.href = "dashboard.html";
+                    }, 500);
+                } else {
+                    try {
+                        await auth.signOut();
+                        localStorage.removeItem("givego_user");
+                        sessionStorage.clear();
+                    } catch (soErr) {
+                        console.warn("Sign out after registration:", soErr);
+                    }
+
+                    showToast("Registration submitted! Your organisation account is currently pending Admin verification. You will be able to log in once an Administrator approves your account.", "info");
+                    setTimeout(() => {
+                        window.location.href = "index.html";
+                    }, 2000);
+                }
             } catch (error) {
                 let friendlyMsg = error.message;
                 if (error.code === 'auth/email-already-in-use') {
