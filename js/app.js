@@ -2416,12 +2416,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (m.type === 'monetary' || (m.amount && !m.quantity)) {
                     actionButtonsHtml += `
                         <button type="button" class="btn btn-primary" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="acceptDonationOffer('${m.id}')">💰 Confirm & Accept Fund Receipt</button>
-                        <button type="button" class="btn btn-danger" style="padding:6px 12px; font-size:0.8rem; cursor:pointer;" onclick="rejectDonationOffer('${m.id}')">Decline</button>
                     `;
                 } else {
                     actionButtonsHtml += `
                         <button type="button" class="btn btn-primary" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="acceptDonationOffer('${m.id}')">🎁 Accept Donation Offer</button>
-                        <button type="button" class="btn btn-danger" style="padding:6px 12px; font-size:0.8rem; cursor:pointer;" onclick="rejectDonationOffer('${m.id}')">Decline</button>
                     `;
                 }
             } else if (m.status === 'pending_receiver_pickup_schedule' || m.status === 'accepted_pending_receiver_schedule') {
