@@ -77,7 +77,7 @@ function isMenu($pageName) {
                                     <a href="#needs-catalogue">Requests Catalogue</a>
                                 </li>
                                 <li class="menu-item">
-                                    <a href="#matching">Smart Matches</a>
+                                    <a href="#matching">Matches & Connections</a>
                                 </li>
                                 <li class="menu-item">
                                     <a href="#chat">Messages</a>
@@ -90,7 +90,7 @@ function isMenu($pageName) {
                                     <a href="#inventory">Inventory Lookup</a>
                                 </li>
                                 <li class="menu-item">
-                                    <a href="#matching">Smart Matches</a>
+                                    <a href="#matching">Matches & Connections</a>
                                 </li>
                                 <li class="menu-item">
                                     <a href="#chat">Messages</a>

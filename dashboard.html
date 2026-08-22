@@ -21,6 +21,9 @@
 </head>
 <body>
 
+    <!-- Mobile Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
+
     <div class="dashboard-container">
         
         <!-- SIDEBAR NAVIGATION -->
@@ -67,12 +70,16 @@
             
             <!-- Header Panel -->
             <header class="header-panel">
-                <div class="welcome-section">
+                <div class="welcome-section" style="display:flex; flex-direction:column; gap:6px;">
+                    <button class="mobile-toggle-btn" id="btnMobileToggleSidebar" onclick="toggleMobileSidebar()" style="display:none; background:var(--color-teal-primary); color:#FFFFFF; border:none; padding:8px 14px; border-radius:6px; font-weight:800; font-size:0.9rem; cursor:pointer; max-width:fit-content; margin-bottom:8px;">
+                        ☰ Navigation Menu
+                    </button>
                     <h1 class="gradient-text" id="welcomeHeading">Hello</h1>
                     <p>Welcome to your GiveGo dashboard. Manage records and activities below.</p>
                 </div>
                 
-                <div class="actions-section">
+                <div class="actions-section" style="display:flex; gap:10px; align-items:center;">
+                    <button class="btn btn-primary" style="font-size:0.8rem; padding:8px 14px; font-weight:700;" onclick="openContactModal()">📞 Contact Us</button>
                     <div class="notification-bell glass-panel" style="padding: 8px 16px; border-radius: var(--radius-sm); cursor: pointer;" id="btnNotificationsToggle" onclick="window.location.hash='#notifications'">
                         <span style="font-size: 0.85rem; font-weight:700; color: var(--color-teal-primary);">Alerts</span>
                         <span class="notification-dot" id="notiDot" style="display: none;"></span>
@@ -129,10 +136,10 @@
                         </div>
                     </div>
 
-                    <!-- Smart Matches Panel -->
+                    <!-- Matches & Connections Panel -->
                     <div style="margin-top: 24px;">
                         <h3 class="section-title" style="display:flex; align-items:center; gap:8px;">
-                            <span>⚡ Smart Match Engine</span>
+                            <span>⚡ Matches & Connections Engine</span>
                             <span style="font-size:0.75rem; font-weight:700; color:var(--color-teal-primary); background:#F5EFE0; padding:2px 8px; border-radius:12px;">Automatic Item Name Matcher</span>
                         </h3>
                         <div class="glass-panel" style="padding: 20px; background: #FFFFFF;" id="smartMatchesContainer">
@@ -471,7 +478,7 @@
                 </div>
 
                 <div class="dashboard-view-panel" id="matching-panel" style="display:none;">
-                    <h3 class="section-title">Smart Matches & Connection Offers</h3>
+                    <h3 class="section-title">Matches & Connections Offers</h3>
                     <div id="receiverMatchesContainer"></div>
                     <div id="donorMatchesContainer"></div>
                 </div>
@@ -604,6 +611,58 @@
                 <div class="dashboard-view-panel" id="notifications-panel" style="display:none;">
                     <h3 class="section-title">System Alerts & Notifications</h3>
                     <div id="notificationsContainer"></div>
+                </div>
+
+
+
+                <!-- Contact Us View Panel -->
+                <div class="dashboard-view-panel" id="contact-panel" style="display:none;">
+                    <h3 class="section-title">Contact & Support Desk</h3>
+                    <div class="glass-panel" style="padding: 28px; background: #FFFFFF; max-width: 800px;">
+                        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px; border-bottom: 2px solid var(--color-border); padding-bottom: 16px;">
+                            <span style="font-size: 2.5rem;">📞</span>
+                            <div>
+                                <h2 style="color: var(--color-teal-primary); font-weight: 800; margin: 0; font-size: 1.6rem;">Get in Touch with GiveGo Support</h2>
+                                <p style="color: var(--color-text-muted); margin: 4px 0 0 0; font-size: 0.9rem;">Have questions or need assistance with your donation listings or requests?</p>
+                            </div>
+                        </div>
+
+                        <div class="grid-cols-2" style="gap: 16px; margin-bottom: 24px;">
+                            <div style="background: #F5EFE0; padding: 16px; border-radius: 10px;">
+                                <h4 style="color: var(--color-teal-primary); margin: 0 0 6px 0; font-weight: 800;">📧 Support Email</h4>
+                                <a href="mailto:support@givego.lk" style="color: var(--color-teal-primary); font-weight: 700; text-decoration: none; font-size: 1rem;">support@givego.lk</a>
+                                <p style="font-size: 0.8rem; color: var(--color-text-muted); margin: 4px 0 0 0;">Response time: Within 24 hours</p>
+                            </div>
+                            <div style="background: #F5EFE0; padding: 16px; border-radius: 10px;">
+                                <h4 style="color: var(--color-teal-primary); margin: 0 0 6px 0; font-weight: 800;">☎️ Emergency Helpline</h4>
+                                <span style="color: var(--color-teal-primary); font-weight: 800; font-size: 1rem;">+94 11 234 5678</span>
+                                <p style="font-size: 0.8rem; color: var(--color-text-muted); margin: 4px 0 0 0;">Available 24/7 for urgent relief dispatch</p>
+                            </div>
+                        </div>
+
+                        <form id="formPanelContactUs" onsubmit="event.preventDefault(); showToast('Thank you! Your message has been sent to GiveGo Support.', 'success'); this.reset();">
+                            <h4 style="color: var(--color-teal-primary); font-weight: 800; margin-bottom: 12px;">Send Us a Message</h4>
+                            <div class="grid-cols-2">
+                                <div class="form-group">
+                                    <label class="form-label">Your Name</label>
+                                    <input class="form-control" type="text" placeholder="Enter your full name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Email Address</label>
+                                    <input class="form-control" type="email" placeholder="e.g. name@domain.com" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Subject / Topic</label>
+                                <input class="form-control" type="text" placeholder="e.g. Inquiry regarding donation dispatch..." required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Message Details</label>
+                                <textarea class="form-control" rows="4" placeholder="Type your message here..." required></textarea>
+                            </div>
+                            <button class="btn btn-primary" type="submit" style="padding: 12px 24px; font-size: 0.95rem; font-weight: 800;">Submit Message to Support →</button>
+                        </form>
+                    </div>
                 </div>
             </div>
 
@@ -814,6 +873,51 @@
             <div id="trackerStatusDetails" style="font-size:0.85rem; font-weight:700; color:var(--color-teal-primary); text-align:center;">
                 📡 Connecting to real-time GPS location stream...
             </div>
+        </div>
+    </div>
+
+
+
+    <!-- Modal: Contact Us -->
+    <div class="modal" id="modalContactUs">
+        <div class="modal-content glass-panel" style="padding:28px; background:#FFFFFF; max-width:580px; width:95%; max-height:88vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:2px solid var(--color-border); padding-bottom:12px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span style="font-size:1.8rem;">📞</span>
+                    <div>
+                        <h3 style="color:var(--color-teal-primary); font-weight:800; font-size:1.3rem; margin:0;">Contact Us</h3>
+                        <p style="font-size:0.8rem; color:var(--color-text-muted); margin:0;">We're here to help 24/7</p>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.85rem; font-weight:800;" onclick="closeContactModal()">✕</button>
+            </div>
+            
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; font-size:0.85rem;">
+                <div style="background:#F5EFE0; padding:12px; border-radius:8px;">
+                    <strong style="color:var(--color-teal-primary); display:block; margin-bottom:4px;">📧 Support Email</strong>
+                    <a href="mailto:support@givego.lk" style="color:var(--color-teal-primary); font-weight:700; text-decoration:none;">support@givego.lk</a>
+                </div>
+                <div style="background:#F5EFE0; padding:12px; border-radius:8px;">
+                    <strong style="color:var(--color-teal-primary); display:block; margin-bottom:4px;">☎️ Hotline</strong>
+                    <span style="font-weight:700; color:var(--color-teal-primary);">+94 11 234 5678</span>
+                </div>
+            </div>
+
+            <form id="formContactUs" onsubmit="return handleContactSubmit(event)">
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label class="form-label" style="font-size:0.8rem; font-weight:700; color:var(--color-teal-primary);">Your Name</label>
+                    <input class="form-control" type="text" id="contactName" placeholder="Enter your full name" required>
+                </div>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label class="form-label" style="font-size:0.8rem; font-weight:700; color:var(--color-teal-primary);">Your Email</label>
+                    <input class="form-control" type="email" id="contactEmail" placeholder="e.g. name@domain.com" required>
+                </div>
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label class="form-label" style="font-size:0.8rem; font-weight:700; color:var(--color-teal-primary);">Message / Inquiry</label>
+                    <textarea class="form-control" id="contactMessage" rows="3" placeholder="How can we assist you?" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%; font-size:0.95rem; padding:12px; font-weight:800;">Send Message →</button>
+            </form>
         </div>
     </div>
 

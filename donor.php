@@ -240,12 +240,12 @@
     </div>
 </div>
 
-<!-- 4. SMART MATCHING SECTION -->
+<!-- 4. MATCHES & CONNECTIONS SECTION -->
 <div id="matching-panel" class="dashboard-view-panel" style="display: none;">
     <div class="dashboard-grid">
         <div class="glass-panel" style="padding: 30px; background: #FFFFFF;">
             <div class="card-header">
-                <h3 class="card-title">Smart Matching Recommendations</h3>
+                <h3 class="card-title">Matches & Connections Recommendations</h3>
                 <span class="badge badge-success">Algorithm Active</span>
             </div>
             <div id="donorMatchesContainer" style="max-height: 500px; overflow-y: auto;">

@@ -83,13 +83,13 @@ document.addEventListener("DOMContentLoaded", () => {
             menuHTML += `
                 <li class="menu-item"><a href="#listings">My Donations</a></li>
                 <li class="menu-item"><a href="#needs-catalogue">Requests Catalogue</a></li>
-                <li class="menu-item"><a href="#matching">Smart Matches</a></li>
+                <li class="menu-item"><a href="#matching">Matches & Connections</a></li>
                 <li class="menu-item"><a href="#chat">Messages</a></li>
             `;
         } else if (isReceiver) {
             menuHTML += `
                 <li class="menu-item"><a href="#requests">Material Requests</a></li>
-                <li class="menu-item"><a href="#matching">Smart Matches</a></li>
+                <li class="menu-item"><a href="#matching">Matches & Connections</a></li>
                 <li class="menu-item"><a href="#chat">Messages</a></li>
             `;
         }
@@ -98,6 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <li class="menu-item"><a href="#available-items">Available Items</a></li>
             <li class="menu-item"><a href="#history">History</a></li>
             <li class="menu-item"><a href="#notifications">Notifications ${unreadBadgeHTML}</a></li>
+            <li class="menu-item"><a href="#contact">Contact Us</a></li>
         `;
 
         menuList.innerHTML = menuHTML;
@@ -252,15 +253,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             await db.collection("notifications").add({
                 userId: req.receiverId,
-                message: `⚡ Smart Match: Admin auto-connected Donor ${don.donorName}'s surplus "${don.itemName}" for your request "${req.itemName}".`,
-                read: false,
-                createdAt: new Date().toISOString()
+                message: `⚡ Matches & Connections: Admin connected Donor ${don.donorName}'s surplus "${don.itemName}" for your request "${req.itemName}".`,
             });
 
-            showToast("Smart match auto-connected & dispatch initiated!", "success");
-            updateOverviewStats();
+            showToast("Matches & Connections auto-connected & dispatch initiated!", "success");
         } catch (err) {
-            showToast("Failed to auto-connect smart match.", "danger");
+            showToast("Failed to auto-connect item match.", "danger");
         }
     };
 
@@ -371,7 +369,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div style="background:#FBF5DD; border-left:4px solid var(--color-teal-primary); padding:14px; border-radius:6px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                     <div>
                         <div style="display:flex; gap:8px; align-items:center; margin-bottom:4px;">
-                            <span class="badge badge-success" style="font-size:0.7rem; font-weight:800;">⚡ SMART MATCH</span>
+                            <span class="badge badge-success" style="font-size:0.7rem; font-weight:800;">⚡ MATCHES & CONNECTIONS</span>
                             <span style="font-size:0.75rem; font-weight:700; color:var(--color-teal-primary);">${m.matchType}</span>
                         </div>
                         <div style="font-weight:800; color:var(--color-text-dark); font-size:0.9rem;">
@@ -480,7 +478,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function setupRouting() {
         const handleHashChange = () => {
-            const hash = window.location.hash || '#overview';
+            let hash = window.location.hash || '#overview';
+            if (hash === '#about') {
+                window.location.hash = '#overview';
+                return;
+            }
+            if (typeof window.closeMobileSidebar === 'function') window.closeMobileSidebar();
             
             // Highlight active menu item
             document.querySelectorAll("#sidebarMenuList .menu-item").forEach(item => {
@@ -694,11 +697,19 @@ document.addEventListener("DOMContentLoaded", () => {
             const photoUrl = document.getElementById("donPhotoUrl")?.value || "";
             const description = document.getElementById("donDescription").value.trim();
 
+            const btnSubmit = formPostDonation.querySelector("button[type='submit']");
+
             try {
+                if (btnSubmit) {
+                    btnSubmit.disabled = true;
+                    btnSubmit.innerHTML = `Submitting Listing...`;
+                }
+
                 showToast("Submitting material listing for Admin review...", "info");
                 await db.collection("donations").add({
-                    donorId: currentUser.uid,
-                    donorName: currentUser.name,
+                    donorId: currentUser.uid || currentUser.id || "anonymous_donor",
+                    donorName: currentUser.name || "Donor",
+                    donorEmail: currentUser.email || "",
                     district: currentUser.district || "Colombo",
                     location: currentUser.location || { lat: 6.9271, lng: 79.8612 },
                     itemName,
@@ -712,10 +723,28 @@ document.addEventListener("DOMContentLoaded", () => {
                     createdAt: new Date().toISOString()
                 });
                 showToast("Material listing submitted. Pending Admin approval before publication.", "success");
+
+                // Thorough form reset
                 formPostDonation.reset();
+                if (document.getElementById("donItemName")) document.getElementById("donItemName").value = "";
+                if (document.getElementById("donQuantity")) document.getElementById("donQuantity").value = "1";
+                if (document.getElementById("donPhotoUrl")) document.getElementById("donPhotoUrl").value = "";
+                if (document.getElementById("donPhotoUrlText")) document.getElementById("donPhotoUrlText").value = "";
+                if (document.getElementById("donDescription")) document.getElementById("donDescription").value = "";
+                const fileInput = formPostDonation.querySelector("input[type='file']");
+                if (fileInput) fileInput.value = "";
+
+                if (typeof renderDonorListings === "function") renderDonorListings();
+                if (typeof renderAdminRequestApprovals === "function") renderAdminRequestApprovals();
                 updateOverviewStats();
             } catch (err) {
                 showToast("Failed to post donation.", "danger");
+                console.error("Donation post error: ", err);
+            } finally {
+                if (btnSubmit) {
+                    btnSubmit.disabled = false;
+                    btnSubmit.textContent = "Submit Listing for Admin Approval";
+                }
             }
         });
     }
@@ -729,7 +758,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const catFilter = document.getElementById("filterDonorCategory")?.value || "all";
         const sortOrder = document.getElementById("sortDonorOrder")?.value || "latest";
 
-        let myDonations = donationsList.filter(d => d.donorId === currentUser.uid);
+        let myDonations = donationsList.filter(d => 
+            d.donorId === currentUser.uid || 
+            (currentUser.id && d.donorId === currentUser.id) || 
+            (currentUser.email && d.donorEmail === currentUser.email)
+        );
 
         if (sortOrder === "latest") {
             myDonations.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
@@ -1225,7 +1258,27 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
+            // Prevent duplicate active/pending offer
+            const existingOffer = matchesList.find(m => 
+                m.requestId === req.id && 
+                (m.donorId === currentUser.uid || (currentUser.email && m.donorEmail === currentUser.email)) && 
+                (m.status === 'pending_receiver_approval' || m.status === 'accepted' || m.status === 'confirmed')
+            );
+            if (existingOffer) {
+                showToast("You already have an active or pending offer for this request.", "warning");
+                const modal = document.getElementById("modalOfferDonation");
+                if (modal) modal.classList.remove("active");
+                return;
+            }
+
+            const btnSubmit = formSubmitOfferDonation.querySelector("button[type='submit']");
+
             try {
+                if (btnSubmit) {
+                    btnSubmit.disabled = true;
+                    btnSubmit.textContent = "Sending Offer...";
+                }
+
                 const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
                 const db = helper.db();
 
@@ -1236,6 +1289,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     receiverName: req.receiverName,
                     donorId: currentUser.uid,
                     donorName: currentUser.name,
+                    donorEmail: currentUser.email || "",
                     type: "physical",
                     category: req.category,
                     quantity: qty,
@@ -1256,11 +1310,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
 
                 showToast("Donation offer sent to receiver! Waiting for receiver approval.", "success");
-                document.getElementById("modalOfferDonation").classList.remove("active");
+                const modal = document.getElementById("modalOfferDonation");
+                if (modal) modal.classList.remove("active");
                 formSubmitOfferDonation.reset();
                 updateOverviewStats();
             } catch (err) {
                 showToast("Failed to submit donation offer.", "danger");
+                console.error(err);
+            } finally {
+                if (btnSubmit) {
+                    btnSubmit.disabled = false;
+                    btnSubmit.textContent = "Submit Donation Offer";
+                }
             }
         });
     }
@@ -1446,7 +1507,27 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
+            // Prevent duplicate active/pending request
+            const existingReq = matchesList.find(m => 
+                m.donationId === item.id && 
+                (m.receiverId === currentUser.uid || (currentUser.email && m.receiverEmail === currentUser.email)) && 
+                (m.status === 'pending_donor_approval' || m.status === 'accepted' || m.status === 'confirmed')
+            );
+            if (existingReq) {
+                showToast("You already have an active or pending request for this surplus item.", "warning");
+                const modal = document.getElementById("modalRequestAvailableItem");
+                if (modal) modal.classList.remove("active");
+                return;
+            }
+
+            const btnSubmit = formSubmitItemRequest.querySelector("button[type='submit']");
+
             try {
+                if (btnSubmit) {
+                    btnSubmit.disabled = true;
+                    btnSubmit.textContent = "Sending Request...";
+                }
+
                 const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
                 const db = helper.db();
 
@@ -1455,6 +1536,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     requestName: item.itemName,
                     receiverId: currentUser.uid,
                     receiverName: currentUser.name,
+                    receiverEmail: currentUser.email || "",
                     donorId: item.donorId,
                     donorName: item.donorName,
                     type: "physical",
@@ -1476,11 +1558,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
 
                 showToast("Item request sent to donor! Waiting for donor approval.", "success");
-                document.getElementById("modalRequestAvailableItem").classList.remove("active");
+                const modal = document.getElementById("modalRequestAvailableItem");
+                if (modal) modal.classList.remove("active");
                 formSubmitItemRequest.reset();
                 updateOverviewStats();
             } catch (err) {
                 showToast("Failed to submit request.", "danger");
+                console.error(err);
+            } finally {
+                if (btnSubmit) {
+                    btnSubmit.disabled = false;
+                    btnSubmit.textContent = "Confirm Request";
+                }
             }
         });
     }
@@ -2680,15 +2769,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     window.startChatWithPartner = (matchId) => {
-        window.location.hash = '#messages';
+        window.location.hash = '#chat';
         
         document.querySelectorAll(".dashboard-view-panel").forEach(p => p.style.display = "none");
-        const msgPanel = document.getElementById("messages-panel") || document.getElementById("communication-panel");
-        if (msgPanel) msgPanel.style.display = "block";
+        const msgPanel = document.getElementById("chat-panel");
+        if (msgPanel) {
+            msgPanel.style.display = "block";
+            msgPanel.classList.add("fade-in");
+        }
 
         document.querySelectorAll("#sidebarMenuList .menu-item").forEach(item => {
             const link = item.querySelector("a");
-            if (link && link.getAttribute("href") === "#messages") {
+            if (link && link.getAttribute("href") === "#chat") {
                 item.classList.add("active");
             } else {
                 item.classList.remove("active");
@@ -2706,9 +2798,10 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        const currentUid = currentUser.uid || currentUser.id || "";
         const existingMatch = matchesList.find(m => 
-            (m.donorId === targetUserId && m.receiverId === currentUser.uid) ||
-            (m.receiverId === targetUserId && m.donorId === currentUser.uid)
+            (m.donorId === targetUserId && (m.receiverId === currentUid || (currentUser.email && m.receiverEmail === currentUser.email))) ||
+            (m.receiverId === targetUserId && (m.donorId === currentUid || (currentUser.email && m.donorEmail === currentUser.email)))
         );
 
         if (existingMatch) {
@@ -2717,10 +2810,12 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
                 const newDoc = await helper.db().collection("matches").add({
-                    donorId: currentUser.role === 'donor' ? currentUser.uid : targetUserId,
+                    donorId: currentUser.role === 'donor' ? currentUid : targetUserId,
                     donorName: currentUser.role === 'donor' ? currentUser.name : (targetUserName || 'Donor'),
-                    receiverId: currentUser.role === 'receiver' ? currentUser.uid : targetUserId,
+                    donorEmail: currentUser.role === 'donor' ? (currentUser.email || '') : '',
+                    receiverId: currentUser.role === 'receiver' ? currentUid : targetUserId,
                     receiverName: currentUser.role === 'receiver' ? currentUser.name : (targetUserName || 'Receiver'),
+                    receiverEmail: currentUser.role === 'receiver' ? (currentUser.email || '') : '',
                     requestName: itemTitle || "Direct Discussion",
                     type: "physical",
                     status: "in_discussion",
@@ -2739,7 +2834,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const container = document.getElementById("chatMatchesList");
         if (!container) return;
 
-        const chatMatches = matchesList.filter(m => m.donorId === currentUser.uid || m.receiverId === currentUser.uid);
+        const chatMatches = matchesList.filter(m => 
+            m.donorId === currentUser.uid || 
+            m.receiverId === currentUser.uid || 
+            (currentUser.id && (m.donorId === currentUser.id || m.receiverId === currentUser.id)) ||
+            (currentUser.email && (m.donorEmail === currentUser.email || m.receiverEmail === currentUser.email))
+        );
 
         if (chatMatches.length === 0) {
             container.innerHTML = `<div style="text-align: center; color: var(--color-text-muted); padding: 20px; font-size:0.85rem;">No active connections for chat.</div>`;
@@ -3130,6 +3230,41 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (err) {
             showToast("Failed to reject evidence.", "danger");
         }
+    };
+
+    window.toggleMobileSidebar = () => {
+        const sidebar = document.querySelector(".sidebar");
+        const overlay = document.getElementById("sidebarOverlay");
+        if (sidebar) sidebar.classList.toggle("open");
+        if (overlay) overlay.classList.toggle("active");
+    };
+    window.closeMobileSidebar = () => {
+        const sidebar = document.querySelector(".sidebar");
+        const overlay = document.getElementById("sidebarOverlay");
+        if (sidebar) sidebar.classList.remove("open");
+        if (overlay) overlay.classList.remove("active");
+    };
+
+    window.openAboutModal = () => {
+        window.location.hash = "#overview";
+    };
+    window.closeAboutModal = () => {};
+    window.openContactModal = () => {
+        window.location.hash = "#contact";
+        const modal = document.getElementById("modalContactUs");
+        if (modal) modal.classList.add("active");
+    };
+    window.closeContactModal = () => {
+        const modal = document.getElementById("modalContactUs");
+        if (modal) modal.classList.remove("active");
+    };
+    window.handleContactSubmit = (e) => {
+        if (e) e.preventDefault();
+        showToast("Thank you for reaching out! Our GiveGo support team will get back to you shortly.", "success");
+        window.closeContactModal();
+        const form = document.getElementById("formContactUs");
+        if (form) form.reset();
+        return false;
     };
 
     init();

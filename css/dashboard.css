@@ -343,3 +343,132 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* Responsive Helper Grids & Wrappers */
+.grid-cols-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.grid-cols-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 16px;
+}
+
+/* Mobile Sidebar Overlay */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(2px);
+    z-index: 99;
+}
+
+.sidebar-overlay.active {
+    display: block;
+}
+
+/* Mobile Responsiveness Styles (< 868px) */
+@media (max-width: 868px) {
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 1000;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+        max-width: 100vw !important;
+        width: 100% !important;
+        padding: 16px 14px !important;
+    }
+
+    .header-panel {
+        flex-direction: column-reverse;
+        gap: 14px;
+        align-items: stretch;
+    }
+
+    .mobile-toggle-btn {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 6px;
+        align-self: flex-start;
+    }
+
+    .welcome-section h1 {
+        font-size: 1.5rem !important;
+    }
+
+    .actions-section {
+        flex-wrap: wrap;
+        width: 100%;
+        gap: 8px !important;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    .stat-card {
+        padding: 14px !important;
+    }
+
+    .stat-number {
+        font-size: 1.6rem !important;
+    }
+
+    .grid-cols-2, .grid-cols-3 {
+        grid-template-columns: 1fr !important;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .modal-content {
+        padding: 18px !important;
+        max-width: 95% !important;
+        margin: 10px !important;
+    }
+
+    .btn {
+        min-height: 38px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .actions-section {
+        justify-content: space-between;
+    }
+
+    .actions-section .btn {
+        flex: 1 1 auto;
+        text-align: center;
+        font-size: 0.75rem !important;
+        padding: 6px 10px !important;
+    }
+}

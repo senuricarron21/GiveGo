@@ -24,99 +24,115 @@ document.addEventListener("DOMContentLoaded", () => {
                 const result = await helper.auth().signInWithEmailAndPassword(email, password);
                 const authUser = result.user;
                 
-                const db = helper.db();
-                const userRef = db.collection("users").doc(authUser.uid);
-                const userDoc = await userRef.get();
-                
-                let role = "donor";
-                let status = "verified";
-                let name = authUser.displayName || authUser.email.split('@')[0];
-                let profileData = {
-                    uid: authUser.uid,
-                    email: authUser.email,
-                    name: name,
-                    role: role,
-                    status: status
-                };
+                let userDoc = null;
+                try {
+                    const db = helper.db();
+                    const userRef = db.collection("users").doc(authUser.uid);
+                    userDoc = await userRef.get();
 
-                if (userDoc.exists) {
-                    const data = userDoc.data();
-                    
-                    if (authUser.uid === '9TVzT4p6IESEaalgHQ0xuptUqVk2' || authUser.email.toLowerCase().includes("admin")) {
-                        role = "admin";
-                        status = "verified";
-                    } else if (data.role) {
-                        role = data.role;
-                        status = data.status || (role === 'donor' ? 'verified' : 'pending');
-                    } else if (data.accountType) {
-                        role = data.accountType.includes('receiver') ? 'receiver' : 'donor';
-                        status = role === 'donor' ? 'verified' : 'pending';
-                    }
-
-                    profileData = {
-                        uid: authUser.uid,
-                        email: authUser.email,
-                        name: data.name || name,
-                        role: role,
-                        status: status,
-                        donorType: data.donorType || "individual",
-                        receiverCategory: data.receiverCategory || "",
-                        district: data.district || "Colombo",
-                        location: data.location || { lat: 6.9271, lng: 79.8612 }
-                    };
-
-                    if (!data.role || !data.status) {
-                        await userRef.set({ role, status }, { merge: true });
-                    }
-                } else {
-                    if (authUser.uid === '9TVzT4p6IESEaalgHQ0xuptUqVk2' || authUser.email.toLowerCase().includes("admin")) {
-                        role = "admin";
-                        status = "verified";
-                        name = "System Admin";
-                    }
-
-                    profileData.role = role;
-                    profileData.status = status;
-                    profileData.name = name;
-
-                    await userRef.set({
+                    let role = "donor";
+                    let status = "verified";
+                    let name = authUser.displayName || authUser.email.split('@')[0];
+                    let profileData = {
                         uid: authUser.uid,
                         email: authUser.email,
                         name: name,
                         role: role,
-                        status: status,
-                        district: "Colombo",
-                        createdAt: new Date().toISOString()
-                    });
-                }
-                
-                if (profileData.status === 'suspended') {
-                    await helper.auth().signOut();
-                    showToast("Your account has been suspended pending administrator review.", "danger");
-                    return;
+                        status: status
+                    };
+
+                    if (userDoc && userDoc.exists) {
+                        const data = userDoc.data();
+                        
+                        if (authUser.uid === '9TVzT4p6IESEaalgHQ0xuptUqVk2' || authUser.email.toLowerCase().includes("admin")) {
+                            role = "admin";
+                            status = "verified";
+                        } else if (data.role) {
+                            role = data.role;
+                            status = data.status || (role === 'donor' ? 'verified' : 'pending');
+                        } else if (data.accountType) {
+                            role = data.accountType.includes('receiver') ? 'receiver' : 'donor';
+                            status = role === 'donor' ? 'verified' : 'pending';
+                        }
+
+                        profileData = {
+                            uid: authUser.uid,
+                            email: authUser.email,
+                            name: data.name || name,
+                            role: role,
+                            status: status,
+                            donorType: data.donorType || "individual",
+                            receiverCategory: data.receiverCategory || "",
+                            district: data.district || "Colombo",
+                            location: data.location || { lat: 6.9271, lng: 79.8612 }
+                        };
+
+                        if (!data.role || !data.status) {
+                            await userRef.set({ role, status }, { merge: true });
+                        }
+                    } else {
+                        if (authUser.uid === '9TVzT4p6IESEaalgHQ0xuptUqVk2' || authUser.email.toLowerCase().includes("admin")) {
+                            role = "admin";
+                            status = "verified";
+                            name = "System Admin";
+                        }
+
+                        profileData.role = role;
+                        profileData.status = status;
+                        profileData.name = name;
+
+                        await userRef.set({
+                            uid: authUser.uid,
+                            email: authUser.email,
+                            name: name,
+                            role: role,
+                            status: status,
+                            district: "Colombo",
+                            createdAt: new Date().toISOString()
+                        });
+                    }
+
+                    if (profileData.status === 'suspended') {
+                        await helper.auth().signOut();
+                        showToast("Your account has been suspended pending administrator review.", "danger");
+                        return;
+                    }
+
+                    try {
+                        localStorage.setItem("givego_user", JSON.stringify(profileData));
+                        const syncResponse = await fetch("api/auth_session.php?action=login", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(profileData)
+                        });
+                        if (syncResponse.ok) {
+                            const text = await syncResponse.text();
+                            if (text) JSON.parse(text);
+                        }
+                    } catch (syncErr) {
+                        console.warn("Session sync skipped (static host environment):", syncErr);
+                    }
+                } catch (fsError) {
+                    console.error("Firestore user fetch error:", fsError);
+                    if (fsError.code === 'permission-denied' || (fsError.message && fsError.message.includes("permission"))) {
+                        throw new Error("Database Permission Error: Please update your Firestore Security Rules in Firebase Console to allow read/write access.");
+                    } else {
+                        throw fsError;
+                    }
                 }
 
-                const syncResponse = await fetch("api/auth_session.php?action=login", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(profileData)
-                });
-                const syncResult = await syncResponse.json();
-                
-                if (syncResult.success) {
-                    showToast("Login successful. Redirecting...", "success");
-                    setTimeout(() => {
-                        window.location.href = "dashboard.html";
-                    }, 600);
-                } else {
-                    throw new Error("PHP Session synchronization failed.");
-                }
+                showToast("Login successful. Redirecting...", "success");
+                setTimeout(() => {
+                    window.location.href = "dashboard.html";
+                }, 400);
             } catch (error) {
                 let friendlyMsg = error.message;
                 if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
                     friendlyMsg = "Invalid email address or password. Please check your credentials.";
                 } else if (error.code === 'auth/too-many-requests') {
                     friendlyMsg = "Too many failed attempts. Please try again in a few minutes.";
+                } else if (error.code === 'permission-denied' || (error.message && error.message.includes('permission'))) {
+                    friendlyMsg = "Database Permission Error: Please update your Firestore Security Rules in Firebase Console.";
                 }
                 showToast(friendlyMsg, "danger");
                 console.error("Auth Error: ", error);
@@ -180,6 +196,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 const result = await auth.createUserWithEmailAndPassword(email, password);
                 const authUser = result.user;
                 
+                const regNum = (orgDetails && orgDetails.registrationNumber) || (receiverDetails && receiverDetails.registrationNumber) || "";
+
                 const userDocData = {
                     uid: authUser.uid,
                     email: authUser.email,
@@ -187,6 +205,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     role,
                     donorType,
                     accountType,
+                    registrationNumber: regNum,
                     phone,
                     district,
                     categories: categories || "All Categories",
@@ -200,10 +219,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 await db.collection("users").doc(authUser.uid).set(userDocData);
 
-                const syncResponse = await fetch("api/auth_session.php?action=login", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
+                try {
+                    localStorage.setItem("givego_user", JSON.stringify({
                         uid: authUser.uid,
                         email: authUser.email,
                         name: name,
@@ -212,22 +229,37 @@ document.addEventListener("DOMContentLoaded", () => {
                         receiverCategory,
                         status: status,
                         location: location
-                    })
-                });
-                const syncResult = await syncResponse.json();
-
-                if (syncResult.success) {
-                    if (status === 'pending') {
-                        showToast("Registration successful. Account pending Admin verification.", "success");
-                    } else {
-                        showToast("Registration successful. Welcome to GiveGo.", "success");
+                    }));
+                    const syncResponse = await fetch("api/auth_session.php?action=login", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            uid: authUser.uid,
+                            email: authUser.email,
+                            name: name,
+                            role: role,
+                            donorType,
+                            receiverCategory,
+                            status: status,
+                            location: location
+                        })
+                    });
+                    if (syncResponse.ok) {
+                        const text = await syncResponse.text();
+                        if (text) JSON.parse(text);
                     }
-                    setTimeout(() => {
-                        window.location.href = "dashboard.html";
-                    }, 1000);
-                } else {
-                    throw new Error("PHP Session synchronization failed.");
+                } catch (syncErr) {
+                    console.warn("Session sync skipped (static host environment):", syncErr);
                 }
+
+                if (status === 'pending') {
+                    showToast("Registration successful. Account pending Admin verification.", "success");
+                } else {
+                    showToast("Registration successful. Welcome to GiveGo.", "success");
+                }
+                setTimeout(() => {
+                    window.location.href = "dashboard.html";
+                }, 800);
             } catch (error) {
                 let friendlyMsg = error.message;
                 if (error.code === 'auth/email-already-in-use') {
@@ -243,17 +275,24 @@ document.addEventListener("DOMContentLoaded", () => {
         logout: async () => {
             try {
                 let helper = getHelperOrWait();
-                if (helper) await helper.auth().signOut();
+                if (helper && helper.auth()) await helper.auth().signOut();
                 
-                const syncResponse = await fetch("api/auth_session.php?action=logout");
-                const syncResult = await syncResponse.json();
-                
-                if (syncResult.success) {
-                    showToast("Logged out successfully.", "success");
-                    setTimeout(() => {
-                        window.location.href = "index.html";
-                    }, 600);
+                try {
+                    localStorage.removeItem("givego_user");
+                    sessionStorage.clear();
+                    const syncResponse = await fetch("api/auth_session.php?action=logout");
+                    if (syncResponse.ok) {
+                        const text = await syncResponse.text();
+                        if (text) JSON.parse(text);
+                    }
+                } catch (syncErr) {
+                    console.warn("Session sync skipped (static host environment):", syncErr);
                 }
+                
+                showToast("Logged out successfully.", "success");
+                setTimeout(() => {
+                    window.location.href = "index.html";
+                }, 400);
             } catch (error) {
                 showToast("Error logging out.", "danger");
                 console.error(error);
@@ -297,8 +336,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let orgDetails = null;
             if (accountType === 'donor_org') {
+                const orgNumEl = document.getElementById("regOrgNumber");
                 orgDetails = {
                     orgName: document.getElementById("regOrgName").value.trim(),
+                    registrationNumber: orgNumEl ? orgNumEl.value.trim() : "",
                     repName: document.getElementById("regRepName").value.trim(),
                     repDesignation: document.getElementById("regRepDesignation").value.trim(),
                     repPhone: document.getElementById("regRepPhone").value.trim(),
@@ -312,8 +353,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let receiverDetails = null;
             if (accountType === 'receiver') {
+                const recNumEl = document.getElementById("regReceiverRegNumber");
                 receiverDetails = {
                     address: document.getElementById("regReceiverAddress").value.trim(),
+                    registrationNumber: recNumEl ? recNumEl.value.trim() : "",
                     repName: document.getElementById("regReceiverRep").value.trim(),
                     bankName: document.getElementById("regBankName").value.trim(),
                     accountName: document.getElementById("regAccountName").value.trim(),

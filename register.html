@@ -14,23 +14,57 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
+    <!-- Mobile responsiveness for register card -->
+    <style>
+        @media (max-width: 600px) {
+            .reg-container { padding: 16px 10px !important; }
+            .reg-panel { padding: 20px 16px !important; }
+        }
+    </style>
 </head>
 <body style="background-color: var(--color-bg-base);">
 
-    <div class="container" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 24px;">
-        <div class="glass-panel" style="width: 100%; max-width: 800px; padding: 40px; border-radius: var(--radius-lg); background: #FFFFFF; border: 1px solid var(--color-border); box-shadow: var(--shadow-soft);">
+    <!-- TOP NAVIGATION BAR -->
+    <header class="top-navbar">
+        <div class="nav-container">
+            <!-- Brand Logo & Name -->
+            <a href="index.html#home" class="nav-brand">
+                <img src="uploads/logo.png" alt="GiveGo Logo" class="nav-brand-logo" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=150&q=80';">
+                <span class="nav-brand-name">GiveGo</span>
+            </a>
+
+            <!-- Center Navigation Links -->
+            <nav>
+                <ul class="nav-menu" id="navMenu">
+                    <li class="nav-menu-item"><a href="index.html#home">Home</a></li>
+                    <li class="nav-menu-item"><a href="index.html#process">Process (How We Work)</a></li>
+                    <li class="nav-menu-item"><a href="index.html#preview">Items & Needs</a></li>
+                    <li class="nav-menu-item"><a href="index.html#about">About Us</a></li>
+                    <li class="nav-menu-item"><a href="index.html#contact">Contact Us</a></li>
+                </ul>
+            </nav>
+
+            <!-- Right Actions -->
+            <div class="nav-actions">
+                <a href="index.html" class="btn-nav-login">Sign In</a>
+                <a href="register.html" class="btn-nav-register active">Join GiveGo</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container reg-container" style="min-height: calc(100vh - 70px); display: flex; align-items: center; justify-content: center; padding: 40px 24px;">
+        <div class="glass-panel reg-panel" style="width: 100%; max-width: 800px; padding: 40px; border-radius: var(--radius-lg); background: #FFFFFF; border: 1px solid var(--color-border); box-shadow: var(--shadow-soft);">
             
             <!-- Header section -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 2px solid var(--color-bg-base); padding-bottom: 16px;">
                 <div>
-                    <img src="uploads/logo.png" alt="GiveGo Logo" style="max-height: 55px; width: auto; object-fit: contain;">
+                    <h2 style="font-size: 1.8rem; color: var(--color-teal-primary); margin: 0; font-weight: 800;">Create Your Account</h2>
                 </div>
                 <a href="index.html" style="color: var(--color-teal-primary); text-decoration: none; font-size: 0.85rem; font-weight: 800;">
-                    Back to Sign In
+                    ← Back to Home
                 </a>
             </div>
 
-            <h2 style="font-size: 2rem; color: var(--color-teal-primary); margin-bottom: 6px; font-weight: 800;">Join the GiveGo Network</h2>
             <p style="color: var(--color-text-muted); font-size: 0.95rem; margin-bottom: 24px;">Register as a Donor or a Receiver Organisation to manage essential charitable support.</p>
             
             <form id="registerForm">
@@ -135,26 +169,32 @@
                             <input class="form-control" type="text" id="regOrgName" placeholder="e.g. Apex Global Foundation">
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="regRepName">Authorised Representative Name</label>
-                            <input class="form-control" type="text" id="regRepName" placeholder="e.g. Dr. Nimal Jayasinghe">
+                            <label class="form-label" for="regOrgNumber">Official Registration Number (BR / NGO)</label>
+                            <input class="form-control" type="text" id="regOrgNumber" placeholder="e.g. PV-12345 / NGO-LK-889">
                         </div>
                     </div>
 
                     <div class="grid-cols-2">
                         <div class="form-group">
+                            <label class="form-label" for="regRepName">Authorised Representative Name</label>
+                            <input class="form-control" type="text" id="regRepName" placeholder="e.g. Dr. Nimal Jayasinghe">
+                        </div>
+                        <div class="form-group">
                             <label class="form-label" for="regRepDesignation">Representative Designation</label>
                             <input class="form-control" type="text" id="regRepDesignation" placeholder="e.g. CSR Manager / Director">
                         </div>
+                    </div>
+
+                    <div class="grid-cols-2">
                         <div class="form-group">
                             <label class="form-label" for="regRepPhone">Representative Phone</label>
                             <input class="form-control" type="tel" id="regRepPhone" placeholder="e.g. +94 71 987 6543">
                         </div>
-                    </div>
-
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label">Business Registration (BR) Document (PDF / Image)</label>
-                        <input type="file" id="brUploadInput" class="form-control" accept=".pdf,.png,.jpg,.jpeg">
-                        <input type="hidden" id="regBrDocUrl" value="">
+                        <div class="form-group">
+                            <label class="form-label">Business Registration (BR) Document (PDF / Image)</label>
+                            <input type="file" id="brUploadInput" class="form-control" accept=".pdf,.png,.jpg,.jpeg">
+                            <input type="hidden" id="regBrDocUrl" value="">
+                        </div>
                     </div>
                 </div>
 
@@ -162,9 +202,15 @@
                 <div id="sectionReceiver" style="display: none; background: #F5EFE0; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--color-border); margin-bottom: 20px;">
                     <h4 style="color: var(--color-teal-primary); margin-bottom: 12px; font-size: 0.95rem; font-weight: 800;">Receiver Organisation Details & Official Bank Account</h4>
                     
-                    <div class="form-group">
-                        <label class="form-label" for="regReceiverAddress">Full Official Address</label>
-                        <input class="form-control" type="text" id="regReceiverAddress" placeholder="e.g. No 45, Kandy Road, Peradeniya">
+                    <div class="grid-cols-2">
+                        <div class="form-group">
+                            <label class="form-label" for="regReceiverAddress">Full Official Address</label>
+                            <input class="form-control" type="text" id="regReceiverAddress" placeholder="e.g. No 45, Kandy Road, Peradeniya">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="regReceiverRegNumber">Official NGO / Government Reg Number</label>
+                            <input class="form-control" type="text" id="regReceiverRegNumber" placeholder="e.g. NGO-LK-2024-889">
+                        </div>
                     </div>
 
                     <div class="grid-cols-2">
@@ -232,6 +278,11 @@
                     Complete Registration
                 </button>
             </form>
+            <div style="text-align: center; margin-top: 18px; font-size: 0.85rem; color: #667067;">
+                Already registered? <a href="index.html" style="color: #0D7C7A; font-weight: 800; text-decoration: none;">Sign In</a> | 
+                <a href="index.html" style="color: #0D7C7A; font-weight: 700; text-decoration: none;">About Us</a> | 
+                <a href="index.html" style="color: #0D7C7A; font-weight: 700; text-decoration: none;">Contact Us</a>
+            </div>
         </div>
     </div>
 
