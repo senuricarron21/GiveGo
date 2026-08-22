@@ -903,14 +903,49 @@ document.addEventListener("DOMContentLoaded", () => {
     if (sortReceiverOrder) sortReceiverOrder.addEventListener("change", renderReceiverRequests);
 
     window.deleteDonation = async (donId) => {
-        if (!confirm("Are you sure you want to remove this listing?")) return;
+        if (!confirm("Are you sure you want to remove this listing? All associated matches and chats will also be removed.")) return;
         try {
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-            await helper.db().collection("donations").doc(donId).delete();
-            showToast("Listing deleted.", "success");
+            const db = helper.db();
+
+            await db.collection("donations").doc(donId).delete();
+
+            const targetDonation = donationsList.find(d => d.id === donId);
+            const donName = targetDonation ? targetDonation.itemName : "";
+
+            const relatedMatches = matchesList.filter(m => 
+                m.donationId === donId || 
+                (donName && m.donationName === donName)
+            );
+
+            for (const match of relatedMatches) {
+                try {
+                    await db.collection("matches").doc(match.id).delete();
+                    const messagesSnap = await db.collection("messages").where("matchId", "==", match.id).get();
+                    if (!messagesSnap.empty) {
+                        const batch = db.batch();
+                        messagesSnap.forEach(doc => batch.delete(doc.ref));
+                        await batch.commit();
+                    }
+                } catch (mErr) {
+                    console.warn("Cascade match delete notice:", mErr);
+                }
+            }
+
+            donationsList = donationsList.filter(d => d.id !== donId);
+            matchesList = matchesList.filter(m => m.donationId !== donId && (!donName || m.donationName !== donName));
+
+            if (typeof renderDonorListings === 'function') renderDonorListings();
+            if (typeof renderAllAvailableItems === 'function') renderAllAvailableItems();
+            if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
+            if (typeof renderDonorMatches === 'function') renderDonorMatches();
+            if (typeof renderChatMatchesList === 'function') renderChatMatchesList();
             updateOverviewStats();
+
+            showToast("Donation listing and all related details removed.", "success");
         } catch (err) {
-            showToast("Failed to delete.", "danger");
+            console.error("Delete error:", err);
+            showToast("Failed to delete donation listing.", "danger");
         }
     };
 
@@ -1067,13 +1102,48 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     window.deleteRequest = async (reqId) => {
-        if (!confirm("Are you sure you want to delete this request?")) return;
+        if (!confirm("Are you sure you want to delete this request? All associated matches and chats will also be removed.")) return;
         try {
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-            await helper.db().collection("requests").doc(reqId).delete();
-            showToast("Request deleted.", "success");
+            const db = helper.db();
+
+            await db.collection("requests").doc(reqId).delete();
+
+            const targetRequest = requestsList.find(r => r.id === reqId);
+            const reqName = targetRequest ? targetRequest.itemName : "";
+
+            const relatedMatches = matchesList.filter(m => 
+                m.requestId === reqId || 
+                (reqName && m.requestName === reqName)
+            );
+
+            for (const match of relatedMatches) {
+                try {
+                    await db.collection("matches").doc(match.id).delete();
+                    const messagesSnap = await db.collection("messages").where("matchId", "==", match.id).get();
+                    if (!messagesSnap.empty) {
+                        const batch = db.batch();
+                        messagesSnap.forEach(doc => batch.delete(doc.ref));
+                        await batch.commit();
+                    }
+                } catch (mErr) {
+                    console.warn("Cascade match delete notice:", mErr);
+                }
+            }
+
+            requestsList = requestsList.filter(r => r.id !== reqId);
+            matchesList = matchesList.filter(m => m.requestId !== reqId && (!reqName || m.requestName !== reqName));
+
+            if (typeof renderReceiverRequests === 'function') renderReceiverRequests();
+            if (typeof renderDonorNeeds === 'function') renderDonorNeeds();
+            if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
+            if (typeof renderDonorMatches === 'function') renderDonorMatches();
+            if (typeof renderChatMatchesList === 'function') renderChatMatchesList();
             updateOverviewStats();
+
+            showToast("Request and all related details removed.", "success");
         } catch (err) {
+            console.error("Delete request error:", err);
             showToast("Failed to delete request.", "danger");
         }
     };
