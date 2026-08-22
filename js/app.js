@@ -2736,15 +2736,30 @@ document.addEventListener("DOMContentLoaded", () => {
             trackerUnsubscribe = helper.db().collection("matches").doc(matchId).onSnapshot((doc) => {
                 const data = doc.data();
                 if (data && data.liveLocation && data.liveLocation.lat && data.liveLocation.lng) {
-                    const { lat, lng, sharingBy, updatedAt } = data.liveLocation;
-                    const newLatLng = [parseFloat(lat), parseFloat(lng)];
-                    if (liveTrackerMarker) liveTrackerMarker.setLatLng(newLatLng);
+                    if (liveTrackerSimulationInterval) {
+                        clearInterval(liveTrackerSimulationInterval);
+                        liveTrackerSimulationInterval = null;
+                    }
+                    const liveLat = parseFloat(data.liveLocation.lat);
+                    const liveLng = parseFloat(data.liveLocation.lng);
+                    const sharingUser = data.liveLocation.sharingBy || partnerName;
+                    const updateTime = new Date(data.liveLocation.updatedAt || Date.now()).toLocaleTimeString();
+
+                    const newLatLng = [liveLat, liveLng];
+                    if (liveTrackerMarker) {
+                        liveTrackerMarker.setLatLng(newLatLng);
+                        liveTrackerMarker.setPopupContent(`<b>🚚 ${sharingUser} (REAL GPS ACTIVE)</b><br>Dispatch: ${itemName}<br>Coordinates: ${liveLat.toFixed(5)}, ${liveLng.toFixed(5)}<br>Updated: ${updateTime}`);
+                    }
                     if (liveTrackerMap) {
                         liveTrackerMap.panTo(newLatLng);
                         liveTrackerMap.invalidateSize();
                     }
                     if (statusDiv) {
-                        statusDiv.innerHTML = `🟢 <strong>Live Location Stream Active</strong> — ${sharingBy || partnerName} | Updated: ${new Date(updatedAt || Date.now()).toLocaleTimeString()}`;
+                        statusDiv.innerHTML = `🟢 <strong>Live Donor GPS Stream Active</strong> — <strong>${sharingUser}</strong> is sharing real GPS location (Lat: ${liveLat.toFixed(4)}, Lng: ${liveLng.toFixed(4)}) | Updated: ${updateTime}`;
+                    }
+                } else {
+                    if (statusDiv && !liveTrackerSimulationInterval) {
+                        statusDiv.innerHTML = `📡 <strong>Live GPS Telemetry Active</strong> — Donor: ${partnerName} | Coordinates: ${donorLat.toFixed(4)}, ${donorLng.toFixed(4)}`;
                     }
                 }
             });
@@ -2757,7 +2772,7 @@ document.addEventListener("DOMContentLoaded", () => {
             simStep++;
             const simLat = donorLat + (Math.sin(simStep * 0.25) * 0.0012);
             const simLng = donorLng + (Math.cos(simStep * 0.25) * 0.0012);
-            if (liveTrackerMarker && (!match.liveLocation || !match.liveLocation.lat)) {
+            if (liveTrackerMarker) {
                 liveTrackerMarker.setLatLng([simLat, simLng]);
                 if (statusDiv) {
                     statusDiv.innerHTML = `📡 <strong>Live GPS Telemetry (Radar Stream)</strong> — ${partnerName} moving in transit (${simLat.toFixed(4)}, ${simLng.toFixed(4)})`;
