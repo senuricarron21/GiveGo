@@ -1551,8 +1551,95 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // 2. Receiver Requests Available Item First from Donor Listing
+    window.closeRequestAvailableItemModal = () => {
+        const modal = document.getElementById("modalRequestAvailableItem");
+        if (modal) {
+            modal.classList.remove("active");
+            modal.style.setProperty("display", "none", "important");
+            modal.style.setProperty("visibility", "hidden", "important");
+            modal.style.setProperty("opacity", "0", "important");
+        }
+    };
+
+    window.submitReceiverItemRequestDirectly = async () => {
+        const donId = document.getElementById("mdlReqDonationId")?.value;
+        const dItem = donationsList.find(d => d.id === donId || String(d.id) === String(donId));
+        if (!dItem) {
+            showToast("Item record not found.", "warning");
+            return;
+        }
+
+        const reqQty = parseInt(document.getElementById("mdlReqItemQty")?.value) || 1;
+        const maxAvail = parseInt(dItem.quantity) || 1;
+
+        if (reqQty > maxAvail) {
+            showToast(`Illogical Quantity! You cannot request ${reqQty} units when the donor only has ${maxAvail} ${dItem.unit || 'units'} available.`, "warning");
+            return;
+        }
+
+        if (reqQty <= 0) {
+            showToast("Requested quantity must be at least 1 unit.", "warning");
+            return;
+        }
+
+        const existingReq = matchesList.find(m => 
+            m.donationId === dItem.id && 
+            (m.receiverId === currentUser.uid || (currentUser.email && m.receiverEmail === currentUser.email)) && 
+            (m.status === 'pending_donor_approval' || m.status === 'accepted' || m.status === 'confirmed')
+        );
+        if (existingReq) {
+            showToast("You already have an active or pending request for this surplus item.", "warning");
+            closeRequestAvailableItemModal();
+            return;
+        }
+
+        try {
+            showToast("⏳ Sending request to donor...", "info");
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            const db = helper.db();
+
+            const matchDoc = {
+                donationId: dItem.id,
+                requestName: dItem.itemName,
+                receiverId: currentUser.uid,
+                receiverName: currentUser.name,
+                receiverEmail: currentUser.email || "",
+                donorId: dItem.donorId,
+                donorName: dItem.donorName,
+                type: "physical",
+                category: dItem.category || "General",
+                quantity: reqQty,
+                unit: dItem.unit || "Units",
+                deliveryMethod: "receiver_pickup",
+                initiator: "receiver",
+                status: "pending_donor_approval",
+                createdAt: new Date().toISOString()
+            };
+
+            const docRef = await db.collection("matches").add(matchDoc);
+            matchDoc.id = docRef.id;
+            matchesList.unshift(matchDoc);
+
+            await db.collection("notifications").add({
+                userId: dItem.donorId,
+                message: `📌 Receiver ${currentUser.name} requested ${reqQty} ${dItem.unit || 'units'} of your available item "${dItem.itemName}". Please Accept or Reject this request in your dashboard.`,
+                read: false,
+                createdAt: new Date().toISOString()
+            });
+
+            showToast("🎉 Item request sent to donor! Waiting for donor approval.", "success");
+            closeRequestAvailableItemModal();
+            updateOverviewStats();
+            if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
+            if (typeof renderAvailableMaterialDonations === 'function') renderAvailableMaterialDonations();
+        } catch (err) {
+            showToast("Failed to submit request.", "danger");
+            console.error("Submit request error:", err);
+        }
+    };
+
     window.openRequestAvailableItemModal = (donationId) => {
-        const item = donationsList.find(d => d.id === donationId);
+        const item = donationsList.find(d => d.id === donationId || String(d.id) === String(donationId));
         if (!item) return;
 
         let modal = document.getElementById("modalRequestAvailableItem");
@@ -1560,13 +1647,14 @@ document.addEventListener("DOMContentLoaded", () => {
             modal = document.createElement("div");
             modal.className = "modal";
             modal.id = "modalRequestAvailableItem";
+            modal.style.zIndex = "999999";
             modal.innerHTML = `
-                <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:520px; width:90%; border-radius:12px;">
+                <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:520px; width:90%; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.3);">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--color-border); padding-bottom:10px;">
                         <h3 id="mdlReqItemTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin:0;">Request Material Item</h3>
-                        <button type="button" class="btn btn-secondary" style="padding:2px 8px; font-size:0.75rem; cursor:pointer;" onclick="document.getElementById('modalRequestAvailableItem').classList.remove('active'); document.getElementById('modalRequestAvailableItem').style.display='none';">✕</button>
+                        <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.85rem; font-weight:800; cursor:pointer;" onclick="closeRequestAvailableItemModal()">✕</button>
                     </div>
-                    <form id="formSubmitItemRequest">
+                    <form id="formSubmitItemRequest" onsubmit="event.preventDefault(); submitReceiverItemRequestDirectly();">
                         <input type="hidden" id="mdlReqDonationId" value="${item.id}">
                         <div class="form-group" style="margin-bottom:14px;">
                             <label class="form-label" style="font-weight:700; font-size:0.85rem;">Requested Quantity / Units</label>
@@ -1577,86 +1665,17 @@ document.addEventListener("DOMContentLoaded", () => {
                             <label class="form-label" style="font-weight:700; font-size:0.85rem;">Delivery Method</label>
                             <input class="form-control" type="text" value="Self Pick Up (Receiver Pick Up)" readonly style="font-weight:800; background:#F5EFE0; color:var(--color-teal-primary); width:100%;">
                         </div>
-                        <div style="background:#F5EFE0; padding:12px; border-radius:6px; font-size:0.8rem; color:var(--color-text-dark); margin-bottom:16px;">
+                        <div style="background:#F5EFE0; padding:12px; border-radius:6px; font-size:0.8rem; color:var(--color-text-dark); margin-bottom:16px; line-height:1.4;">
                             📌 As a Receiver requesting this available item, an automated notification will be sent to the donor to accept your request.
                         </div>
-                        <button class="btn btn-primary" type="submit" style="width:100%; font-weight:800; padding:12px; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer;">Confirm Request</button>
+                        <div style="display:flex; gap:10px; justify-content:flex-end; align-items:center;">
+                            <button type="button" class="btn btn-secondary" style="padding:10px 18px; font-size:0.85rem; font-weight:800; cursor:pointer;" onclick="closeRequestAvailableItemModal()">✕ Cancel</button>
+                            <button class="btn btn-primary" type="button" onclick="submitReceiverItemRequestDirectly()" style="font-weight:800; padding:10px 22px; font-size:0.88rem; background:#0D7C7A; color:#FFFFFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 3px 10px rgba(13,124,122,0.3);">🚀 Send Item Request</button>
+                        </div>
                     </form>
                 </div>
             `;
             document.body.appendChild(modal);
-
-            document.getElementById("formSubmitItemRequest")?.addEventListener("submit", async (e) => {
-                e.preventDefault();
-                const donId = document.getElementById("mdlReqDonationId").value;
-                const dItem = donationsList.find(d => d.id === donId);
-                if (!dItem) return;
-
-                const reqQty = parseInt(document.getElementById("mdlReqItemQty")?.value) || 1;
-                const maxAvail = parseInt(dItem.quantity) || 1;
-
-                if (reqQty > maxAvail) {
-                    showToast(`Illogical Quantity! You cannot request ${reqQty} units when the donor only has ${maxAvail} ${dItem.unit || 'units'} available.`, "warning");
-                    return;
-                }
-
-                if (reqQty <= 0) {
-                    showToast("Requested quantity must be at least 1 unit.", "warning");
-                    return;
-                }
-
-                const existingReq = matchesList.find(m => 
-                    m.donationId === dItem.id && 
-                    (m.receiverId === currentUser.uid || (currentUser.email && m.receiverEmail === currentUser.email)) && 
-                    (m.status === 'pending_donor_approval' || m.status === 'accepted' || m.status === 'confirmed')
-                );
-                if (existingReq) {
-                    showToast("You already have an active or pending request for this surplus item.", "warning");
-                    const mdl = document.getElementById("modalRequestAvailableItem");
-                    if (mdl) { mdl.classList.remove("active"); mdl.style.display = "none"; }
-                    return;
-                }
-
-                try {
-                    const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-                    const db = helper.db();
-
-                    const matchDoc = {
-                        donationId: dItem.id,
-                        requestName: dItem.itemName,
-                        receiverId: currentUser.uid,
-                        receiverName: currentUser.name,
-                        receiverEmail: currentUser.email || "",
-                        donorId: dItem.donorId,
-                        donorName: dItem.donorName,
-                        type: "physical",
-                        category: dItem.category,
-                        quantity: reqQty,
-                        unit: dItem.unit || "Units",
-                        initiator: "receiver",
-                        status: "pending_donor_approval",
-                        createdAt: new Date().toISOString()
-                    };
-
-                    await db.collection("matches").add(matchDoc);
-
-                    await db.collection("notifications").add({
-                        userId: dItem.donorId,
-                        message: `📌 Receiver ${currentUser.name} requested ${reqQty} ${dItem.unit || 'units'} of your available item "${dItem.itemName}". Please Accept or Reject this request in your dashboard.`,
-                        read: false,
-                        createdAt: new Date().toISOString()
-                    });
-
-                    showToast("Item request sent to donor! Waiting for donor approval.", "success");
-                    const mdl = document.getElementById("modalRequestAvailableItem");
-                    if (mdl) { mdl.classList.remove("active"); mdl.style.display = "none"; }
-                    updateOverviewStats();
-                    if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
-                } catch (err) {
-                    showToast("Failed to submit request.", "danger");
-                    console.error(err);
-                }
-            });
         }
 
         const donInput = document.getElementById("mdlReqDonationId");
@@ -1677,10 +1696,10 @@ document.addEventListener("DOMContentLoaded", () => {
             maxNotice.textContent = `📌 Max Stock Available: ${maxAvail} ${item.unit || 'units'}`;
         }
 
-        modal.style.display = "flex";
-        modal.style.visibility = "visible";
-        modal.style.opacity = "1";
-        modal.style.zIndex = "999999";
+        modal.style.setProperty("display", "flex", "important");
+        modal.style.setProperty("visibility", "visible", "important");
+        modal.style.setProperty("opacity", "1", "important");
+        modal.style.setProperty("z-index", "999999", "important");
         modal.classList.add("active");
     };
 
