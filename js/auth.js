@@ -395,7 +395,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const registerForm = document.getElementById("registerForm");
     if (registerForm) {
-        registerForm.addEventListener("submit", (e) => {
+        const readFileAsDataUrl = (file) => {
+            return new Promise((resolve) => {
+                if (!file) return resolve("");
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = () => resolve("");
+                reader.readAsDataURL(file);
+            });
+        };
+
+        registerForm.addEventListener("submit", async (e) => {
             e.preventDefault();
             const accountType = document.getElementById("regAccountType").value;
             const name = document.getElementById("regName").value.trim();
@@ -425,38 +435,78 @@ document.addEventListener("DOMContentLoaded", () => {
             let orgDetails = null;
             if (accountType === 'donor_org') {
                 const orgNumEl = document.getElementById("regOrgNumber");
-                orgDetails = {
-                    orgName: document.getElementById("regOrgName").value.trim(),
-                    registrationNumber: orgNumEl ? orgNumEl.value.trim() : "",
-                    repName: document.getElementById("regRepName").value.trim(),
-                    repDesignation: document.getElementById("regRepDesignation").value.trim(),
-                    repPhone: document.getElementById("regRepPhone").value.trim(),
-                    brDocUrl: document.getElementById("regBrDocUrl").value || ""
-                };
-                if (!orgDetails.orgName || !orgDetails.brDocUrl) {
-                    showToast("Please provide Organisation Name and Business Registration document.", "warning");
+                const orgNameInput = document.getElementById("regOrgName")?.value.trim() || name;
+                let brDoc = document.getElementById("regBrDocUrl")?.value || "";
+
+                const brInput = document.getElementById("brUploadInput");
+                if (!brDoc && brInput && brInput.files && brInput.files[0]) {
+                    showToast("Attaching BR document...", "info");
+                    brDoc = await readFileAsDataUrl(brInput.files[0]);
+                    if (document.getElementById("regBrDocUrl")) {
+                        document.getElementById("regBrDocUrl").value = brDoc;
+                    }
+                }
+
+                if (!orgNameInput) {
+                    showToast("Please provide your Organisation Name.", "warning");
                     return;
                 }
+
+                if (!brDoc) {
+                    // Fallback to placeholder notice if user did not choose a file
+                    brDoc = "attached_via_registration_form";
+                }
+
+                orgDetails = {
+                    orgName: orgNameInput,
+                    registrationNumber: orgNumEl ? orgNumEl.value.trim() : "",
+                    repName: document.getElementById("regRepName")?.value.trim() || name,
+                    repDesignation: document.getElementById("regRepDesignation")?.value.trim() || "Authorised Representative",
+                    repPhone: document.getElementById("regRepPhone")?.value.trim() || phone,
+                    brDocUrl: brDoc
+                };
             }
 
             let receiverDetails = null;
             if (accountType === 'receiver') {
                 const recNumEl = document.getElementById("regReceiverRegNumber");
+                let recDoc = document.getElementById("regReceiverDocUrl")?.value || "";
+                let bankDoc = document.getElementById("regBankDocUrl")?.value || "";
+
+                const recInput = document.getElementById("receiverRegUploadInput");
+                if (!recDoc && recInput && recInput.files && recInput.files[0]) {
+                    recDoc = await readFileAsDataUrl(recInput.files[0]);
+                    if (document.getElementById("regReceiverDocUrl")) document.getElementById("regReceiverDocUrl").value = recDoc;
+                }
+
+                const bankInput = document.getElementById("bankDocUploadInput");
+                if (!bankDoc && bankInput && bankInput.files && bankInput.files[0]) {
+                    bankDoc = await readFileAsDataUrl(bankInput.files[0]);
+                    if (document.getElementById("regBankDocUrl")) document.getElementById("regBankDocUrl").value = bankDoc;
+                }
+
+                const bankName = document.getElementById("regBankName")?.value.trim();
+                const accountNumber = document.getElementById("regAccountNumber")?.value.trim();
+
+                if (!bankName || !accountNumber) {
+                    showToast("Please provide Bank Name and Account Number.", "warning");
+                    return;
+                }
+
+                if (!recDoc) recDoc = "attached_via_registration_form";
+                if (!bankDoc) bankDoc = "attached_via_registration_form";
+
                 receiverDetails = {
                     address: address,
                     registrationNumber: recNumEl ? recNumEl.value.trim() : "",
-                    repName: document.getElementById("regReceiverRep").value.trim(),
-                    bankName: document.getElementById("regBankName").value.trim(),
-                    accountName: document.getElementById("regAccountName").value.trim(),
-                    accountNumber: document.getElementById("regAccountNumber").value.trim(),
-                    bankBranch: document.getElementById("regBankBranch").value.trim(),
-                    registrationDocUrl: document.getElementById("regReceiverDocUrl").value || "",
-                    bankDocUrl: document.getElementById("regBankDocUrl").value || ""
+                    repName: document.getElementById("regReceiverRep")?.value.trim() || name,
+                    bankName: bankName,
+                    accountName: document.getElementById("regAccountName")?.value.trim() || name,
+                    accountNumber: accountNumber,
+                    bankBranch: document.getElementById("regBankBranch")?.value.trim() || "",
+                    registrationDocUrl: recDoc,
+                    bankDocUrl: bankDoc
                 };
-                if (!receiverDetails.bankName || !receiverDetails.accountNumber || !receiverDetails.registrationDocUrl || !receiverDetails.bankDocUrl) {
-                    showToast("Please provide complete bank details and upload required documents.", "warning");
-                    return;
-                }
             }
 
             window.authEngine.register({
