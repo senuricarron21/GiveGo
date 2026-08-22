@@ -2510,14 +2510,30 @@ document.addEventListener("DOMContentLoaded", () => {
             };
         }
 
-        const modal = document.getElementById("modalLiveLocationTracker");
-        if (modal) {
-            modal.style.display = "flex";
-            modal.style.visibility = "visible";
-            modal.style.opacity = "1";
-            modal.style.zIndex = "999999";
-            modal.classList.add("active");
+        let modal = document.getElementById("modalLiveLocationTracker");
+        if (!modal) {
+            modal = document.createElement("div");
+            modal.className = "modal";
+            modal.id = "modalLiveLocationTracker";
+            modal.innerHTML = `
+                <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:680px; width:95%; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.3);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--color-border); padding-bottom:10px;">
+                        <h3 id="mdlTrackerTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin:0;">📍 Live Location Tracker</h3>
+                        <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.85rem; font-weight:800; cursor:pointer;" onclick="stopLiveLocationTrackerModal()">✕</button>
+                    </div>
+                    <div id="liveTrackerMapContainer" style="height:380px; width:100%; border-radius:8px; border:1px solid var(--color-border); margin-bottom:12px; background:#F5EFE0;"></div>
+                    <div id="trackerStatusDetails" style="font-size:0.85rem; font-weight:700; color:var(--color-teal-primary); text-align:center;">
+                        📡 Connecting to real-time GPS location stream...
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
         }
+        modal.style.display = "flex";
+        modal.style.visibility = "visible";
+        modal.style.opacity = "1";
+        modal.style.zIndex = "999999";
+        modal.classList.add("active");
 
         const partnerName = match.donorName || "Donor";
         const itemName = match.itemName || match.donationName || match.requestName || "Items";
