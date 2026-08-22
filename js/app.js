@@ -2785,29 +2785,16 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     window.openLiveTrackingMapModal = async (matchId) => {
-        const targetDocId = await resolveFirestoreMatchDocId(matchId);
-        let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId || m.id === targetDocId);
-        
-        try {
-            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-            if (helper && helper.db) {
-                const docSnap = await helper.db().collection("matches").doc(targetDocId).get();
-                if (docSnap.exists) {
-                    match = { id: docSnap.id, ...docSnap.data() };
-                }
-            }
-        } catch (fetchErr) {
-            console.warn("Direct match fetch notice:", fetchErr);
-        }
+        let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId || m.requestId === matchId || m.donationId === matchId);
 
         if (!match) {
             const don = donationsList.find(d => d.id === matchId || d.deliverySessionId === matchId);
             const req = requestsList.find(r => r.id === matchId || r.deliverySessionId === matchId);
             match = {
-                id: targetDocId,
-                donorName: don ? (don.donorName || "Donor") : (req ? (req.donorName || "Donor") : "Donor"),
-                receiverName: currentUser ? currentUser.name : "Receiver",
-                itemName: don ? don.itemName : (req ? req.itemName : "Donation Package"),
+                id: matchId,
+                donorName: don ? (don.donorName || "melamiyaaa") : (req ? (req.donorName || "melamiyaaa") : "melamiyaaa"),
+                receiverName: currentUser ? currentUser.name : "senuri",
+                itemName: don ? don.itemName : (req ? req.itemName : "Umbrellas"),
                 status: "in_transit",
                 location: { lat: 6.9271, lng: 79.8612 }
             };
@@ -2832,13 +2819,13 @@ document.addEventListener("DOMContentLoaded", () => {
             `;
             document.body.appendChild(modal);
         }
-        modal.style.display = "flex";
-        modal.style.visibility = "visible";
-        modal.style.opacity = "1";
-        modal.style.zIndex = "999999";
+        modal.style.setProperty("display", "flex", "important");
+        modal.style.setProperty("visibility", "visible", "important");
+        modal.style.setProperty("opacity", "1", "important");
+        modal.style.setProperty("z-index", "999999", "important");
         modal.classList.add("active");
 
-        const isDonorView = currentUser && currentUser.uid === match.donorId;
+        const isDonorView = currentUser && (currentUser.uid === match.donorId || (currentUser.role === 'donor' && currentUser.uid !== match.receiverId));
         const partnerName = isDonorView ? (match.receiverName || "Receiver") : (match.donorName || "Donor");
         const partnerRole = isDonorView ? "Receiver" : "Donor";
         const iconEmoji = isDonorView ? "🏢" : "🚚";
@@ -2948,42 +2935,40 @@ document.addEventListener("DOMContentLoaded", () => {
             statusDiv.innerHTML = `🟢 <strong>Live Telemetry Radar Active</strong> — ${partnerRole}: ${partnerName} | Coordinates: ${targetLat.toFixed(4)}, ${targetLng.toFixed(4)}`;
         }
 
-        // Real-time Firebase Listener on exact document ID
-        const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-        if (trackerUnsubscribe) trackerUnsubscribe();
+        // Background resolve exact doc ID and connect live Firestore listener
+        resolveFirestoreMatchDocId(matchId).then(targetDocId => {
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            if (trackerUnsubscribe) trackerUnsubscribe();
 
-        if (helper && helper.db) {
-            trackerUnsubscribe = helper.db().collection("matches").doc(targetDocId).onSnapshot((doc) => {
-                const data = doc.data();
-                if (data && data.liveLocation && data.liveLocation.lat && data.liveLocation.lng) {
-                    if (liveTrackerSimulationInterval) {
-                        clearInterval(liveTrackerSimulationInterval);
-                        liveTrackerSimulationInterval = null;
-                    }
-                    const liveLat = parseFloat(data.liveLocation.lat);
-                    const liveLng = parseFloat(data.liveLocation.lng);
-                    const sharingUser = data.liveLocation.sharingBy || partnerName;
-                    const updateTime = new Date(data.liveLocation.updatedAt || Date.now()).toLocaleTimeString();
+            if (helper && helper.db) {
+                trackerUnsubscribe = helper.db().collection("matches").doc(targetDocId).onSnapshot((doc) => {
+                    const data = doc.data();
+                    if (data && data.liveLocation && data.liveLocation.lat && data.liveLocation.lng) {
+                        if (liveTrackerSimulationInterval) {
+                            clearInterval(liveTrackerSimulationInterval);
+                            liveTrackerSimulationInterval = null;
+                        }
+                        const liveLat = parseFloat(data.liveLocation.lat);
+                        const liveLng = parseFloat(data.liveLocation.lng);
+                        const sharingUser = data.liveLocation.sharingBy || partnerName;
+                        const updateTime = new Date(data.liveLocation.updatedAt || Date.now()).toLocaleTimeString();
 
-                    const newLatLng = [liveLat, liveLng];
-                    if (liveTrackerMarker) {
-                        liveTrackerMarker.setLatLng(newLatLng);
-                        liveTrackerMarker.setPopupContent(`<b>${iconEmoji} ${sharingUser} (${partnerRole} REAL GPS ACTIVE)</b><br>Dispatch: ${itemName}<br>Coordinates: ${liveLat.toFixed(5)}, ${liveLng.toFixed(5)}<br>Updated: ${updateTime}`);
+                        const newLatLng = [liveLat, liveLng];
+                        if (liveTrackerMarker) {
+                            liveTrackerMarker.setLatLng(newLatLng);
+                            liveTrackerMarker.setPopupContent(`<b>${iconEmoji} ${sharingUser} (${partnerRole} REAL GPS ACTIVE)</b><br>Dispatch: ${itemName}<br>Coordinates: ${liveLat.toFixed(5)}, ${liveLng.toFixed(5)}<br>Updated: ${updateTime}`);
+                        }
+                        if (liveTrackerMap) {
+                            liveTrackerMap.panTo(newLatLng);
+                            liveTrackerMap.invalidateSize(true);
+                        }
+                        if (statusDiv) {
+                            statusDiv.innerHTML = `🟢 <strong>Live ${partnerRole} GPS Stream Active</strong> — <strong>${sharingUser}</strong> is sharing real GPS location (Lat: ${liveLat.toFixed(4)}, Lng: ${liveLng.toFixed(4)}) | Updated: ${updateTime}`;
+                        }
                     }
-                    if (liveTrackerMap) {
-                        liveTrackerMap.panTo(newLatLng);
-                        liveTrackerMap.invalidateSize(true);
-                    }
-                    if (statusDiv) {
-                        statusDiv.innerHTML = `🟢 <strong>Live ${partnerRole} GPS Stream Active</strong> — <strong>${sharingUser}</strong> is sharing real GPS location (Lat: ${liveLat.toFixed(4)}, Lng: ${liveLng.toFixed(4)}) | Updated: ${updateTime}`;
-                    }
-                } else {
-                    if (statusDiv && !liveTrackerSimulationInterval) {
-                        statusDiv.innerHTML = `📡 <strong>Live GPS Telemetry Active</strong> — ${partnerRole}: ${partnerName} | Coordinates: ${targetLat.toFixed(4)}, ${targetLng.toFixed(4)}`;
-                    }
-                }
-            });
-        }
+                });
+            }
+        }).catch(err => console.warn("Background match lookup notice:", err));
 
         // Live telemetry simulation loop to animate GPS movement towards destination
         if (liveTrackerSimulationInterval) clearInterval(liveTrackerSimulationInterval);

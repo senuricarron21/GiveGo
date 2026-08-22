@@ -366,42 +366,4 @@
     });
 </script>
 
-<!-- Modal: Real-Time Live Location Tracker Map -->
-<div class="modal" id="modalLiveLocationTracker" style="display:none; z-index:999999;">
-    <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:680px; width:95%; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.3);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--color-border); padding-bottom:10px;">
-            <h3 id="mdlTrackerTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin:0;">📍 Live Location Tracker</h3>
-            <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.85rem; font-weight:800; cursor:pointer;" onclick="stopLiveLocationTrackerModal()">✕</button>
-        </div>
-        <div id="liveTrackerMapContainer" style="height:380px; width:100%; border-radius:8px; border:1px solid var(--color-border); margin-bottom:12px; background:#F5EFE0;"></div>
-        <div id="trackerStatusDetails" style="font-size:0.85rem; font-weight:700; color:var(--color-teal-primary); text-align:center;">
-            📡 Connecting to real-time GPS location stream...
-        </div>
-    </div>
-</div>
-
-<!-- Modal: Handover Evidence & Receipt Confirmation -->
-<div class="modal" id="modalHandoverEvidence" style="display:none; z-index:999999;">
-    <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:540px; width:95%; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.3);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--color-border); padding-bottom:10px;">
-            <h3 id="mdlEvidenceTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin:0;">📷 Handover Evidence & Receipt Confirmation</h3>
-            <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.85rem; font-weight:800; cursor:pointer;" onclick="closeHandoverEvidenceModal()">✕</button>
-        </div>
-        <form id="formSubmitHandoverEvidence">
-            <input type="hidden" id="mdlEvidenceMatchId" value="">
-            <div style="margin-bottom:12px;">
-                <label style="font-size:0.85rem; font-weight:700;">Handover Notes / Feedback (Optional):</label>
-                <textarea id="mdlEvidenceNotes" class="input-control" style="width:100%; height:60px;" placeholder="e.g. Items received in excellent condition..."></textarea>
-            </div>
-            <div style="margin-bottom:16px;">
-                <label style="font-size:0.85rem; font-weight:700;">Evidence Photo URL (Optional):</label>
-                <input type="text" id="mdlEvidenceUrl" class="input-control" placeholder="https://example.com/photo.jpg">
-            </div>
-            <div style="display:flex; gap:10px; justify-content:flex-end;">
-                <button type="button" class="btn btn-secondary" onclick="confirmReceiptWithoutPhoto(document.getElementById('mdlEvidenceMatchId').value)">Confirm Without Photo</button>
-                <button type="submit" class="btn btn-primary">✅ Submit & Confirm Receipt</button>
-            </div>
-        </form>
-    </div>
-</div>
 
