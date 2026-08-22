@@ -139,7 +139,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const confirmedMatches = activeMatches.filter(m => m.status === 'confirmed' || m.status === 'completed' || m.status === 'in_transit').length;
             const rate = activeMatches.length > 0 ? Math.round((confirmedMatches / activeMatches.length) * 100) : (totalPublishedRequests > 0 ? Math.round((confirmedMatches / totalPublishedRequests) * 100) : 0);
             
-            const totalUsersCount = usersList.filter(u => u.status !== 'rejected').length;
+            // Only count verified, approved active users
+            const totalVerifiedUsers = usersList.filter(u => u.status === 'verified').length;
 
             const elPending = document.getElementById("statPendingApprovalsCount");
             if (elPending) elPending.textContent = totalPendingApprovals;
@@ -151,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (elRate) elRate.textContent = `${rate}%`;
 
             const elUsers = document.getElementById("statTotalUsers");
-            if (elUsers) elUsers.textContent = totalUsersCount;
+            if (elUsers) elUsers.textContent = totalVerifiedUsers;
 
             renderAdminActiveMatchesTable();
         }
@@ -2395,7 +2396,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 actionBtn = ` <button class="btn btn-primary" style="padding:4px 8px; font-size:0.75rem;" onclick="updateUserStatus('${u.id || u.uid}', 'verified')">Approve</button> <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem; margin-left:4px;" onclick="updateUserStatus('${u.id || u.uid}', 'rejected')">Reject</button> `;
             }
 
-            return ` <tr> <td><strong>${u.name}</strong></td> <td>${u.email}</td> <td>${(u.role || u.accountType || 'user').toUpperCase()} (${u.donorType || u.receiverCategory || 'User'})</td> <td>${u.district || 'Colombo'}</td> <td>${statusBadge}</td> <td> ${actionBtn} </td> </tr> `;
+            return ` <tr> <td><strong>${u.name}</strong></td> <td>${u.email}</td> <td>${(u.role || u.accountType || 'user').toUpperCase()} (${u.donorType || u.receiverCategory || 'User'})</td> <td>${u.district || 'Colombo'}</td> <td>${statusBadge}</td> <td> <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;"> ${actionBtn} <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem; background:#C53030;" onclick="deleteUserPermanently('${u.id || u.uid}')">Delete User</button> </div> </td> </tr> `;
         }).join("");
     }
 
@@ -2410,6 +2411,19 @@ document.addEventListener("DOMContentLoaded", () => {
             updateOverviewStats();
         } catch (err) {
             showToast("Failed to update user status.", "danger");
+        }
+    };
+
+    window.deleteUserPermanently = async (userId) => {
+        if (!confirm("Are you sure you want to permanently delete this user account from GiveGo? This action cannot be undone.")) return;
+        try {
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            await helper.db().collection("users").doc(userId).delete();
+            showToast("User account permanently deleted from database.", "success");
+            updateOverviewStats();
+        } catch (err) {
+            console.error("Delete user error:", err);
+            showToast("Failed to delete user account: " + err.message, "danger");
         }
     };
 
@@ -2524,7 +2538,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     ${docPreviews}
                     <div style="display:flex; gap:10px; margin-top:16px;">
                         <button class="btn btn-primary" style="flex-grow:1; font-size:0.85rem; font-weight:800;" onclick="updateUserStatus('${u.id || u.uid}', 'verified')">Approve Account</button>
-                        <button class="btn btn-danger" style="font-size:0.85rem; font-weight:800;" onclick="updateUserStatus('${u.id || u.uid}', 'rejected')">Reject</button>
+                        <button class="btn btn-danger" style="font-size:0.85rem; font-weight:800;" onclick="deleteUserPermanently('${u.id || u.uid}')">Reject & Delete</button>
                     </div>
                 </div>
             `;
