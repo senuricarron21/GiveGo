@@ -1415,6 +1415,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Receiver Accepts Donor Offer
+    // Receiver Accepts Donor Offer (Physical or Monetary Fund)
     window.acceptDonationOffer = async (matchId) => {
         try {
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
@@ -1422,12 +1423,18 @@ document.addEventListener("DOMContentLoaded", () => {
             const match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId);
             if (!match) return;
 
+            const isMonetary = match.type === 'monetary' || (match.amount && !match.quantity);
+            const nextStatus = isMonetary ? "completed" : "accepted_pending_delivery_method";
+
             await db.collection("matches").doc(matchId).update({
-                status: "accepted_pending_delivery_method",
+                status: nextStatus,
+                evidenceSubmitted: isMonetary ? true : (match.evidenceSubmitted || false),
+                completedAt: isMonetary ? new Date().toISOString() : null,
                 updatedAt: new Date().toISOString()
             });
 
-            // Automatically deduct donated quantity from receiver's requested quantity
+            match.status = nextStatus;
+
             let reqNotice = "";
             if (match.requestId || match.requestName) {
                 let targetReq = requestsList.find(r => r.id === match.requestId || (r.itemName === match.requestName && r.receiverId === match.receiverId));
@@ -1438,60 +1445,96 @@ document.addEventListener("DOMContentLoaded", () => {
                         const reqDocSnap = await db.collection("requests").doc(targetReqId).get();
                         if (reqDocSnap.exists) {
                             const reqData = reqDocSnap.data();
-                            const currentRequired = parseFloat(reqData.quantityRequired || reqData.quantity || 0);
-                            const currentReceived = parseFloat(reqData.quantityReceived || 0);
-                            const donatedQty = parseFloat(match.quantity || 0);
-                            const newRemaining = Math.max(0, currentRequired - donatedQty);
-                            const newReceived = currentReceived + donatedQty;
 
-                            const reqUpdates = {
-                                quantity: newRemaining,
-                                quantityRequired: newRemaining,
-                                quantityReceived: newReceived,
-                                lastDonatedQuantity: donatedQty,
-                                updatedAt: new Date().toISOString()
-                            };
+                            if (isMonetary) {
+                                const currentAmountRequired = parseFloat(reqData.amountRequired || 0);
+                                const currentAmountReceived = parseFloat(reqData.amountReceived || 0);
+                                const donatedAmount = parseFloat(match.amount || 0);
+                                const newAmountRemaining = Math.max(0, currentAmountRequired - donatedAmount);
+                                const newAmountReceived = currentAmountReceived + donatedAmount;
 
-                            if (newRemaining <= 0) {
-                                reqUpdates.status = "fulfilled";
-                                reqUpdates.fulfilledAt = new Date().toISOString();
-                                reqNotice = ` Request "${match.requestName}" is now fully fulfilled (0 remaining)!`;
+                                const reqUpdates = {
+                                    amountRequired: newAmountRemaining,
+                                    amountReceived: newAmountReceived,
+                                    lastDonatedAmount: donatedAmount,
+                                    updatedAt: new Date().toISOString()
+                                };
+
+                                if (newAmountRemaining <= 0) {
+                                    reqUpdates.status = "fulfilled";
+                                    reqUpdates.fulfilledAt = new Date().toISOString();
+                                    reqNotice = ` Request "${match.requestName}" is now 100% funded!`;
+                                } else {
+                                    reqUpdates.partiallyFulfilled = true;
+                                    reqNotice = ` Remaining fund required updated to LKR ${newAmountRemaining.toLocaleString()}.`;
+                                }
+
+                                await db.collection("requests").doc(targetReqId).update(reqUpdates);
+
+                                if (targetReq) {
+                                    targetReq.amountRequired = newAmountRemaining;
+                                    targetReq.amountReceived = newAmountReceived;
+                                    if (newAmountRemaining <= 0) targetReq.status = "fulfilled";
+                                }
                             } else {
-                                reqUpdates.partiallyFulfilled = true;
-                                reqNotice = ` Remaining request updated to ${newRemaining} ${match.unit || 'units'} required.`;
-                            }
+                                const currentRequired = parseFloat(reqData.quantityRequired || reqData.quantity || 0);
+                                const currentReceived = parseFloat(reqData.quantityReceived || 0);
+                                const donatedQty = parseFloat(match.quantity || 0);
+                                const newRemaining = Math.max(0, currentRequired - donatedQty);
+                                const newReceived = currentReceived + donatedQty;
 
-                            await db.collection("requests").doc(targetReqId).update(reqUpdates);
+                                const reqUpdates = {
+                                    quantity: newRemaining,
+                                    quantityRequired: newRemaining,
+                                    quantityReceived: newReceived,
+                                    lastDonatedQuantity: donatedQty,
+                                    updatedAt: new Date().toISOString()
+                                };
 
-                            // Update in-memory requestsList
-                            if (targetReq) {
-                                targetReq.quantity = newRemaining;
-                                targetReq.quantityRequired = newRemaining;
-                                targetReq.quantityReceived = newReceived;
-                                if (newRemaining <= 0) targetReq.status = "fulfilled";
+                                if (newRemaining <= 0) {
+                                    reqUpdates.status = "fulfilled";
+                                    reqUpdates.fulfilledAt = new Date().toISOString();
+                                    reqNotice = ` Request "${match.requestName}" is now fully fulfilled (0 remaining)!`;
+                                } else {
+                                    reqUpdates.partiallyFulfilled = true;
+                                    reqNotice = ` Remaining request updated to ${newRemaining} ${match.unit || 'units'} required.`;
+                                }
+
+                                await db.collection("requests").doc(targetReqId).update(reqUpdates);
+
+                                if (targetReq) {
+                                    targetReq.quantity = newRemaining;
+                                    targetReq.quantityRequired = newRemaining;
+                                    targetReq.quantityReceived = newReceived;
+                                    if (newRemaining <= 0) targetReq.status = "fulfilled";
+                                }
                             }
                         }
                     } catch (reqErr) {
-                        console.error("Error updating request quantity:", reqErr);
+                        console.error("Error updating request amount/quantity:", reqErr);
                     }
                 }
             }
 
+            const notifMsg = isMonetary 
+                ? `💰 Receiver ${currentUser.name} accepted and confirmed receipt of your donation of LKR ${parseFloat(match.amount || 0).toLocaleString()} for "${match.requestName}". Thank you for your support!`
+                : `✅ Receiver ${currentUser.name} accepted your offer of ${match.quantity} ${match.unit || 'units'} for "${match.requestName}". Please open your dashboard to select your Delivery Method.`;
+
             await db.collection("notifications").add({
                 userId: match.donorId,
-                message: `✅ Receiver ${currentUser.name} accepted your offer of ${match.quantity} ${match.unit || 'units'} for "${match.requestName}". Please open your dashboard to select your Delivery Method.`,
+                message: notifMsg,
                 read: false,
                 createdAt: new Date().toISOString()
             });
 
-            showToast(`🎉 Offer accepted!${reqNotice}`, "success");
+            showToast(`🎉 ${isMonetary ? 'Fund receipt confirmed!' : 'Offer accepted!'}${reqNotice}`, "success");
             updateOverviewStats();
             if (typeof renderReceiverRequests === 'function') renderReceiverRequests();
             if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
             if (typeof renderAvailablePhysicalRequests === 'function') renderAvailablePhysicalRequests();
         } catch (err) {
             console.error("acceptDonationOffer error:", err);
-            showToast("Failed to accept offer.", "danger");
+            showToast("Failed to accept donation.", "danger");
         }
     };
 
@@ -2335,9 +2378,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         container.innerHTML = myMatches.map(m => {
             let statusBadge = `<span class="badge badge-warning">${m.status}</span>`;
-            if (m.status === 'confirmed') statusBadge = `<span class="badge badge-success">Confirmed</span>`;
+            if (m.status === 'confirmed' || m.status === 'completed') statusBadge = `<span class="badge badge-success">Completed / Confirmed</span>`;
             else if (m.status === 'rejected') statusBadge = `<span class="badge badge-danger">Declined</span>`;
-            else if (m.status === 'pending_receiver_approval') statusBadge = `<span class="badge badge-warning">Offer Pending Your Approval</span>`;
+            else if (m.status === 'pending_receiver' || m.status === 'pending_receiver_approval') {
+                statusBadge = m.type === 'monetary' 
+                    ? `<span class="badge badge-warning">💰 Awaiting Your Fund Confirmation</span>`
+                    : `<span class="badge badge-warning">🎁 Offer Pending Your Approval</span>`;
+            }
             else if (m.status === 'accepted_pending_delivery_method') statusBadge = `<span class="badge badge-info">Offer Accepted (Waiting for Donor Delivery Selection)</span>`;
             else if (m.status === 'pending_receiver_pickup_schedule') statusBadge = `<span class="badge badge-warning">Pick Up Schedule Required</span>`;
             else if (m.status === 'donor_scheduled_delivery') statusBadge = `<span class="badge badge-info">Donor Scheduled Self Delivery</span>`;
@@ -2348,7 +2395,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (m.type === 'physical') {
                 details = `Quantity: <strong>${m.quantity} ${m.unit || 'units'}</strong>`;
             } else if (m.type === 'monetary') {
-                details = `Amount: <strong>LKR ${m.amount}</strong> | Ref: ${m.referenceNumber} | <a href="${m.receiptUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700;">View Receipt</a>`;
+                details = `Amount: <strong>LKR ${parseFloat(m.amount || 0).toLocaleString()}</strong> | Ref: ${m.referenceNumber || 'N/A'} | ${m.receiptUrl ? `<a href="${m.receiptUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700;">View Receipt</a>` : 'No Receipt'}`;
             }
 
             const isPickUp = isReceiverPickupMethod(m);
@@ -2365,11 +2412,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let actionButtonsHtml = '';
 
-            if (m.status === 'pending_receiver_approval') {
-                actionButtonsHtml += `
-                    <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="acceptDonationOffer('${m.id}')">Accept Offer</button>
-                    <button class="btn btn-danger" style="padding:4px 10px; font-size:0.75rem;" onclick="rejectDonationOffer('${m.id}')">Decline</button>
-                `;
+            if (m.status === 'pending_receiver' || m.status === 'pending_receiver_approval' || m.status === 'pending') {
+                if (m.type === 'monetary' || (m.amount && !m.quantity)) {
+                    actionButtonsHtml += `
+                        <button type="button" class="btn btn-primary" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="acceptDonationOffer('${m.id}')">💰 Confirm & Accept Fund Receipt</button>
+                        <button type="button" class="btn btn-danger" style="padding:6px 12px; font-size:0.8rem; cursor:pointer;" onclick="rejectDonationOffer('${m.id}')">Decline</button>
+                    `;
+                } else {
+                    actionButtonsHtml += `
+                        <button type="button" class="btn btn-primary" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="acceptDonationOffer('${m.id}')">🎁 Accept Donation Offer</button>
+                        <button type="button" class="btn btn-danger" style="padding:6px 12px; font-size:0.8rem; cursor:pointer;" onclick="rejectDonationOffer('${m.id}')">Decline</button>
+                    `;
+                }
             } else if (m.status === 'pending_receiver_pickup_schedule' || m.status === 'accepted_pending_receiver_schedule') {
                 actionButtonsHtml += `
                     <button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openScheduleReceiverPickupModal('${m.id}')">Schedule Pick Up Date & Time</button>
