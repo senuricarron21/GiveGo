@@ -2284,7 +2284,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (m.status === 'in_transit' || m.status === 'delivered' || m.status === 'confirmed') {
                 actionButtonsHtml += `
-                    <button class="btn btn-success" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFFFFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="completeDeliveryHandoverNow('${m.id}')">📦 Mark Received & Complete Order</button>
+                    <button class="btn btn-success" style="padding:6px 14px; font-size:0.8rem; font-weight:800; background:#0D7C7A; color:#FFFFFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="openHandoverEvidenceModal('${m.id}')">📷 Submit Handover Picture & Complete</button>
                 `;
             }
 
@@ -2565,8 +2565,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    window.confirmPhysicalReceipt = (matchId) => {
-        let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId);
+    window.openHandoverEvidenceModal = (matchId) => {
+        let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId || m.requestId === matchId || m.donationId === matchId);
         const targetId = match ? match.id : matchId;
 
         let modal = document.getElementById("modalHandoverEvidence");
@@ -2574,25 +2574,34 @@ document.addEventListener("DOMContentLoaded", () => {
             modal = document.createElement("div");
             modal.className = "modal";
             modal.id = "modalHandoverEvidence";
+            modal.style.zIndex = "999999";
             modal.innerHTML = `
-                <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:540px; width:95%; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.3);">
+                <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:540px; width:92%; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.3);">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--color-border); padding-bottom:10px;">
-                        <h3 id="mdlEvidenceTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin:0;">📷 Handover Evidence & Receipt Confirmation</h3>
+                        <h3 id="mdlEvidenceTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin:0;">📷 Submit Handover Evidence Picture</h3>
                         <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.85rem; font-weight:800; cursor:pointer;" onclick="closeHandoverEvidenceModal()">✕</button>
                     </div>
                     <form id="formSubmitHandoverEvidence">
                         <input type="hidden" id="mdlEvidenceMatchId" value="${targetId}">
-                        <div style="margin-bottom:12px;">
-                            <label style="font-size:0.85rem; font-weight:700;">Handover Notes / Feedback (Optional):</label>
-                            <textarea id="mdlEvidenceNotes" class="input-control" style="width:100%; height:60px;" placeholder="e.g. Items received in excellent condition..."></textarea>
+                        <div class="form-group" style="margin-bottom:12px;">
+                            <label class="form-label" style="font-size:0.85rem; font-weight:700;">Select Picture / Take Photo</label>
+                            <input class="form-control" type="file" id="mdlEvidenceFileInput" accept="image/*" style="margin-bottom:6px;">
+                            <div id="mdlEvidencePreviewBox" style="display:none; text-align:center; margin-top:8px; margin-bottom:8px;">
+                                <img id="mdlEvidencePreviewImg" style="max-height:140px; max-width:100%; border-radius:8px; border:2px solid var(--color-teal-primary); object-fit:contain;" />
+                            </div>
+                            <small style="color:var(--color-text-muted); display:block; margin-top:4px;">Or paste direct image URL below:</small>
+                            <input class="form-control" type="url" id="mdlEvidenceUrl" placeholder="https://example.com/handover.jpg" style="margin-top:4px;">
                         </div>
-                        <div style="margin-bottom:16px;">
-                            <label style="font-size:0.85rem; font-weight:700;">Evidence Photo URL (Optional):</label>
-                            <input type="text" id="mdlEvidenceUrl" class="input-control" placeholder="https://example.com/photo.jpg">
+                        <div class="form-group" style="margin-bottom:14px;">
+                            <label class="form-label" style="font-size:0.85rem; font-weight:700;">Handover Notes (Optional)</label>
+                            <textarea class="form-control" id="mdlEvidenceNotes" rows="2" placeholder="e.g. Items received in excellent condition."></textarea>
                         </div>
-                        <div style="display:flex; gap:10px; justify-content:flex-end;">
-                            <button type="button" class="btn btn-secondary" onclick="confirmReceiptWithoutPhoto(document.getElementById('mdlEvidenceMatchId').value)">⚡ Complete Without Photo</button>
-                            <button type="submit" class="btn btn-primary">✅ Submit & Confirm Receipt</button>
+                        <div style="background:#E6F4F1; padding:10px 14px; border-radius:6px; font-size:0.8rem; color:var(--color-teal-primary); font-weight:700; margin-bottom:16px;">
+                            🛡️ Evidence Photo: Your photo is recorded and sent to the Admin verification portal.
+                        </div>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;">
+                            <button type="button" class="btn btn-secondary" style="padding:8px 14px; font-size:0.85rem; font-weight:700;" onclick="confirmReceiptWithoutPhoto(document.getElementById('mdlEvidenceMatchId').value)">⚡ Skip Photo & Complete</button>
+                            <button type="submit" class="btn btn-primary" style="padding:8px 16px; font-size:0.85rem; font-weight:800; background:#0D7C7A; color:#FFF;">✅ Submit Picture & Complete Order</button>
                         </div>
                     </form>
                 </div>
@@ -2604,7 +2613,28 @@ document.addEventListener("DOMContentLoaded", () => {
         if (matchIdInput) matchIdInput.value = targetId;
 
         const modalTitle = document.getElementById("mdlEvidenceTitle");
-        if (modalTitle) modalTitle.textContent = `📷 Handover Evidence: ${match ? (match.requestName || match.itemName || 'Donation Item') : 'Item'}`;
+        if (modalTitle) modalTitle.textContent = `📷 Handover Picture: ${match ? (match.requestName || match.itemName || 'Donation Item') : 'Item'}`;
+
+        // Bind image file selection to live preview
+        const fileInput = document.getElementById("mdlEvidenceFileInput");
+        if (fileInput) {
+            fileInput.onchange = (evt) => {
+                const file = evt.target.files && evt.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        window._selectedEvidenceBase64 = e.target.result;
+                        const previewBox = document.getElementById("mdlEvidencePreviewBox");
+                        const previewImg = document.getElementById("mdlEvidencePreviewImg");
+                        if (previewBox && previewImg) {
+                            previewImg.src = e.target.result;
+                            previewBox.style.display = "block";
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+        }
 
         modal.style.setProperty("display", "flex", "important");
         modal.style.setProperty("visibility", "visible", "important");
@@ -2612,6 +2642,8 @@ document.addEventListener("DOMContentLoaded", () => {
         modal.style.setProperty("z-index", "999999", "important");
         modal.classList.add("active");
     };
+
+    window.confirmPhysicalReceipt = window.openHandoverEvidenceModal;
 
     window.confirmReceiptWithoutPhoto = async (matchId) => {
         try {
@@ -2685,11 +2717,12 @@ document.addEventListener("DOMContentLoaded", () => {
             const db = helper.db();
 
             let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId || m.id === targetDocId);
-            let evidenceUrl = urlInput || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=600&q=80';
+            let evidenceUrl = window._selectedEvidenceBase64 || urlInput || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=600&q=80';
 
             if (match) {
                 match.status = "completed";
                 match.deliveryStatus = "delivered_and_confirmed";
+                match.handoverEvidenceUrl = evidenceUrl;
                 match.completedAt = new Date().toISOString();
             }
 
@@ -2722,7 +2755,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 } catch(e) {}
             }
 
-            showToast("🎉 Handover receipt confirmed & evidence submitted!", "success");
+            showToast("🎉 Handover photo submitted! Order completed successfully.", "success");
             closeHandoverEvidenceModal();
 
             if (typeof updateOverviewStats === 'function') updateOverviewStats();
