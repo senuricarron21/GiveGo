@@ -1256,7 +1256,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } else if (reqType === 'monetary') {
                 actionBtn = `<button class="btn btn-primary" style="width:100%; font-size:0.85rem;" onclick="openMonetaryModal('${r.id}')">Make Monetary Transfer</button>`;
             } else if (reqType === 'volunteer') {
-                actionBtn = `<button class="btn btn-primary" style="width:100%; font-size:0.85rem;" onclick="openVolunteerModal('${r.id}')">Volunteer for Shift</button>`;
+                actionBtn = `<button type="button" class="btn btn-primary" data-action="volunteer-shift" data-request-id="${r.id}" style="width:100%; font-size:0.85rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="openVolunteerModal('${r.id}')">🤝 Join Volunteer Shift</button>`;
             }
 
             return `
@@ -2137,6 +2137,173 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+
+    window.openVolunteerModal = (requestId) => {
+        const req = requestsList.find(r => r.id === requestId);
+        if (!req) return;
+
+        let modal = document.getElementById("modalVolunteerSignup");
+        if (modal && modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
+        }
+
+        const reqIdEl = document.getElementById("mdlVolunteerRequestId");
+        if (reqIdEl) reqIdEl.value = req.id;
+
+        const titleEl = document.getElementById("mdlVolunteerTitle");
+        if (titleEl) titleEl.textContent = `🤝 Join Volunteer Shift: ${req.itemName}`;
+
+        const orgInfoEl = document.getElementById("mdlVolunteerOrgInfo");
+        if (orgInfoEl) orgInfoEl.innerHTML = `🏢 <strong>Organizer / Receiver:</strong> ${req.receiverName} (${req.receiverCategory || 'Organisation'})`;
+
+        const shiftInfoEl = document.getElementById("mdlVolunteerShiftInfo");
+        if (shiftInfoEl) {
+            const shiftTime = req.volDateTime ? ` | 🕒 Time: ${new Date(req.volDateTime).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}` : '';
+            const location = req.volLocation || req.district || 'Colombo';
+            const reqVol = req.volunteersRequired || 1;
+            const assignedVol = req.volunteersAssigned || 0;
+            shiftInfoEl.innerHTML = `📍 <strong>Location:</strong> ${location}${shiftTime}<br>👥 <strong>Volunteers Needed:</strong> ${reqVol} (${assignedVol} filled so far)`;
+        }
+
+        const equipInfoEl = document.getElementById("mdlVolunteerEquipmentInfo");
+        if (equipInfoEl) {
+            equipInfoEl.innerHTML = `🧰 <strong>Equipment & Skills:</strong> ${req.equipmentNeeded || req.skillsRequired || 'Standard non-clinical support'}`;
+        }
+
+        const nameInput = document.getElementById("mdlVolunteerName");
+        if (nameInput) nameInput.value = (currentUser && currentUser.name) ? currentUser.name : '';
+
+        const phoneInput = document.getElementById("mdlVolunteerPhone");
+        if (phoneInput) phoneInput.value = (currentUser && (currentUser.phone || currentUser.contactNumber)) ? (currentUser.phone || currentUser.contactNumber) : '';
+
+        const countInput = document.getElementById("mdlVolunteerCount");
+        if (countInput) {
+            const remainingNeeded = Math.max(1, (parseInt(req.volunteersRequired) || 5) - (parseInt(req.volunteersAssigned) || 0));
+            countInput.max = remainingNeeded;
+            countInput.value = 1;
+        }
+
+        if (modal) {
+            modal.style.setProperty("display", "flex", "important");
+            modal.style.setProperty("visibility", "visible", "important");
+            modal.style.setProperty("opacity", "1", "important");
+            modal.style.setProperty("z-index", "99999999", "important");
+            modal.classList.add("active");
+        }
+    };
+
+    window.closeVolunteerModal = () => {
+        const modal = document.getElementById("modalVolunteerSignup");
+        if (modal) {
+            modal.classList.remove("active");
+            modal.style.setProperty("display", "none", "important");
+            modal.style.setProperty("visibility", "hidden", "important");
+            modal.style.setProperty("opacity", "0", "important");
+        }
+    };
+
+    window.submitVolunteerShiftDirectly = async () => {
+        const reqId = document.getElementById("mdlVolunteerRequestId")?.value;
+        const req = requestsList.find(r => r.id === reqId);
+        if (!req) {
+            showToast("Request shift not found.", "warning");
+            return;
+        }
+
+        const volName = document.getElementById("mdlVolunteerName")?.value.trim();
+        const volPhone = document.getElementById("mdlVolunteerPhone")?.value.trim();
+        const volCount = parseInt(document.getElementById("mdlVolunteerCount")?.value) || 1;
+        const notes = document.getElementById("mdlVolunteerNotes")?.value.trim() || "";
+        const btnSubmit = document.getElementById("btnSubmitVolunteerReg");
+
+        if (!volName || !volPhone) {
+            showToast("Please provide your name and contact phone number.", "warning");
+            return;
+        }
+
+        try {
+            if (btnSubmit) {
+                btnSubmit.disabled = true;
+                btnSubmit.textContent = "Registering...";
+            }
+            showToast("Registering for volunteer shift...", "info");
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            const db = helper.db();
+
+            const matchDoc = {
+                requestId: req.id,
+                requestName: req.itemName,
+                receiverId: req.receiverId,
+                receiverName: req.receiverName,
+                donorId: currentUser.uid,
+                donorName: currentUser.name,
+                donorEmail: currentUser.email || "",
+                volunteerName: volName,
+                volunteerPhone: volPhone,
+                volunteerCount: volCount,
+                type: "volunteer",
+                category: req.category || "Volunteer",
+                status: "confirmed",
+                notes: notes,
+                confirmedAt: new Date().toISOString(),
+                createdAt: new Date().toISOString()
+            };
+
+            await db.collection("matches").add(matchDoc);
+
+            // Increment volunteersAssigned on request
+            const currentAssigned = parseInt(req.volunteersAssigned) || 0;
+            const targetRequired = parseInt(req.volunteersRequired) || 1;
+            const newAssigned = currentAssigned + volCount;
+
+            const reqUpdates = {
+                volunteersAssigned: newAssigned,
+                updatedAt: new Date().toISOString()
+            };
+
+            if (newAssigned >= targetRequired) {
+                reqUpdates.status = "fulfilled";
+                reqUpdates.fulfilledAt = new Date().toISOString();
+            }
+
+            await db.collection("requests").doc(req.id).update(reqUpdates);
+
+            req.volunteersAssigned = newAssigned;
+            if (newAssigned >= targetRequired) req.status = "fulfilled";
+
+            await db.collection("notifications").add({
+                userId: req.receiverId,
+                message: `🤝 Volunteer ${currentUser.name} (${volName}, Phone: ${volPhone}) registered ${volCount} volunteer(s) for your shift "${req.itemName}".`,
+                read: false,
+                createdAt: new Date().toISOString()
+            });
+
+            showToast(`🎉 Registration confirmed! You registered ${volCount} volunteer(s) for "${req.itemName}".`, "success");
+            closeVolunteerModal();
+            updateOverviewStats();
+            if (typeof renderDonorNeeds === 'function') renderDonorNeeds();
+            if (typeof renderDonorMatches === 'function') renderDonorMatches();
+        } catch (err) {
+            console.error("Volunteer registration error:", err);
+            showToast("Failed to register for volunteer shift.", "danger");
+        } finally {
+            if (btnSubmit) {
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = "🤝 Confirm Shift Registration";
+            }
+        }
+    };
+
+    // Delegated click handler for volunteer-shift
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-action="volunteer-shift"]');
+        if (btn) {
+            const reqId = btn.getAttribute('data-request-id');
+            if (reqId && typeof window.openVolunteerModal === 'function') {
+                window.openVolunteerModal(reqId);
+            }
+        }
+    });
 
     function renderAdminUsers() {
         const body = document.getElementById("adminUsersBody");

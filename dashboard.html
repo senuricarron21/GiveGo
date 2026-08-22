@@ -6,8 +6,8 @@
     <title>Dashboard | GiveGo</title>
     
     <!-- CSS styles -->
-    <link rel="stylesheet" href="css/styles.css?v=25.0">
-    <link rel="stylesheet" href="css/dashboard.css?v=25.0">
+    <link rel="stylesheet" href="css/styles.css?v=26.0">
+    <link rel="stylesheet" href="css/dashboard.css?v=26.0">
     
     <!-- Leaflet.js CSS for Real Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
@@ -886,6 +886,44 @@
         </div>
     </div>
 
+    <!-- Modal: Donor Volunteer Shift Sign Up -->
+    <div class="modal" id="modalVolunteerSignup" style="z-index:99999999;">
+        <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:560px; width:92%; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.3);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid var(--color-border); padding-bottom:10px;">
+                <h3 id="mdlVolunteerTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.15rem; margin:0;">🤝 Sign Up for Volunteer Shift</h3>
+                <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.85rem; font-weight:800; cursor:pointer;" onclick="closeVolunteerModal()">✕</button>
+            </div>
+            <form id="formSubmitVolunteerSignup" onsubmit="event.preventDefault(); submitVolunteerShiftDirectly();">
+                <input type="hidden" id="mdlVolunteerRequestId">
+                <div id="mdlVolunteerDetailsBox" style="background:#F0FDF4; border:1px solid #86EFAC; border-radius:8px; padding:12px; margin-bottom:14px; font-size:0.85rem; color:#14532D;">
+                    <div id="mdlVolunteerOrgInfo" style="font-weight:700; margin-bottom:4px;"></div>
+                    <div id="mdlVolunteerShiftInfo" style="margin-bottom:4px;"></div>
+                    <div id="mdlVolunteerEquipmentInfo"></div>
+                </div>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label class="form-label" style="font-weight:700; font-size:0.85rem;">Your Full Name <span style="color:#E53E3E;">*</span></label>
+                    <input type="text" class="form-control" id="mdlVolunteerName" required placeholder="e.g. John Doe">
+                </div>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label class="form-label" style="font-weight:700; font-size:0.85rem;">Contact Phone Number <span style="color:#E53E3E;">*</span></label>
+                    <input type="tel" class="form-control" id="mdlVolunteerPhone" required placeholder="e.g. +94 77 123 4567">
+                </div>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label class="form-label" style="font-weight:700; font-size:0.85rem;">Number of Volunteers Joining <span style="color:#E53E3E;">*</span></label>
+                    <input type="number" class="form-control" id="mdlVolunteerCount" min="1" max="50" value="1" required>
+                </div>
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label class="form-label" style="font-weight:700; font-size:0.85rem;">Skills / Notes (Optional)</label>
+                    <textarea class="form-control" id="mdlVolunteerNotes" rows="2" placeholder="e.g. First Aid certified, available entire morning."></textarea>
+                </div>
+                <div style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" class="btn btn-secondary" style="padding:8px 16px; font-weight:700; cursor:pointer;" onclick="closeVolunteerModal()">✕ Cancel</button>
+                    <button type="submit" id="btnSubmitVolunteerReg" class="btn btn-primary" style="padding:8px 20px; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 3px 10px rgba(13,124,122,0.3);">🤝 Confirm Shift Registration</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal: Real-Time Live Location Tracker Map -->
     <div class="modal" id="modalLiveLocationTracker">
         <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:680px; width:95%;">
@@ -950,8 +988,8 @@
 
     <!-- Core Javascript Files -->
     <script src="js/firebase-config.js"></script>
-    <script src="js/auth.js?v=25.0"></script>
-    <script src="js/app.js?v=25.0"></script>
+    <script src="js/auth.js?v=26.0"></script>
+    <script src="js/app.js?v=26.0"></script>
     
     <script>
         document.getElementById("btnLogout").addEventListener("click", () => {
