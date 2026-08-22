@@ -1418,23 +1418,79 @@ document.addEventListener("DOMContentLoaded", () => {
     window.acceptDonationOffer = async (matchId) => {
         try {
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-            const match = matchesList.find(m => m.id === matchId);
+            const db = helper.db();
+            const match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId);
             if (!match) return;
 
-            await helper.db().collection("matches").doc(matchId).update({
-                status: "accepted_pending_delivery_method"
+            await db.collection("matches").doc(matchId).update({
+                status: "accepted_pending_delivery_method",
+                updatedAt: new Date().toISOString()
             });
 
-            await helper.db().collection("notifications").add({
+            // Automatically deduct donated quantity from receiver's requested quantity
+            let reqNotice = "";
+            if (match.requestId || match.requestName) {
+                let targetReq = requestsList.find(r => r.id === match.requestId || (r.itemName === match.requestName && r.receiverId === match.receiverId));
+                let targetReqId = targetReq ? targetReq.id : match.requestId;
+
+                if (targetReqId) {
+                    try {
+                        const reqDocSnap = await db.collection("requests").doc(targetReqId).get();
+                        if (reqDocSnap.exists) {
+                            const reqData = reqDocSnap.data();
+                            const currentRequired = parseFloat(reqData.quantityRequired || reqData.quantity || 0);
+                            const currentReceived = parseFloat(reqData.quantityReceived || 0);
+                            const donatedQty = parseFloat(match.quantity || 0);
+                            const newRemaining = Math.max(0, currentRequired - donatedQty);
+                            const newReceived = currentReceived + donatedQty;
+
+                            const reqUpdates = {
+                                quantity: newRemaining,
+                                quantityRequired: newRemaining,
+                                quantityReceived: newReceived,
+                                lastDonatedQuantity: donatedQty,
+                                updatedAt: new Date().toISOString()
+                            };
+
+                            if (newRemaining <= 0) {
+                                reqUpdates.status = "fulfilled";
+                                reqUpdates.fulfilledAt = new Date().toISOString();
+                                reqNotice = ` Request "${match.requestName}" is now fully fulfilled (0 remaining)!`;
+                            } else {
+                                reqUpdates.partiallyFulfilled = true;
+                                reqNotice = ` Remaining request updated to ${newRemaining} ${match.unit || 'units'} required.`;
+                            }
+
+                            await db.collection("requests").doc(targetReqId).update(reqUpdates);
+
+                            // Update in-memory requestsList
+                            if (targetReq) {
+                                targetReq.quantity = newRemaining;
+                                targetReq.quantityRequired = newRemaining;
+                                targetReq.quantityReceived = newReceived;
+                                if (newRemaining <= 0) targetReq.status = "fulfilled";
+                            }
+                        }
+                    } catch (reqErr) {
+                        console.error("Error updating request quantity:", reqErr);
+                    }
+                }
+            }
+
+            await db.collection("notifications").add({
                 userId: match.donorId,
-                message: `✅ Receiver ${currentUser.name} accepted your offer for "${match.requestName}". Please open your dashboard to select your Delivery Method.`,
+                message: `✅ Receiver ${currentUser.name} accepted your offer of ${match.quantity} ${match.unit || 'units'} for "${match.requestName}". Please open your dashboard to select your Delivery Method.`,
                 read: false,
                 createdAt: new Date().toISOString()
             });
 
-            showToast("Offer accepted! Notification sent to donor to select delivery method.", "success");
+            showToast(`🎉 Offer accepted!${reqNotice}`, "success");
             updateOverviewStats();
+            if (typeof renderReceiverRequests === 'function') renderReceiverRequests();
+            if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
+            if (typeof renderAvailablePhysicalRequests === 'function') renderAvailablePhysicalRequests();
         } catch (err) {
+            console.error("acceptDonationOffer error:", err);
             showToast("Failed to accept offer.", "danger");
         }
     };
@@ -1707,23 +1763,66 @@ document.addEventListener("DOMContentLoaded", () => {
     window.acceptReceiverItemRequest = async (matchId) => {
         try {
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-            const match = matchesList.find(m => m.id === matchId);
+            const db = helper.db();
+            const match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId);
             if (!match) return;
 
-            await helper.db().collection("matches").doc(matchId).update({
-                status: "accepted_pending_receiver_schedule"
+            await db.collection("matches").doc(matchId).update({
+                status: "accepted_pending_receiver_schedule",
+                updatedAt: new Date().toISOString()
             });
 
-            await helper.db().collection("notifications").add({
+            // Automatically deduct requested quantity from donor's available item inventory
+            let itemNotice = "";
+            if (match.donationId) {
+                try {
+                    const donDocSnap = await db.collection("donations").doc(match.donationId).get();
+                    if (donDocSnap.exists) {
+                        const donData = donDocSnap.data();
+                        const currentAvailable = parseFloat(donData.quantity || 0);
+                        const reqQty = parseFloat(match.quantity || 0);
+                        const newRemaining = Math.max(0, currentAvailable - reqQty);
+
+                        const donUpdates = {
+                            quantity: newRemaining,
+                            updatedAt: new Date().toISOString()
+                        };
+
+                        if (newRemaining <= 0) {
+                            donUpdates.status = "claimed";
+                            itemNotice = ` Item "${match.requestName}" is now fully claimed (0 available).`;
+                        } else {
+                            itemNotice = ` Item stock updated to ${newRemaining} ${match.unit || 'units'} remaining.`;
+                        }
+
+                        await db.collection("donations").doc(match.donationId).update(donUpdates);
+
+                        // Update in-memory donationsList
+                        const localDon = donationsList.find(d => d.id === match.donationId);
+                        if (localDon) {
+                            localDon.quantity = newRemaining;
+                            if (newRemaining <= 0) localDon.status = "claimed";
+                        }
+                    }
+                } catch (donErr) {
+                    console.error("Error updating donation quantity:", donErr);
+                }
+            }
+
+            await db.collection("notifications").add({
                 userId: match.receiverId,
-                message: `✅ Donor ${currentUser.name} accepted your request for "${match.requestName}"! Please open your dashboard to schedule your Self Pick Up Date & Time.`,
+                message: `✅ Donor ${currentUser.name} accepted your request for ${match.quantity} ${match.unit || 'units'} of "${match.requestName}"! Please open your dashboard to schedule your Self Pick Up Date & Time.`,
                 read: false,
                 createdAt: new Date().toISOString()
             });
 
-            showToast("Request accepted! Receiver notified to schedule pick-up date & time.", "success");
+            showToast(`🎉 Request accepted!${itemNotice}`, "success");
             updateOverviewStats();
+            if (typeof renderDonorListings === 'function') renderDonorListings();
+            if (typeof renderDonorMatches === 'function') renderDonorMatches();
+            if (typeof renderAvailableMaterialDonations === 'function') renderAvailableMaterialDonations();
         } catch (err) {
+            console.error("acceptReceiverItemRequest error:", err);
             showToast("Failed to accept request.", "danger");
         }
     };
