@@ -2303,8 +2303,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (m.status === 'in_transit' || m.status === 'delivered' || m.status === 'confirmed') {
                 actionButtonsHtml += `
-                    <button class="btn btn-success" data-action="mark-received" data-match-id="${m.id}" style="padding:6px 14px; font-size:0.82rem; font-weight:800; background:#0D7C7A; color:#FFFFFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="markItemsAsReceivedNow('${m.id}')">✅ I Received the Items</button>
-                    <button class="btn btn-secondary" style="padding:6px 12px; font-size:0.78rem; font-weight:700; cursor:pointer;" onclick="openHandoverEvidenceModal('${m.id}')">📷 Attach Photo Evidence</button>
+                    <button class="btn btn-success" style="padding:7px 18px; font-size:0.82rem; font-weight:800; background:#0D7C7A; color:#FFFFFF; border:none; border-radius:6px; cursor:pointer; box-shadow:0 2px 8px rgba(13,124,122,0.3);" onclick="openHandoverEvidenceModal('${m.id}')">📦 I Received the Items</button>
                 `;
             }
 
@@ -2758,14 +2757,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!matchId) return;
 
+        const evidenceUrl = window._selectedEvidenceBase64 || urlInput;
+
+        // ENFORCE MANDATORY EVIDENCE PICTURE
+        if (!evidenceUrl) {
+            showToast("⚠️ Image Evidence Required: Please select a photo or paste an image URL to confirm receipt.", "warning");
+            return;
+        }
+
         try {
-            showToast("⏳ Submitting picture evidence...", "info");
+            showToast("⏳ Submitting picture evidence & completing order...", "info");
             const targetDocId = await resolveFirestoreMatchDocId(matchId);
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
             const db = helper.db();
 
             let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId || m.id === targetDocId);
-            let evidenceUrl = window._selectedEvidenceBase64 || urlInput || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=600&q=80';
 
             if (match) {
                 match.status = "completed";
