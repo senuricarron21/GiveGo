@@ -2574,6 +2574,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let liveTrackerSimulationInterval = null;
 
+    const SRI_LANKA_DISTRICT_COORDS = {
+        'colombo': { lat: 6.9271, lng: 79.8612 },
+        'gampaha': { lat: 7.0840, lng: 79.9925 },
+        'kalutara': { lat: 6.5854, lng: 79.9607 },
+        'kandy': { lat: 7.2906, lng: 80.6337 },
+        'matale': { lat: 7.4675, lng: 80.6234 },
+        'nuwara eliya': { lat: 6.9497, lng: 80.7891 },
+        'galle': { lat: 6.0535, lng: 80.2210 },
+        'matara': { lat: 5.9549, lng: 80.5550 },
+        'hambantota': { lat: 6.1429, lng: 81.1212 },
+        'jaffna': { lat: 9.6615, lng: 80.0255 },
+        'kilinochchi': { lat: 9.3803, lng: 80.3770 },
+        'mannar': { lat: 8.9810, lng: 79.9044 },
+        'vavuniya': { lat: 8.7542, lng: 80.4982 },
+        'mullaitivu': { lat: 9.2671, lng: 80.8142 },
+        'batticaloa': { lat: 7.7310, lng: 81.6747 },
+        'ampara': { lat: 7.2974, lng: 81.6747 },
+        'trincomalee': { lat: 8.5874, lng: 81.2152 },
+        'kurunegala': { lat: 7.4863, lng: 80.3647 },
+        'puttalam': { lat: 8.0362, lng: 79.8283 },
+        'anuradhapura': { lat: 8.3114, lng: 80.4037 },
+        'polonnaruwa': { lat: 7.9403, lng: 81.0188 },
+        'badulla': { lat: 6.9934, lng: 81.0550 },
+        'moneragala': { lat: 6.8717, lng: 81.3487 },
+        'ratnapura': { lat: 6.6828, lng: 80.4017 },
+        'kegalle': { lat: 7.2513, lng: 80.3464 }
+    };
+
     window.openLiveTrackingMapModal = (matchId) => {
         let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId);
         
@@ -2601,7 +2629,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         <h3 id="mdlTrackerTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin:0;">📍 Live Location Tracker</h3>
                         <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.85rem; font-weight:800; cursor:pointer;" onclick="stopLiveLocationTrackerModal()">✕</button>
                     </div>
-                    <div id="liveTrackerMapContainer" style="height:380px; width:100%; border-radius:8px; border:1px solid var(--color-border); margin-bottom:12px; background:#F5EFE0;"></div>
+                    <div id="liveTrackerMapContainer" style="height:380px; width:100%; border-radius:8px; border:1px solid var(--color-border); margin-bottom:12px; background:#F5EFE0; position:relative; overflow:hidden;"></div>
                     <div id="trackerStatusDetails" style="font-size:0.85rem; font-weight:700; color:var(--color-teal-primary); text-align:center;">
                         📡 Connecting to real-time GPS location stream...
                     </div>
@@ -2635,7 +2663,10 @@ document.addEventListener("DOMContentLoaded", () => {
             donorLng = parseFloat(match.donorLocation.lng);
         } else {
             const donorUser = usersList.find(u => u.uid === match.donorId || u.name === match.donorName);
-            if (donorUser && donorUser.location && donorUser.location.lat && donorUser.location.lng) {
+            if (donorUser && donorUser.district && SRI_LANKA_DISTRICT_COORDS[donorUser.district.toLowerCase()]) {
+                donorLat = SRI_LANKA_DISTRICT_COORDS[donorUser.district.toLowerCase()].lat;
+                donorLng = SRI_LANKA_DISTRICT_COORDS[donorUser.district.toLowerCase()].lng;
+            } else if (donorUser && donorUser.location && donorUser.location.lat && donorUser.location.lng) {
                 donorLat = parseFloat(donorUser.location.lat);
                 donorLng = parseFloat(donorUser.location.lng);
             }
@@ -2645,8 +2676,11 @@ document.addEventListener("DOMContentLoaded", () => {
             const container = document.getElementById("liveTrackerMapContainer");
             if (!container) return;
 
-            container.style.height = "380px";
-            container.style.width = "100%";
+            // Reset container to avoid Leaflet container re-init errors
+            if (container._leaflet_id) {
+                container._leaflet_id = null;
+            }
+            container.innerHTML = `<div id="liveMapInner" style="width:100%; height:380px;"></div>`;
 
             if (typeof L === 'undefined') {
                 container.innerHTML = `<iframe width="100%" height="380" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://maps.google.com/maps?q=${donorLat},${donorLng}&z=14&output=embed"></iframe>`;
@@ -2657,17 +2691,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
             try {
                 if (liveTrackerMap) {
-                    liveTrackerMap.remove();
+                    try { liveTrackerMap.remove(); } catch (e) {}
                     liveTrackerMap = null;
                 }
 
-                liveTrackerMap = L.map('liveTrackerMapContainer').setView([donorLat, donorLng], 14);
+                liveTrackerMap = L.map('liveMapInner').setView([donorLat, donorLng], 14);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; OpenStreetMap contributors'
                 }).addTo(liveTrackerMap);
 
-                setTimeout(() => { if (liveTrackerMap) liveTrackerMap.invalidateSize(); }, 100);
-                setTimeout(() => { if (liveTrackerMap) liveTrackerMap.invalidateSize(); }, 350);
+                setTimeout(() => { if (liveTrackerMap) liveTrackerMap.invalidateSize(); }, 50);
+                setTimeout(() => { if (liveTrackerMap) liveTrackerMap.invalidateSize(); }, 250);
+                setTimeout(() => { if (liveTrackerMap) liveTrackerMap.invalidateSize(); }, 500);
 
                 const customMarkerHtml = `<div style="background:var(--color-teal-primary); color:#FFFFFF; padding:6px 12px; border-radius:20px; font-weight:800; font-size:0.85rem; box-shadow:0 4px 12px rgba(13,124,122,0.4); display:flex; align-items:center; gap:6px; border:2px solid #FFFFFF;">🚚 ${partnerName}</div>`;
                 const vehicleIcon = L.divIcon({
@@ -2687,49 +2722,48 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         renderMap();
-        setTimeout(renderMap, 200);
 
-            const statusDiv = document.getElementById("trackerStatusDetails");
-            if (statusDiv) {
-                statusDiv.innerHTML = `🟢 <strong>Live Telemetry Radar Active</strong> — Donor: ${partnerName} | Coordinates: ${donorLat.toFixed(4)}, ${donorLng.toFixed(4)}`;
-            }
+        const statusDiv = document.getElementById("trackerStatusDetails");
+        if (statusDiv) {
+            statusDiv.innerHTML = `🟢 <strong>Live Telemetry Radar Active</strong> — Donor: ${partnerName} | Coordinates: ${donorLat.toFixed(4)}, ${donorLng.toFixed(4)}`;
+        }
 
-            // Real-time Firebase Listener
-            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-            if (trackerUnsubscribe) trackerUnsubscribe();
+        // Real-time Firebase Listener
+        const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+        if (trackerUnsubscribe) trackerUnsubscribe();
 
-            if (helper && helper.db) {
-                trackerUnsubscribe = helper.db().collection("matches").doc(matchId).onSnapshot((doc) => {
-                    const data = doc.data();
-                    if (data && data.liveLocation && data.liveLocation.lat && data.liveLocation.lng) {
-                        const { lat, lng, sharingBy, updatedAt } = data.liveLocation;
-                        const newLatLng = [parseFloat(lat), parseFloat(lng)];
-                        if (liveTrackerMarker) liveTrackerMarker.setLatLng(newLatLng);
-                        if (liveTrackerMap) {
-                            liveTrackerMap.panTo(newLatLng);
-                            liveTrackerMap.invalidateSize();
-                        }
-                        if (statusDiv) {
-                            statusDiv.innerHTML = `🟢 <strong>Live Location Stream Active</strong> — ${sharingBy || partnerName} | Updated: ${new Date(updatedAt || Date.now()).toLocaleTimeString()}`;
-                        }
+        if (helper && helper.db) {
+            trackerUnsubscribe = helper.db().collection("matches").doc(matchId).onSnapshot((doc) => {
+                const data = doc.data();
+                if (data && data.liveLocation && data.liveLocation.lat && data.liveLocation.lng) {
+                    const { lat, lng, sharingBy, updatedAt } = data.liveLocation;
+                    const newLatLng = [parseFloat(lat), parseFloat(lng)];
+                    if (liveTrackerMarker) liveTrackerMarker.setLatLng(newLatLng);
+                    if (liveTrackerMap) {
+                        liveTrackerMap.panTo(newLatLng);
+                        liveTrackerMap.invalidateSize();
                     }
-                });
-            }
-
-            // Live telemetry simulation loop to animate GPS movement towards destination
-            if (liveTrackerSimulationInterval) clearInterval(liveTrackerSimulationInterval);
-            let simStep = 0;
-            liveTrackerSimulationInterval = setInterval(() => {
-                simStep++;
-                const simLat = donorLat + (Math.sin(simStep * 0.25) * 0.0012);
-                const simLng = donorLng + (Math.cos(simStep * 0.25) * 0.0012);
-                if (liveTrackerMarker && (!match.liveLocation || !match.liveLocation.lat)) {
-                    liveTrackerMarker.setLatLng([simLat, simLng]);
                     if (statusDiv) {
-                        statusDiv.innerHTML = `📡 <strong>Live GPS Telemetry (Radar Stream)</strong> — ${partnerName} moving in transit (${simLat.toFixed(4)}, ${simLng.toFixed(4)})`;
+                        statusDiv.innerHTML = `🟢 <strong>Live Location Stream Active</strong> — ${sharingBy || partnerName} | Updated: ${new Date(updatedAt || Date.now()).toLocaleTimeString()}`;
                     }
                 }
-            }, 2500);
+            });
+        }
+
+        // Live telemetry simulation loop to animate GPS movement towards destination
+        if (liveTrackerSimulationInterval) clearInterval(liveTrackerSimulationInterval);
+        let simStep = 0;
+        liveTrackerSimulationInterval = setInterval(() => {
+            simStep++;
+            const simLat = donorLat + (Math.sin(simStep * 0.25) * 0.0012);
+            const simLng = donorLng + (Math.cos(simStep * 0.25) * 0.0012);
+            if (liveTrackerMarker && (!match.liveLocation || !match.liveLocation.lat)) {
+                liveTrackerMarker.setLatLng([simLat, simLng]);
+                if (statusDiv) {
+                    statusDiv.innerHTML = `📡 <strong>Live GPS Telemetry (Radar Stream)</strong> — ${partnerName} moving in transit (${simLat.toFixed(4)}, ${simLng.toFixed(4)})`;
+                }
+            }
+        }, 2500);
 
     };
 
