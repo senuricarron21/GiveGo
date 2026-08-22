@@ -219,6 +219,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     postalCode,
                     categories,
                     receiverCategory,
+                    individualDetails,
                     orgDetails,
                     receiverDetails
                 } = payload;
@@ -276,7 +277,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 const result = await auth.createUserWithEmailAndPassword(email, password);
                 const authUser = result.user;
                 
-                const regNum = (orgDetails && orgDetails.registrationNumber) || (receiverDetails && receiverDetails.registrationNumber) || "";
+                const nicNumber = (individualDetails && individualDetails.nicNumber) || payload.nicNumber || "";
+                const nicDocUrl = (individualDetails && individualDetails.nicDocUrl) || payload.nicDocUrl || "";
+                const regNum = nicNumber || (orgDetails && orgDetails.registrationNumber) || (receiverDetails && receiverDetails.registrationNumber) || "";
 
                 const userDocData = {
                     uid: authUser.uid,
@@ -286,6 +289,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     donorType,
                     accountType,
                     registrationNumber: regNum,
+                    nicNumber: nicNumber,
+                    nicDocUrl: nicDocUrl,
+                    individualDetails: individualDetails || null,
                     phone,
                     district: district || "Colombo",
                     address: address || "",
@@ -404,6 +410,35 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
+            let individualDetails = null;
+            if (accountType === 'donor_individual') {
+                const nicNumber = document.getElementById("regNicNumber")?.value.trim() || "";
+                let nicDoc = document.getElementById("regNicDocUrl")?.value || "";
+
+                const nicInput = document.getElementById("nicUploadInput");
+                if (!nicDoc && nicInput && nicInput.files && nicInput.files[0]) {
+                    showToast("Attaching NIC document...", "info");
+                    nicDoc = await readFileAsDataUrl(nicInput.files[0]);
+                    if (document.getElementById("regNicDocUrl")) {
+                        document.getElementById("regNicDocUrl").value = nicDoc;
+                    }
+                }
+
+                if (!nicNumber) {
+                    showToast("Please provide your National Identity Card (NIC) number.", "warning");
+                    return;
+                }
+
+                if (!nicDoc) {
+                    nicDoc = "attached_via_registration_form";
+                }
+
+                individualDetails = {
+                    nicNumber: nicNumber,
+                    nicDocUrl: nicDoc
+                };
+            }
+
             let orgDetails = null;
             if (accountType === 'donor_org') {
                 const orgNumEl = document.getElementById("regOrgNumber");
@@ -493,6 +528,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 postalCode,
                 categories,
                 receiverCategory,
+                individualDetails,
                 orgDetails,
                 receiverDetails
             });

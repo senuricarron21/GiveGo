@@ -2418,21 +2418,47 @@ document.addEventListener("DOMContentLoaded", () => {
 
         grid.innerHTML = pending.map(u => {
             const roleDisplay = (u.role || u.accountType || 'user').toUpperCase();
-            const subtype = u.donorType ? `Donor (${u.donorType})` : (u.receiverCategory ? `Receiver (${u.receiverCategory})` : roleDisplay);
+            const isPersonal = u.donorType === 'individual' || (!u.donorType && !u.receiverCategory && roleDisplay.includes('DONOR'));
+            const isOrgDonor = u.donorType === 'organisation' || !!u.orgDetails;
+            const isReceiver = roleDisplay.includes('RECEIVER') || !!u.receiverDetails;
+
+            let subtype = `Donor (Individual)`;
+            if (isOrgDonor) subtype = `Donor (Organisation / Corporate)`;
+            else if (isReceiver) subtype = `Receiver (${u.receiverCategory || 'Organisation'})`;
+
             const address = u.address || (u.receiverDetails && u.receiverDetails.address) || 'Not provided';
-            const regNum = u.registrationNumber || (u.orgDetails && u.orgDetails.registrationNumber) || (u.receiverDetails && u.receiverDetails.registrationNumber) || 'N/A';
+            const nicNum = u.nicNumber || (u.individualDetails && u.individualDetails.nicNumber) || '';
+            const brNum = (u.orgDetails && u.orgDetails.registrationNumber) || '';
+            const recNum = (u.receiverDetails && u.receiverDetails.registrationNumber) || '';
+            const regNum = nicNum || brNum || recNum || u.registrationNumber || 'N/A';
             
+            let idLabel = "National Identity Card (NIC) No";
+            if (isOrgDonor) idLabel = "Business Registration (BR) No";
+            else if (isReceiver) idLabel = "Official NGO / Govt Reg No";
+
             let docLinks = '';
+            const nicDoc = u.nicDocUrl || (u.individualDetails && u.individualDetails.nicDocUrl);
+            if (nicDoc && nicDoc.length > 50) {
+                docLinks += `<div style="margin-top:6px;"><a href="${nicDoc}" target="_blank" style="color:var(--color-teal-primary); font-weight:700; font-size:0.85rem; text-decoration:underline;">View NIC Document Copy</a></div>`;
+            }
             if (u.orgDetails && u.orgDetails.brDocUrl && u.orgDetails.brDocUrl.length > 50) {
-                docLinks += `<div style="margin-top:6px;"><a href="${u.orgDetails.brDocUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700; font-size:0.8rem; text-decoration:underline;">View BR Document</a></div>`;
+                docLinks += `<div style="margin-top:6px;"><a href="${u.orgDetails.brDocUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700; font-size:0.85rem; text-decoration:underline;">View Business Registration (BR) Document</a></div>`;
             }
             if (u.receiverDetails) {
                 if (u.receiverDetails.registrationDocUrl && u.receiverDetails.registrationDocUrl.length > 50) {
-                    docLinks += `<div style="margin-top:4px;"><a href="${u.receiverDetails.registrationDocUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700; font-size:0.8rem; text-decoration:underline;">View Registration Certificate</a></div>`;
+                    docLinks += `<div style="margin-top:4px;"><a href="${u.receiverDetails.registrationDocUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700; font-size:0.85rem; text-decoration:underline;">View Registration Certificate</a></div>`;
                 }
                 if (u.receiverDetails.bankDocUrl && u.receiverDetails.bankDocUrl.length > 50) {
-                    docLinks += `<div style="margin-top:4px;"><a href="${u.receiverDetails.bankDocUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700; font-size:0.8rem; text-decoration:underline;">View Bank Account Proof</a></div>`;
+                    docLinks += `<div style="margin-top:4px;"><a href="${u.receiverDetails.bankDocUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700; font-size:0.85rem; text-decoration:underline;">View Bank Account Proof</a></div>`;
                 }
+            }
+
+            let extraInfo = '';
+            if (isOrgDonor && u.orgDetails && u.orgDetails.orgName) {
+                extraInfo += `<div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 4px;">Organisation Name: <strong>${u.orgDetails.orgName}</strong> (Rep: ${u.orgDetails.repName || u.name})</div>`;
+            }
+            if (isReceiver && u.receiverDetails && u.receiverDetails.bankName) {
+                extraInfo += `<div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 4px;">Bank Account: <strong>${u.receiverDetails.bankName} - ${u.receiverDetails.accountNumber}</strong> (${u.receiverDetails.accountName || u.name})</div>`;
             }
 
             return `
@@ -2444,7 +2470,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     <h4 style="font-size: 1.15rem; color: var(--color-teal-primary); margin:0 0 6px 0; font-weight:800;">${u.name}</h4>
                     <div style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 4px;">Email: <strong>${u.email}</strong> | Phone: <strong>${u.phone || 'N/A'}</strong></div>
                     <div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 4px;">District: <strong>${u.district || 'Colombo'}</strong> | Address: <strong>${address}</strong></div>
-                    <div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 6px;">Registration No: <strong>${regNum}</strong></div>
+                    ${extraInfo}
+                    <div style="font-size: 0.85rem; color: var(--color-text-dark); margin-bottom: 6px;">${idLabel}: <strong>${regNum}</strong></div>
                     ${docLinks}
                     <div style="display:flex; gap:10px; margin-top:16px;">
                         <button class="btn btn-primary" style="flex-grow:1; font-size:0.85rem; font-weight:800;" onclick="updateUserStatus('${u.id || u.uid}', 'verified')">Approve Account</button>
