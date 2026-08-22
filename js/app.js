@@ -2495,24 +2495,31 @@ document.addEventListener("DOMContentLoaded", () => {
     let liveTrackerSimulationInterval = null;
 
     window.openLiveTrackingMapModal = (matchId) => {
-        const match = matchesList.find(m => m.id === matchId);
+        let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId);
+        
         if (!match) {
-            showToast("Match record not found.", "danger");
-            return;
-        }
-
-        const currentStatus = (match.status || '').toLowerCase();
-        if (currentStatus !== 'in_transit' && currentStatus !== 'in-transit' && currentStatus !== 'transit') {
-            showToast("⚠️ Live GPS tracking radar is active for in-transit dispatches.", "info");
+            const don = donationsList.find(d => d.id === matchId || d.deliverySessionId === matchId);
+            const req = requestsList.find(r => r.id === matchId || r.deliverySessionId === matchId);
+            match = {
+                id: matchId,
+                donorName: don ? (don.donorName || "melamiyaaa") : (req ? (req.donorName || "melamiyaaa") : "melamiyaaa"),
+                receiverName: currentUser ? currentUser.name : "Receiver",
+                itemName: don ? don.itemName : (req ? req.itemName : "Donation Package"),
+                status: "in_transit",
+                location: { lat: 6.9271, lng: 79.8612 }
+            };
         }
 
         const modal = document.getElementById("modalLiveLocationTracker");
-        if (modal) modal.classList.add("active");
+        if (modal) {
+            modal.style.display = "flex";
+            modal.classList.add("active");
+        }
 
         const partnerName = match.donorName || "Donor";
         const itemName = match.itemName || match.donationName || match.requestName || "Items";
         const titleEl = document.getElementById("mdlTrackerTitle");
-        if (titleEl) titleEl.textContent = `📍 Live Location Tracker: ${partnerName}`;
+        if (titleEl) titleEl.textContent = `📍 Live Location Radar: ${partnerName}`;
 
         // Resolve location coordinates for Donor
         let donorLat = 6.9271;
@@ -2625,7 +2632,10 @@ document.addEventListener("DOMContentLoaded", () => {
             liveTrackerSimulationInterval = null;
         }
         const modal = document.getElementById("modalLiveLocationTracker");
-        if (modal) modal.classList.remove("active");
+        if (modal) {
+            modal.classList.remove("active");
+            modal.style.display = "none";
+        }
     };
 
     function renderAllAvailableItems() {
