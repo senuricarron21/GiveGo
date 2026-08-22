@@ -2377,13 +2377,11 @@ document.addEventListener("DOMContentLoaded", () => {
             } else if (m.status === 'donor_scheduled_delivery') {
                 actionButtonsHtml += `
                     <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="acceptSchedule('${m.id}')">Accept Schedule</button>
-                    <button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openNegotiateModal('${m.id}')">Negotiate Time</button>
                     <button class="btn btn-danger" style="padding:4px 10px; font-size:0.75rem;" onclick="rejectSchedule('${m.id}')">Reject Schedule</button>
                 `;
             } else if (m.status === 'schedule_negotiating' && m.proposedBy !== currentUser.uid) {
                 actionButtonsHtml += `
                     <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="acceptSchedule('${m.id}')">Accept Proposed Time</button>
-                    <button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openNegotiateModal('${m.id}')">Re-Negotiate</button>
                     <button class="btn btn-danger" style="padding:4px 10px; font-size:0.75rem;" onclick="rejectSchedule('${m.id}')">Reject Proposal</button>
                 `;
             }
@@ -2502,13 +2500,11 @@ document.addEventListener("DOMContentLoaded", () => {
             } else if (m.status === 'receiver_scheduled_pickup') {
                 actionButtonsHtml += `
                     <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="acceptSchedule('${m.id}')">Accept Pick Up Schedule</button>
-                    <button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openNegotiateModal('${m.id}')">Negotiate Time</button>
                     <button class="btn btn-danger" style="padding:4px 10px; font-size:0.75rem;" onclick="rejectSchedule('${m.id}')">Reject Schedule</button>
                 `;
             } else if (m.status === 'schedule_negotiating' && m.proposedBy !== currentUser.uid) {
                 actionButtonsHtml += `
                     <button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="acceptSchedule('${m.id}')">Accept Proposed Time</button>
-                    <button class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openNegotiateModal('${m.id}')">Re-Negotiate</button>
                     <button class="btn btn-danger" style="padding:4px 10px; font-size:0.75rem;" onclick="rejectSchedule('${m.id}')">Reject Proposal</button>
                 `;
             }
