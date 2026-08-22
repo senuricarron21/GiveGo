@@ -2513,13 +2513,16 @@ document.addEventListener("DOMContentLoaded", () => {
         const modal = document.getElementById("modalLiveLocationTracker");
         if (modal) {
             modal.style.display = "flex";
+            modal.style.visibility = "visible";
+            modal.style.opacity = "1";
+            modal.style.zIndex = "999999";
             modal.classList.add("active");
         }
 
         const partnerName = match.donorName || "Donor";
         const itemName = match.itemName || match.donationName || match.requestName || "Items";
         const titleEl = document.getElementById("mdlTrackerTitle");
-        if (titleEl) titleEl.textContent = `📍 Live Location Radar: ${partnerName}`;
+        if (titleEl) titleEl.textContent = `📍 Live GPS Radar: ${partnerName}`;
 
         // Resolve location coordinates for Donor
         let donorLat = 6.9271;
@@ -2542,40 +2545,53 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        setTimeout(() => {
+        const renderMap = () => {
             const container = document.getElementById("liveTrackerMapContainer");
             if (!container) return;
 
+            container.style.height = "380px";
+            container.style.width = "100%";
+
             if (typeof L === 'undefined') {
+                container.innerHTML = `<iframe width="100%" height="380" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="https://maps.google.com/maps?q=${donorLat},${donorLng}&z=14&output=embed"></iframe>`;
                 const statusDiv = document.getElementById("trackerStatusDetails");
-                if (statusDiv) statusDiv.innerHTML = `⚠️ Leaflet map library loading... please refresh.`;
+                if (statusDiv) statusDiv.innerHTML = `🟢 <strong>Live Donor Location Stream</strong> — ${partnerName} (${donorLat.toFixed(4)}, ${donorLng.toFixed(4)})`;
                 return;
             }
 
-            if (liveTrackerMap) {
-                liveTrackerMap.remove();
-                liveTrackerMap = null;
+            try {
+                if (liveTrackerMap) {
+                    liveTrackerMap.remove();
+                    liveTrackerMap = null;
+                }
+
+                liveTrackerMap = L.map('liveTrackerMapContainer').setView([donorLat, donorLng], 14);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(liveTrackerMap);
+
+                setTimeout(() => { if (liveTrackerMap) liveTrackerMap.invalidateSize(); }, 100);
+                setTimeout(() => { if (liveTrackerMap) liveTrackerMap.invalidateSize(); }, 350);
+
+                const customMarkerHtml = `<div style="background:var(--color-teal-primary); color:#FFFFFF; padding:6px 12px; border-radius:20px; font-weight:800; font-size:0.85rem; box-shadow:0 4px 12px rgba(13,124,122,0.4); display:flex; align-items:center; gap:6px; border:2px solid #FFFFFF;">🚚 ${partnerName}</div>`;
+                const vehicleIcon = L.divIcon({
+                    className: 'live-gps-marker',
+                    html: customMarkerHtml,
+                    iconSize: [140, 36],
+                    iconAnchor: [70, 18]
+                });
+
+                liveTrackerMarker = L.marker([donorLat, donorLng], { icon: vehicleIcon }).addTo(liveTrackerMap)
+                    .bindPopup(`<b>🚚 ${partnerName} (Donor)</b><br>Dispatch: ${itemName}<br>Status: IN TRANSIT`)
+                    .openPopup();
+            } catch (mapErr) {
+                console.warn("Leaflet init fallback:", mapErr);
+                container.innerHTML = `<iframe width="100%" height="380" frameborder="0" scrolling="no" src="https://maps.google.com/maps?q=${donorLat},${donorLng}&z=14&output=embed"></iframe>`;
             }
+        };
 
-            liveTrackerMap = L.map('liveTrackerMapContainer').setView([donorLat, donorLng], 14);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(liveTrackerMap);
-
-            // Resize Leaflet map to fill container inside modal
-            liveTrackerMap.invalidateSize();
-
-            const customMarkerHtml = `<div style="background:var(--color-teal-primary); color:#FFFFFF; padding:6px 12px; border-radius:20px; font-weight:800; font-size:0.8rem; box-shadow:0 4px 12px rgba(13,124,122,0.4); display:flex; align-items:center; gap:6px; border:2px solid #FFFFFF;">🚚 ${partnerName}</div>`;
-            const vehicleIcon = L.divIcon({
-                className: 'live-gps-marker',
-                html: customMarkerHtml,
-                iconSize: [140, 36],
-                iconAnchor: [70, 18]
-            });
-
-            liveTrackerMarker = L.marker([donorLat, donorLng], { icon: vehicleIcon }).addTo(liveTrackerMap)
-                .bindPopup(`<b>🚚 ${partnerName} (Donor)</b><br>Dispatch: ${itemName}<br>Status: IN TRANSIT`)
-                .openPopup();
+        renderMap();
+        setTimeout(renderMap, 200);
 
             const statusDiv = document.getElementById("trackerStatusDetails");
             if (statusDiv) {
@@ -2619,7 +2635,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }, 2500);
 
-        }, 300);
     };
 
     window.stopLiveLocationTrackerModal = () => {
