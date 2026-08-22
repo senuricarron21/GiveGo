@@ -2733,32 +2733,34 @@ document.addEventListener("DOMContentLoaded", () => {
         modal.style.zIndex = "999999";
         modal.classList.add("active");
 
-        const partnerName = match.donorName || "Donor";
+        const isDonorView = currentUser && currentUser.uid === match.donorId;
+        const partnerName = isDonorView ? (match.receiverName || "Receiver") : (match.donorName || "Donor");
+        const partnerRole = isDonorView ? "Receiver" : "Donor";
+        const iconEmoji = isDonorView ? "🏢" : "🚚";
+
         const itemName = match.itemName || match.donationName || match.requestName || "Items";
         const titleEl = document.getElementById("mdlTrackerTitle");
-        if (titleEl) titleEl.textContent = `📍 Live GPS Radar: ${partnerName}`;
+        if (titleEl) titleEl.textContent = `📍 Live GPS Radar: ${partnerName} (${partnerRole})`;
 
-        // Resolve location coordinates for Donor
-        let donorLat = 6.9271;
-        let donorLng = 79.8612;
+        let targetLat = 6.9271;
+        let targetLng = 79.8612;
 
         if (match.liveLocation && match.liveLocation.lat && match.liveLocation.lng) {
-            donorLat = parseFloat(match.liveLocation.lat);
-            donorLng = parseFloat(match.liveLocation.lng);
-        } else if (match.location && match.location.lat && match.location.lng) {
-            donorLat = parseFloat(match.location.lat);
-            donorLng = parseFloat(match.location.lng);
-        } else if (match.donorLocation && match.donorLocation.lat && match.donorLocation.lng) {
-            donorLat = parseFloat(match.donorLocation.lat);
-            donorLng = parseFloat(match.donorLocation.lng);
+            targetLat = parseFloat(match.liveLocation.lat);
+            targetLng = parseFloat(match.liveLocation.lng);
         } else {
-            const donorUser = usersList.find(u => u.uid === match.donorId || u.name === match.donorName);
-            if (donorUser && donorUser.district && SRI_LANKA_DISTRICT_COORDS[donorUser.district.toLowerCase()]) {
-                donorLat = SRI_LANKA_DISTRICT_COORDS[donorUser.district.toLowerCase()].lat;
-                donorLng = SRI_LANKA_DISTRICT_COORDS[donorUser.district.toLowerCase()].lng;
-            } else if (donorUser && donorUser.location && donorUser.location.lat && donorUser.location.lng) {
-                donorLat = parseFloat(donorUser.location.lat);
-                donorLng = parseFloat(donorUser.location.lng);
+            const targetUser = usersList.find(u => 
+                isDonorView ? (u.uid === match.receiverId || u.name === match.receiverName) : (u.uid === match.donorId || u.name === match.donorName)
+            );
+            if (targetUser && targetUser.district && SRI_LANKA_DISTRICT_COORDS[targetUser.district.toLowerCase()]) {
+                targetLat = SRI_LANKA_DISTRICT_COORDS[targetUser.district.toLowerCase()].lat;
+                targetLng = SRI_LANKA_DISTRICT_COORDS[targetUser.district.toLowerCase()].lng;
+            } else if (targetUser && targetUser.location && targetUser.location.lat) {
+                targetLat = parseFloat(targetUser.location.lat);
+                targetLng = parseFloat(targetUser.location.lng);
+            } else if (match.location && match.location.lat) {
+                targetLat = parseFloat(match.location.lat);
+                targetLng = parseFloat(match.location.lng);
             }
         }
 
@@ -2785,13 +2787,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div style="width:100%; height:380px; background:linear-gradient(135deg, #0d7c7a 0%, #064e4b 100%); border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#FFFFFF; position:relative; overflow:hidden;">
                         <div style="position:absolute; width:280px; height:280px; border:2px dashed rgba(255,255,255,0.25); border-radius:50%;"></div>
                         <div style="position:absolute; width:180px; height:180px; border:2px solid rgba(255,255,255,0.4); border-radius:50%;"></div>
-                        <div style="font-size:3rem; margin-bottom:8px; z-index:2;">🚚</div>
-                        <div style="font-size:1.1rem; font-weight:800; z-index:2; margin-bottom:4px;">${partnerName} (Donor Live Stream)</div>
-                        <div style="font-size:0.85rem; font-weight:700; color:#E0F2F1; z-index:2; background:rgba(0,0,0,0.3); padding:4px 12px; border-radius:12px;">📍 Coordinates: ${donorLat.toFixed(4)}°N, ${donorLng.toFixed(4)}°E</div>
+                        <div style="font-size:3rem; margin-bottom:8px; z-index:2;">${iconEmoji}</div>
+                        <div style="font-size:1.1rem; font-weight:800; z-index:2; margin-bottom:4px;">${partnerName} (${partnerRole} Live Stream)</div>
+                        <div style="font-size:0.85rem; font-weight:700; color:#E0F2F1; z-index:2; background:rgba(0,0,0,0.3); padding:4px 12px; border-radius:12px;">📍 Coordinates: ${targetLat.toFixed(4)}°N, ${targetLng.toFixed(4)}°E</div>
                     </div>
                 `;
                 const statusDiv = document.getElementById("trackerStatusDetails");
-                if (statusDiv) statusDiv.innerHTML = `🟢 <strong>Live Donor Location Stream Active</strong> — ${partnerName} (${donorLat.toFixed(4)}, ${donorLng.toFixed(4)})`;
+                if (statusDiv) statusDiv.innerHTML = `🟢 <strong>Live ${partnerRole} Location Stream Active</strong> — ${partnerName} (${targetLat.toFixed(4)}, ${targetLng.toFixed(4)})`;
                 return;
             }
 
@@ -2806,7 +2808,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     liveTrackerMap = null;
                 }
 
-                liveTrackerMap = L.map('liveMapInner').setView([donorLat, donorLng], 14);
+                liveTrackerMap = L.map('liveMapInner').setView([targetLat, targetLng], 14);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '&copy; OpenStreetMap contributors'
                 }).addTo(liveTrackerMap);
@@ -2815,7 +2817,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 setTimeout(() => { if (liveTrackerMap) liveTrackerMap.invalidateSize(); }, 250);
                 setTimeout(() => { if (liveTrackerMap) liveTrackerMap.invalidateSize(); }, 500);
 
-                const customMarkerHtml = `<div style="background:var(--color-teal-primary); color:#FFFFFF; padding:6px 12px; border-radius:20px; font-weight:800; font-size:0.85rem; box-shadow:0 4px 12px rgba(13,124,122,0.4); display:flex; align-items:center; gap:6px; border:2px solid #FFFFFF;">🚚 ${partnerName}</div>`;
+                const customMarkerHtml = `<div style="background:var(--color-teal-primary); color:#FFFFFF; padding:6px 12px; border-radius:20px; font-weight:800; font-size:0.85rem; box-shadow:0 4px 12px rgba(13,124,122,0.4); display:flex; align-items:center; gap:6px; border:2px solid #FFFFFF;">${iconEmoji} ${partnerName}</div>`;
                 const vehicleIcon = L.divIcon({
                     className: 'live-gps-marker',
                     html: customMarkerHtml,
@@ -2823,8 +2825,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     iconAnchor: [70, 18]
                 });
 
-                liveTrackerMarker = L.marker([donorLat, donorLng], { icon: vehicleIcon }).addTo(liveTrackerMap)
-                    .bindPopup(`<b>🚚 ${partnerName} (Donor)</b><br>Dispatch: ${itemName}<br>Status: IN TRANSIT`)
+                liveTrackerMarker = L.marker([targetLat, targetLng], { icon: vehicleIcon }).addTo(liveTrackerMap)
+                    .bindPopup(`<b>${iconEmoji} ${partnerName} (${partnerRole})</b><br>Dispatch: ${itemName}<br>Status: IN TRANSIT`)
                     .openPopup();
             } catch (mapErr) {
                 console.warn("Leaflet init fallback:", mapErr);
@@ -2835,7 +2837,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const statusDiv = document.getElementById("trackerStatusDetails");
         if (statusDiv) {
-            statusDiv.innerHTML = `🟢 <strong>Live Telemetry Radar Active</strong> — Donor: ${partnerName} | Coordinates: ${donorLat.toFixed(4)}, ${donorLng.toFixed(4)}`;
+            statusDiv.innerHTML = `🟢 <strong>Live Telemetry Radar Active</strong> — ${partnerRole}: ${partnerName} | Coordinates: ${targetLat.toFixed(4)}, ${targetLng.toFixed(4)}`;
         }
 
         // Real-time Firebase Listener
@@ -2858,18 +2860,18 @@ document.addEventListener("DOMContentLoaded", () => {
                     const newLatLng = [liveLat, liveLng];
                     if (liveTrackerMarker) {
                         liveTrackerMarker.setLatLng(newLatLng);
-                        liveTrackerMarker.setPopupContent(`<b>🚚 ${sharingUser} (REAL GPS ACTIVE)</b><br>Dispatch: ${itemName}<br>Coordinates: ${liveLat.toFixed(5)}, ${liveLng.toFixed(5)}<br>Updated: ${updateTime}`);
+                        liveTrackerMarker.setPopupContent(`<b>${iconEmoji} ${sharingUser} (${partnerRole} REAL GPS ACTIVE)</b><br>Dispatch: ${itemName}<br>Coordinates: ${liveLat.toFixed(5)}, ${liveLng.toFixed(5)}<br>Updated: ${updateTime}`);
                     }
                     if (liveTrackerMap) {
                         liveTrackerMap.panTo(newLatLng);
                         liveTrackerMap.invalidateSize();
                     }
                     if (statusDiv) {
-                        statusDiv.innerHTML = `🟢 <strong>Live Donor GPS Stream Active</strong> — <strong>${sharingUser}</strong> is sharing real GPS location (Lat: ${liveLat.toFixed(4)}, Lng: ${liveLng.toFixed(4)}) | Updated: ${updateTime}`;
+                        statusDiv.innerHTML = `🟢 <strong>Live ${partnerRole} GPS Stream Active</strong> — <strong>${sharingUser}</strong> is sharing real GPS location (Lat: ${liveLat.toFixed(4)}, Lng: ${liveLng.toFixed(4)}) | Updated: ${updateTime}`;
                     }
                 } else {
                     if (statusDiv && !liveTrackerSimulationInterval) {
-                        statusDiv.innerHTML = `📡 <strong>Live GPS Telemetry Active</strong> — Donor: ${partnerName} | Coordinates: ${donorLat.toFixed(4)}, ${donorLng.toFixed(4)}`;
+                        statusDiv.innerHTML = `📡 <strong>Live GPS Telemetry Active</strong> — ${partnerRole}: ${partnerName} | Coordinates: ${targetLat.toFixed(4)}, ${targetLng.toFixed(4)}`;
                     }
                 }
             });
@@ -2880,8 +2882,8 @@ document.addEventListener("DOMContentLoaded", () => {
         let simStep = 0;
         liveTrackerSimulationInterval = setInterval(() => {
             simStep++;
-            const simLat = donorLat + (Math.sin(simStep * 0.25) * 0.0012);
-            const simLng = donorLng + (Math.cos(simStep * 0.25) * 0.0012);
+            const simLat = targetLat + (Math.sin(simStep * 0.25) * 0.0012);
+            const simLng = targetLng + (Math.cos(simStep * 0.25) * 0.0012);
             if (liveTrackerMarker) {
                 liveTrackerMarker.setLatLng([simLat, simLng]);
                 if (statusDiv) {
