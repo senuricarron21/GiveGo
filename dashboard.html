@@ -97,7 +97,10 @@
 
                     <!-- Admin Executive Overview Section (Visible for Admin) -->
                     <div id="adminExecutiveOverviewSection" style="display:none; margin-top:24px;">
-                        <h3 class="section-title" style="color:var(--color-teal-primary); font-weight:800;">🛡️ Executive Admin Command Center Overview</h3>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+                            <h3 class="section-title" style="color:var(--color-teal-primary); font-weight:800; margin:0;">🛡️ Executive Admin Command Center Overview</h3>
+                            <button type="button" class="btn btn-danger" style="padding:6px 14px; font-weight:800; font-size:0.85rem;" onclick="clearAllDatabaseItems()">🗑️ Purge All Database Items</button>
+                        </div>
                         
                         <!-- Live Active Matches & Real-Time Controls -->
                         <div class="glass-panel" style="padding:20px; background:#FFFFFF; margin-bottom:24px;">

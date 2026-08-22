@@ -1148,6 +1148,56 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    window.clearAllDatabaseItems = async () => {
+        if (!confirm("⚠️ WARNING: Are you sure you want to permanently delete ALL requests, donation listings, matches, chat messages, and notifications from the database? This action cannot be undone.")) {
+            return;
+        }
+
+        showToast("🧹 Purging all items from database...", "info");
+
+        try {
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            if (!helper || !helper.db) {
+                showToast("Database connection not ready.", "danger");
+                return;
+            }
+            const db = helper.db();
+            const collectionsToPurge = ["requests", "donations", "matches", "messages", "notifications"];
+
+            for (const collName of collectionsToPurge) {
+                try {
+                    const snap = await db.collection(collName).get();
+                    if (!snap.empty) {
+                        const batch = db.batch();
+                        snap.forEach(doc => batch.delete(doc.ref));
+                        await batch.commit();
+                    }
+                } catch (cErr) {
+                    console.warn(`Purge collection ${collName} notice:`, cErr);
+                }
+            }
+
+            requestsList = [];
+            donationsList = [];
+            matchesList = [];
+            messagesList = [];
+
+            if (typeof renderReceiverRequests === 'function') renderReceiverRequests();
+            if (typeof renderDonorNeeds === 'function') renderDonorNeeds();
+            if (typeof renderDonorListings === 'function') renderDonorListings();
+            if (typeof renderAllAvailableItems === 'function') renderAllAvailableItems();
+            if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
+            if (typeof renderDonorMatches === 'function') renderDonorMatches();
+            if (typeof renderChatMatchesList === 'function') renderChatMatchesList();
+            if (typeof updateOverviewStats === 'function') updateOverviewStats();
+
+            showToast("✅ All database items (requests, listings, matches, chats) have been permanently removed!", "success");
+        } catch (err) {
+            console.error("Error purging database items:", err);
+            showToast("Failed to purge database items.", "danger");
+        }
+    };
+
     function renderDonorNeeds() {
         const grid = document.getElementById("donorNeedsGrid");
         if (!grid) return;
