@@ -75,13 +75,23 @@ if (isset($_SESSION['user'])) {
                 <div class="grid-cols-2">
                     <div class="form-group">
                         <label class="form-label" for="regPassword">Password (Min. 8 chars with special char) <span style="color:#E53E3E;">*</span></label>
-                        <input class="form-control" type="password" id="regPassword" placeholder="e.g. Secret@2026" required autocomplete="new-password">
+                        <div class="password-input-wrapper">
+                            <input class="form-control" type="password" id="regPassword" placeholder="e.g. Secret@2026" required autocomplete="new-password">
+                            <button type="button" class="btn-password-toggle" onclick="togglePasswordVisibility('regPassword', this)" aria-label="Show password" title="Toggle password visibility">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
                         <div id="passwordValidationFeedback" class="validation-msg-error" style="display: none;"></div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label" for="regConfirmPassword">Confirm Password <span style="color:#E53E3E;">*</span></label>
-                        <input class="form-control" type="password" id="regConfirmPassword" placeholder="Re-enter your password" required autocomplete="new-password">
+                        <div class="password-input-wrapper">
+                            <input class="form-control" type="password" id="regConfirmPassword" placeholder="Re-enter your password" required autocomplete="new-password">
+                            <button type="button" class="btn-password-toggle" onclick="togglePasswordVisibility('regConfirmPassword', this)" aria-label="Show password" title="Toggle password visibility">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
                         <div id="confirmPasswordValidationFeedback" class="validation-msg-error" style="display: none;"></div>
                     </div>
                 </div>

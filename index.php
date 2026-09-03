@@ -471,7 +471,12 @@ if (isset($_SESSION['user'])) {
 
                 <div class="form-group" style="margin-bottom:20px;">
                     <label for="loginPassword" class="form-label">Password</label>
-                    <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+                    <div class="password-input-wrapper">
+                        <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+                        <button type="button" class="btn-password-toggle" onclick="togglePasswordVisibility('loginPassword', this)" aria-label="Show password" title="Toggle password visibility">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </button>
+                    </div>
                 </div>
 
                 <button class="btn-royal-blue" type="submit" style="width:100%; padding:12px; border-radius:8px; font-size:1rem; margin-bottom:16px;">
