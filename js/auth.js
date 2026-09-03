@@ -462,7 +462,17 @@ document.addEventListener("DOMContentLoaded", () => {
         },
 
         register: async (payload) => {
+            const regFormEl = document.getElementById("registerForm");
+            const submitBtn = regFormEl ? regFormEl.querySelector('button[type="submit"]') : null;
+            const originalBtnHtml = submitBtn ? submitBtn.innerHTML : "Complete Registration";
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `<span>⏳ Creating Account...</span>`;
+            }
+
             try {
+                if (window.clearToasts) window.clearToasts();
                 showToast("Creating account...", "info");
                 
                 let helper = getHelperOrWait();
@@ -576,15 +586,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 await db.collection("users").doc(authUser.uid).set(userDocData);
 
+                // --- CLEAR FORM AND RESET ALL INPUT FIELDS ON SUCCESS ---
+                if (regFormEl) {
+                    regFormEl.reset();
+                    // Clear all hidden doc URLs
+                    ["regNicDocUrl", "regBrDocUrl", "regReceiverDocUrl", "regBankDocUrl"].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.value = "";
+                    });
+                    // Clear all file inputs
+                    ["nicUploadInput", "brUploadInput", "receiverRegUploadInput", "bankDocUploadInput"].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            el.value = "";
+                            el.classList.remove("input-error", "input-success");
+                        }
+                    });
+                    // Remove all input feedback indicators
+                    document.querySelectorAll(".form-control").forEach(el => el.classList.remove("input-error", "input-success"));
+                    document.querySelectorAll(".validation-msg-error").forEach(el => el.style.display = "none");
+                }
+
+                if (window.clearToasts) window.clearToasts();
+
                 if (status === 'verified') {
                     try {
                         localStorage.setItem("givego_user", JSON.stringify(userDocData));
                     } catch (lsErr) {}
 
-                    showToast("Registration successful! Welcome to GiveGo.", "success");
+                    if (submitBtn) {
+                        submitBtn.innerHTML = `<span>✓ Account Created Successfully!</span>`;
+                        submitBtn.style.backgroundColor = "#27AE60";
+                    }
+
+                    showToast("✅ Account created successfully! Welcome to GiveGo. Redirecting to your dashboard...", "success");
                     setTimeout(() => {
                         window.location.href = "dashboard.html";
-                    }, 500);
+                    }, 1500);
                 } else {
                     try {
                         await auth.signOut();
@@ -594,17 +632,32 @@ document.addEventListener("DOMContentLoaded", () => {
                         console.warn("Sign out after registration:", soErr);
                     }
 
-                    showToast("Registration submitted! Your organisation account is currently pending Admin verification. You will be able to log in once an Administrator approves your account.", "info");
+                    if (submitBtn) {
+                        submitBtn.innerHTML = `<span>✓ Registration Submitted!</span>`;
+                        submitBtn.style.backgroundColor = "#27AE60";
+                    }
+
+                    showToast("✅ Account created successfully! Your organisation registration has been submitted for Administrator verification.", "success");
                     setTimeout(() => {
                         window.location.href = "index.html";
-                    }, 2000);
+                    }, 2500);
                 }
             } catch (error) {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHtml;
+                    submitBtn.style.backgroundColor = "";
+                }
+
+                if (window.clearToasts) window.clearToasts();
+
                 let friendlyMsg = error.message;
                 if (error.code === 'auth/email-already-in-use') {
                     friendlyMsg = "An account with this email address already exists. Please sign in instead.";
                 } else if (error.code === 'auth/weak-password') {
                     friendlyMsg = "Password must be at least 6 characters long.";
+                } else if (error.code === 'permission-denied' || (error.message && error.message.includes('permission'))) {
+                    friendlyMsg = "Database Permission Error: Please update your Firestore Security Rules in Firebase Console.";
                 }
                 showToast(friendlyMsg, "danger");
                 console.error("Registration Error: ", error);
@@ -1107,6 +1160,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+function clearToasts() {
+    let container = document.querySelector(".toast-container");
+    if (container) {
+        container.innerHTML = "";
+    }
+}
+window.clearToasts = clearToasts;
+
 function showToast(message, type = "info") {
     let container = document.querySelector(".toast-container");
     if (!container) {
@@ -1115,23 +1176,57 @@ function showToast(message, type = "info") {
         document.body.appendChild(container);
     }
     
+    // Remove previous "Creating account..." or intermediate loading toasts if a final response is dispatched
+    if (type === "success" || type === "danger" || type === "warning") {
+        const existingToasts = container.querySelectorAll(".toast");
+        existingToasts.forEach(t => {
+            if (t.textContent.includes("Creating account") || t.textContent.includes("Authenticating")) {
+                t.remove();
+            }
+        });
+    }
+    
     const toast = document.createElement("div");
     toast.className = `toast glass-panel`;
     
-    let borderTheme = "var(--color-primary)";
-    if (type === "success") borderTheme = "var(--color-success)";
-    else if (type === "warning") borderTheme = "var(--color-warning)";
-    else if (type === "danger") borderTheme = "var(--color-danger)";
-    else if (type === "info") borderTheme = "var(--color-secondary)";
+    let borderTheme = "#0D7C7A";
+    let icon = "ℹ️";
+    let textColor = "#1E293B";
+
+    if (type === "success") {
+        borderTheme = "#27AE60";
+        icon = "✅";
+    } else if (type === "warning") {
+        borderTheme = "#F39C12";
+        icon = "⚠️";
+    } else if (type === "danger") {
+        borderTheme = "#E53E3E";
+        icon = "❌";
+    } else if (type === "info") {
+        borderTheme = "#3B82F6";
+        icon = "ℹ️";
+    }
     
-    toast.style.borderLeft = `4px solid ${borderTheme}`;
-    toast.innerHTML = `<div style="color: var(--color-primary); font-weight: 600; font-size: 0.9rem;">${message}</div>`;
+    toast.style.borderLeft = `5px solid ${borderTheme}`;
+    toast.style.boxShadow = "0 8px 24px rgba(0,0,0,0.12)";
+    toast.style.backgroundColor = "#FFFFFF";
+    toast.style.padding = "14px 18px";
+    toast.style.marginBottom = "10px";
+    toast.style.borderRadius = "8px";
+    toast.style.display = "flex";
+    toast.style.alignItems = "center";
+    toast.style.gap = "10px";
+    toast.style.zIndex = "99999";
+    
+    toast.innerHTML = `<div style="color: ${textColor}; font-weight: 700; font-size: 0.92rem; line-height: 1.4;">${message}</div>`;
     container.appendChild(toast);
     
+    const duration = type === "success" ? 4500 : 3800;
     setTimeout(() => {
+        toast.style.transition = "opacity 0.4s ease, transform 0.4s ease";
         toast.style.transform = "translateY(-10px)";
         toast.style.opacity = "0";
-        setTimeout(() => toast.remove(), 300);
-    }, 3500);
+        setTimeout(() => toast.remove(), 400);
+    }, duration);
 }
 window.showToast = showToast;
