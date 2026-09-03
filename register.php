@@ -64,15 +64,25 @@ if (isset($_SESSION['user'])) {
                     </div>
                 </div>
 
+                <!-- Email Address with Detailed Error Feedback -->
+                <div class="form-group" style="margin-bottom: 18px;">
+                    <label class="form-label" for="regEmail">Email Address <span style="color:#E53E3E;">*</span></label>
+                    <input class="form-control" type="email" id="regEmail" placeholder="e.g. user@givego.lk or name@example.com" required autocomplete="email">
+                    <div id="emailValidationFeedback" class="validation-msg-error" style="display: none;"></div>
+                </div>
+
+                <!-- Password & Confirm Password (Min 8 characters + Special Character) -->
                 <div class="grid-cols-2">
                     <div class="form-group">
-                        <label class="form-label" for="regEmail">Email Address</label>
-                        <input class="form-control" type="email" id="regEmail" placeholder="e.g. user@givego.lk" required>
+                        <label class="form-label" for="regPassword">Password (Min. 8 chars with special char) <span style="color:#E53E3E;">*</span></label>
+                        <input class="form-control" type="password" id="regPassword" placeholder="e.g. Secret@2026" required autocomplete="new-password">
+                        <div id="passwordValidationFeedback" class="validation-msg-error" style="display: none;"></div>
                     </div>
-                    
+
                     <div class="form-group">
-                        <label class="form-label" for="regPassword">Password</label>
-                        <input class="form-control" type="password" id="regPassword" placeholder="Min. 6 characters" required>
+                        <label class="form-label" for="regConfirmPassword">Confirm Password <span style="color:#E53E3E;">*</span></label>
+                        <input class="form-control" type="password" id="regConfirmPassword" placeholder="Re-enter your password" required autocomplete="new-password">
+                        <div id="confirmPasswordValidationFeedback" class="validation-msg-error" style="display: none;"></div>
                     </div>
                 </div>
 

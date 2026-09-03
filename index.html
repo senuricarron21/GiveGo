@@ -455,10 +455,11 @@
                 <button type="button" onclick="closeLoginModal()" style="background:#F1F5F9; border:none; padding:6px 12px; border-radius:6px; font-weight:800; cursor:pointer; color:#475569;">✕</button>
             </div>
 
-            <form id="loginForm">
+            <form id="loginForm" novalidate>
                 <div class="form-group" style="margin-bottom:16px;">
                     <label for="loginEmail" class="form-label">Email Address</label>
                     <input type="email" id="loginEmail" class="form-control" placeholder="e.g. user@givego.lk" required autocomplete="email">
+                    <div id="loginEmailFeedback" class="validation-msg-error" style="display:none;"></div>
                 </div>
 
                 <div class="form-group" style="margin-bottom:20px;">
