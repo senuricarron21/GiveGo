@@ -618,6 +618,16 @@ if (isset($_SESSION['user'])) {
 
         document.addEventListener("DOMContentLoaded", () => {
             initLiveLandingItems();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("registered") === "true") {
+                if (window.showToast) {
+                    window.showToast("✅ Account created successfully! Please sign in with your email and password.", "success");
+                }
+                if (typeof openLoginModal === "function") {
+                    setTimeout(() => openLoginModal(), 500);
+                }
+            }
         });
     </script>
 </body>

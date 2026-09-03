@@ -643,38 +643,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (window.clearToasts) window.clearToasts();
 
+                // Sign out after registration so user can sign in fresh through the login page
+                try {
+                    await auth.signOut();
+                    localStorage.removeItem("givego_user");
+                    sessionStorage.clear();
+                } catch (soErr) {
+                    console.warn("Sign out after registration:", soErr);
+                }
+
+                if (submitBtn) {
+                    submitBtn.innerHTML = `<span>✓ Account Created Successfully!</span>`;
+                    submitBtn.style.backgroundColor = "#27AE60";
+                }
+
                 if (status === 'verified') {
-                    try {
-                        localStorage.setItem("givego_user", JSON.stringify(userDocData));
-                    } catch (lsErr) {}
-
-                    if (submitBtn) {
-                        submitBtn.innerHTML = `<span>✓ Account Created Successfully!</span>`;
-                        submitBtn.style.backgroundColor = "#27AE60";
-                    }
-
-                    showToast("✅ Account created successfully! Welcome to GiveGo. Redirecting to your dashboard...", "success");
+                    showToast("✅ Account created successfully! Please sign in with your credentials. Redirecting to login page...", "success");
                     setTimeout(() => {
-                        window.location.href = "dashboard.html";
-                    }, 1500);
+                        const targetPage = window.location.pathname.endsWith(".php") ? "index.php?registered=true" : "index.html?registered=true";
+                        window.location.href = targetPage;
+                    }, 1600);
                 } else {
-                    try {
-                        await auth.signOut();
-                        localStorage.removeItem("givego_user");
-                        sessionStorage.clear();
-                    } catch (soErr) {
-                        console.warn("Sign out after registration:", soErr);
-                    }
-
-                    if (submitBtn) {
-                        submitBtn.innerHTML = `<span>✓ Registration Submitted!</span>`;
-                        submitBtn.style.backgroundColor = "#27AE60";
-                    }
-
-                    showToast("✅ Account created successfully! Your organisation registration has been submitted for Administrator verification.", "success");
+                    showToast("✅ Account created successfully! Your organisation account is submitted for Admin review. Redirecting to login page...", "success");
                     setTimeout(() => {
-                        window.location.href = "index.html";
-                    }, 2500);
+                        const targetPage = window.location.pathname.endsWith(".php") ? "index.php?registered=true" : "index.html?registered=true";
+                        window.location.href = targetPage;
+                    }, 2000);
                 }
             } catch (error) {
                 if (submitBtn) {
