@@ -118,26 +118,8 @@ if (isset($_SESSION['user'])) {
                         </select>
                     </div>
 
-                    <div class="form-group" id="groupDonorCategories">
-                        <label class="form-label">Preferred Donation Categories</label>
-                        <select class="form-control form-select" id="regCategories">
-                            <option value="All Categories">All Categories</option>
-                            <option value="Education & Learning Supplies">Education & Learning Materials</option>
-                            <option value="Medical & Healthcare">Medical & Healthcare Supplies</option>
-                            <option value="Food & Dry Rations">Food & Dry Rations</option>
-                            <option value="Clothing & Apparel">Clothing & Apparel</option>
-                            <option value="Household & Furniture">Household Essentials & Furniture</option>
-                            <option value="Electronics & IT Equipment">Electronics & IT Equipment</option>
-                            <option value="Monetary Donations">Monetary Donations / Financial Aid</option>
-                            <option value="Volunteer Support">Volunteer Support & Manpower</option>
-                            <option value="Emergency Disaster Relief">Emergency Disaster Relief Kits</option>
-                            <option value="Animal Food & Veterinary Care">Animal Food & Veterinary Supplies</option>
-                            <option value="Other Essential Supplies">Other Essential Supplies</option>
-                        </select>
-                    </div>
-
                     <div class="form-group" id="groupReceiverCategory" style="display: none;">
-                        <label class="form-label" for="regReceiverCategory">Receiver Category</label>
+                        <label class="form-label" for="regReceiverCategory">Receiver Category <span style="color:#E53E3E;">*</span></label>
                         <select class="form-control form-select" id="regReceiverCategory">
                             <option value="Hospital">Hospital / Medical Clinic</option>
                             <option value="Elders' Home">Elders' Home / Senior Citizen Care</option>
@@ -281,22 +263,19 @@ if (isset($_SESSION['user'])) {
             function toggleAccountTypeUI() {
                 const val = accTypeSelect.value;
                 if (val === 'donor_individual') {
-                    secOrgDonor.style.display = "none";
-                    secReceiver.style.display = "none";
-                    groupDonorCat.style.display = "block";
-                    groupRecCat.style.display = "none";
+                    if (secOrgDonor) secOrgDonor.style.display = "none";
+                    if (secReceiver) secReceiver.style.display = "none";
+                    if (groupRecCat) groupRecCat.style.display = "none";
                     lblName.textContent = "Full Name";
                 } else if (val === 'donor_org') {
-                    secOrgDonor.style.display = "block";
-                    secReceiver.style.display = "none";
-                    groupDonorCat.style.display = "block";
-                    groupRecCat.style.display = "none";
+                    if (secOrgDonor) secOrgDonor.style.display = "block";
+                    if (secReceiver) secReceiver.style.display = "none";
+                    if (groupRecCat) groupRecCat.style.display = "none";
                     lblName.textContent = "Contact Person Name";
                 } else if (val === 'receiver') {
-                    secOrgDonor.style.display = "none";
-                    secReceiver.style.display = "block";
-                    groupDonorCat.style.display = "none";
-                    groupRecCat.style.display = "block";
+                    if (secOrgDonor) secOrgDonor.style.display = "none";
+                    if (secReceiver) secReceiver.style.display = "block";
+                    if (groupRecCat) groupRecCat.style.display = "block";
                     lblName.textContent = "Official Organisation Name";
                 }
             }
