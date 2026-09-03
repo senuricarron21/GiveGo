@@ -729,179 +729,98 @@ input[type="file"].form-control {
     text-decoration: underline;
 }
 
-/* 4. WAVY ORGANIC PILLARS BANNER (MATCHING USER REFERENCE) */
-.wavy-pillars-section {
-    padding: 80px 20px;
-    background: #F4F8F7;
-    position: relative;
-    overflow: hidden;
+/* 4. FOUR COLORED PILLAR CARDS (EXACT MOCKUP MATCH) */
+.pillars-section {
+    padding: 85px 20px;
+    background: #FFFFFF;
+    border-top: 1px solid #E2E8F0;
+    border-bottom: 1px solid #E2E8F0;
 }
 
-.wavy-banner-container {
-    max-width: 1260px;
-    margin: 0 auto;
-    background: linear-gradient(135deg, #0D7C7A 0%, #0A6664 50%, #085250 100%);
-    border-radius: 40px 100px 40px 100px / 80px 40px 80px 40px;
-    padding: 50px 36px 44px 36px;
-    box-shadow: 0 16px 40px rgba(13, 124, 122, 0.22);
-    position: relative;
-}
-
-.wavy-banner-header {
-    text-align: center;
-    color: #FFFFFF;
-    margin-bottom: 30px;
-}
-
-.wavy-banner-title {
-    font-size: 2.3rem;
-    font-weight: 900;
-    color: #FFFFFF;
-    letter-spacing: -0.5px;
-    margin-bottom: 8px;
-}
-
-.wavy-banner-subtitle {
-    font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.88);
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.wavy-cards-grid {
+.pillars-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 22px;
-    margin-top: 26px;
-    margin-bottom: 28px;
+    max-width: 1240px;
+    margin: 0 auto;
 }
 
-.wavy-round-card {
-    background: #FFFFFF;
-    border-radius: 50%;
-    aspect-ratio: 1 / 1;
-    min-height: 290px;
-    border: 4px solid rgba(255, 255, 255, 0.9);
-    padding: 24px 16px;
-    text-align: center;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+.pillar-card {
+    border-radius: 12px;
+    padding: 34px 24px;
+    color: #FFFFFF;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    min-height: 350px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.pillar-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.16);
+}
+
+.pillar-card-yellow { background: #EBB036; }
+.pillar-card-teal   { background: #1E7B75; }
+.pillar-card-blue   { background: #4361EE; }
+.pillar-card-coral  { background: #E25A38; }
+
+.pillar-icon-badge {
+    width: 58px;
+    height: 58px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 50%;
+    display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
-    cursor: pointer;
+    font-size: 1.6rem;
+    margin-bottom: 22px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.wavy-round-card:hover {
-    transform: translateY(-8px) scale(1.03);
-    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.22);
-}
-
-.wavy-card-tag {
-    position: absolute;
-    top: 16px;
-    background: #E6F7F6;
-    color: #0D7C7A;
-    font-size: 0.72rem;
+.pillar-card-title {
+    font-size: 1.3rem;
     font-weight: 800;
-    padding: 3px 12px;
-    border-radius: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border: 1.5px solid #BCE5E3;
-    z-index: 2;
-}
-
-.wavy-card-img {
-    width: 112px;
-    height: 112px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-top: 18px;
-    margin-bottom: 10px;
-    border: 3px solid #0D7C7A;
-    box-shadow: 0 6px 14px rgba(13, 124, 122, 0.25);
-    transition: transform 0.3s ease;
-}
-
-.wavy-round-card:hover .wavy-card-img {
-    transform: scale(1.06);
-}
-
-.wavy-card-title {
-    font-size: 1.05rem;
-    font-weight: 800;
-    color: #1E293B;
-    margin-bottom: 4px;
+    margin-bottom: 12px;
+    color: #FFFFFF;
     line-height: 1.25;
 }
 
-.wavy-card-meta {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #0D7C7A;
-    margin-bottom: 8px;
+.pillar-card-desc {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.92);
+    margin-bottom: 24px;
 }
 
-.wavy-card-btn {
-    background: #0D7C7A;
+.pillar-card-link {
     color: #FFFFFF;
-    font-size: 0.76rem;
+    font-size: 0.88rem;
     font-weight: 800;
-    padding: 6px 16px;
-    border-radius: 16px;
     text-decoration: none;
-    display: inline-block;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(13, 124, 122, 0.28);
-}
-
-.wavy-card-btn:hover {
-    background: #095958;
-    color: #FFFFFF;
-}
-
-.wavy-carousel-indicators {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
+    gap: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    padding-top: 14px;
+    transition: opacity 0.2s ease;
 }
 
-.wavy-indicator-pill {
-    width: 28px;
-    height: 6px;
-    background: #FFFFFF;
-    border-radius: 4px;
-}
-
-.wavy-indicator-dot {
-    width: 6px;
-    height: 6px;
-    background: rgba(255, 255, 255, 0.5);
-    border-radius: 50%;
+.pillar-card-link:hover {
+    opacity: 0.85;
 }
 
 @media (max-width: 1024px) {
-    .wavy-cards-grid {
+    .pillars-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-    }
-    .wavy-banner-container {
-        border-radius: 30px;
-        padding: 40px 24px;
     }
 }
 
 @media (max-width: 600px) {
-    .wavy-cards-grid {
+    .pillars-grid {
         grid-template-columns: 1fr;
-    }
-    .wavy-round-card {
-        max-width: 260px;
-        margin: 0 auto;
     }
 }
 
