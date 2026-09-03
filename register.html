@@ -188,11 +188,11 @@
                     <div class="grid-cols-2">
                         <div class="form-group">
                             <label class="form-label" for="regNicNumber">National Identity Card (NIC) Number <span style="color:#E53E3E;">*</span></label>
-                            <input class="form-control" type="text" id="regNicNumber" placeholder="e.g. 199512345678 / 951234567V">
+                            <input class="form-control" type="text" id="regNicNumber" placeholder="e.g. 199512345678 / 951234567V" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">NIC Front / Document Copy (PDF / Image)</label>
-                            <input type="file" id="nicUploadInput" class="form-control" accept=".pdf,.png,.jpg,.jpeg" onchange="handleDocUpload(this, 'regNicDocUrl')">
+                            <label class="form-label">NIC Front / Document Copy (PDF / Image) <span style="color:#E53E3E;">*</span></label>
+                            <input type="file" id="nicUploadInput" class="form-control" accept=".pdf,.png,.jpg,.jpeg" onchange="handleDocUpload(this, 'regNicDocUrl')" required>
                             <input type="hidden" id="regNicDocUrl" value="">
                         </div>
                     </div>
@@ -203,31 +203,31 @@
                     <h4 style="color: var(--color-teal-primary); margin-bottom: 12px; font-size: 0.95rem; font-weight: 800;">Organisational Details & Business Registration (BR)</h4>
                     <div class="grid-cols-2">
                         <div class="form-group">
-                            <label class="form-label" for="regOrgName">Organisation Official Name</label>
+                            <label class="form-label" for="regOrgName">Organisation Official Name <span style="color:#E53E3E;">*</span></label>
                             <input class="form-control" type="text" id="regOrgName" placeholder="e.g. Apex Global Foundation">
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="regOrgNumber">Official Registration Number (BR / NGO)</label>
+                            <label class="form-label" for="regOrgNumber">Official Registration Number (BR / NGO) <span style="color:#E53E3E;">*</span></label>
                             <input class="form-control" type="text" id="regOrgNumber" placeholder="e.g. PV-12345 / NGO-LK-889">
                         </div>
                     </div>
                     <div class="grid-cols-2">
                         <div class="form-group">
-                            <label class="form-label" for="regRepName">Authorised Representative Name</label>
+                            <label class="form-label" for="regRepName">Authorised Representative Name <span style="color:#E53E3E;">*</span></label>
                             <input class="form-control" type="text" id="regRepName" placeholder="e.g. Dr. Nimal Jayasinghe">
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="regRepDesignation">Representative Designation</label>
+                            <label class="form-label" for="regRepDesignation">Representative Designation <span style="color:#E53E3E;">*</span></label>
                             <input class="form-control" type="text" id="regRepDesignation" placeholder="e.g. CSR Manager / Director">
                         </div>
                     </div>
                     <div class="grid-cols-2">
                         <div class="form-group">
-                            <label class="form-label" for="regRepPhone">Representative Phone</label>
+                            <label class="form-label" for="regRepPhone">Representative Phone <span style="color:#E53E3E;">*</span></label>
                             <input class="form-control" type="tel" id="regRepPhone" placeholder="e.g. +94 71 987 6543">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Business Registration (BR) Document (PDF / Image)</label>
+                            <label class="form-label">Business Registration (BR) Document (PDF / Image) <span style="color:#E53E3E;">*</span></label>
                             <input type="file" id="brUploadInput" class="form-control" accept=".pdf,.png,.jpg,.jpeg" onchange="handleDocUpload(this, 'regBrDocUrl')">
                             <input type="hidden" id="regBrDocUrl" value="">
                         </div>
@@ -239,46 +239,46 @@
                     <h4 style="color: var(--color-teal-primary); margin-bottom: 12px; font-size: 0.95rem; font-weight: 800;">Receiver Organisation Details & Official Bank Account</h4>
                     <div class="grid-cols-2">
                         <div class="form-group">
-                            <label class="form-label" for="regReceiverAddress">Full Official Address</label>
+                            <label class="form-label" for="regReceiverAddress">Full Official Address <span style="color:#E53E3E;">*</span></label>
                             <input class="form-control" type="text" id="regReceiverAddress" placeholder="e.g. No 45, Kandy Road, Peradeniya">
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="regReceiverRegNumber">Official NGO / Government Reg Number</label>
+                            <label class="form-label" for="regReceiverRegNumber">Official NGO / Government Reg Number <span style="color:#E53E3E;">*</span></label>
                             <input class="form-control" type="text" id="regReceiverRegNumber" placeholder="e.g. NGO-LK-2024-889">
                         </div>
                     </div>
                     <div class="grid-cols-2">
                         <div class="form-group">
-                            <label class="form-label" for="regReceiverRep">Authorised Representative Name</label>
+                            <label class="form-label" for="regReceiverRep">Authorised Representative Name <span style="color:#E53E3E;">*</span></label>
                             <input class="form-control" type="text" id="regReceiverRep" placeholder="e.g. Rev. Sister Mary">
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="regBankName">Bank Name</label>
+                            <label class="form-label" for="regBankName">Bank Name <span style="color:#E53E3E;">*</span></label>
                             <input class="form-control" type="text" id="regBankName" placeholder="e.g. Bank of Ceylon">
                         </div>
                     </div>
                     <div class="grid-cols-3">
                         <div class="form-group">
-                            <label class="form-label" for="regAccountName">Account Name</label>
+                            <label class="form-label" for="regAccountName">Account Name <span style="color:#E53E3E;">*</span></label>
                             <input class="form-control" type="text" id="regAccountName" placeholder="e.g. Grace Elders Home Fund">
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="regAccountNumber">Account Number</label>
+                            <label class="form-label" for="regAccountNumber">Account Number <span style="color:#E53E3E;">*</span></label>
                             <input class="form-control" type="text" id="regAccountNumber" placeholder="e.g. 789012345">
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="regBankBranch">Branch</label>
+                            <label class="form-label" for="regBankBranch">Branch <span style="color:#E53E3E;">*</span></label>
                             <input class="form-control" type="text" id="regBankBranch" placeholder="e.g. Kandy Main Branch">
                         </div>
                     </div>
                     <div class="grid-cols-2" style="margin-bottom: 0;">
                         <div class="form-group">
-                            <label class="form-label">Registration Certificate (PDF/Image)</label>
+                            <label class="form-label">Registration Certificate (PDF/Image) <span style="color:#E53E3E;">*</span></label>
                             <input type="file" id="receiverRegUploadInput" class="form-control" accept=".pdf,.png,.jpg,.jpeg" onchange="handleDocUpload(this, 'regReceiverDocUrl')">
                             <input type="hidden" id="regReceiverDocUrl" value="">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Official Bank Account Proof (PDF/Image)</label>
+                            <label class="form-label">Official Bank Account Proof (PDF/Image) <span style="color:#E53E3E;">*</span></label>
                             <input type="file" id="bankDocUploadInput" class="form-control" accept=".pdf,.png,.jpg,.jpeg" onchange="handleDocUpload(this, 'regBankDocUrl')">
                             <input type="hidden" id="regBankDocUrl" value="">
                         </div>

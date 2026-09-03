@@ -642,14 +642,15 @@ document.addEventListener("DOMContentLoaded", () => {
             const city = document.getElementById("regCity")?.value.trim() || "";
             const postalCode = document.getElementById("regPostalCode")?.value.trim() || "";
 
-            if (!name) {
-                showToast("Please enter your full name.", "warning");
+            if (!name || name.length < 2) {
+                showToast("Please enter your full name (at least 2 characters).", "warning");
                 document.getElementById("regName")?.focus();
                 return;
             }
 
-            if (!phone) {
-                showToast("Please enter your contact phone number.", "warning");
+            const phoneClean = phone.replace(/[^0-9+]/g, '');
+            if (!phoneClean || phoneClean.replace(/[^0-9]/g, '').length < 9) {
+                showToast("Please enter a valid contact phone number (at least 9 digits).", "warning");
                 document.getElementById("regPhone")?.focus();
                 return;
             }
@@ -681,12 +682,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            if (!address) {
+            // 4. Operating Address & City Validation
+            if (!address || address.length < 3) {
                 showToast("Please provide your street address / premise location.", "warning");
                 document.getElementById("regAddress")?.focus();
                 return;
             }
 
+            if (!city || city.length < 2) {
+                showToast("Please enter your city / town.", "warning");
+                document.getElementById("regCity")?.focus();
+                return;
+            }
+
+            // 5. Role-Specific Strict Field & Document Upload Validation
             let individualDetails = null;
             if (accountType === 'donor_individual') {
                 const nicNumber = document.getElementById("regNicNumber")?.value.trim() || "";
@@ -703,11 +712,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (!nicNumber) {
                     showToast("Please provide your National Identity Card (NIC) number.", "warning");
+                    document.getElementById("regNicNumber")?.focus();
                     return;
                 }
 
+                // Strict NIC Format Check (Sri Lankan NIC format: 9 digits + V/X or 12 digits)
+                const nicRegex = /^([0-9]{9}[vVxX]|[0-9]{12})$/;
+                if (!nicRegex.test(nicNumber)) {
+                    showToast("Please enter a valid NIC Number (e.g. 199512345678 or 951234567V).", "warning");
+                    document.getElementById("regNicNumber")?.focus();
+                    return;
+                }
+
+                // Mandatory NIC Document Upload Check
                 if (!nicDoc) {
-                    nicDoc = "attached_via_registration_form";
+                    showToast("Please upload your NIC image or document (PNG, JPG, or PDF) to verify identity.", "warning");
+                    if (nicInput) {
+                        nicInput.classList.add("input-error");
+                        nicInput.focus();
+                    }
+                    return;
+                } else if (nicInput) {
+                    nicInput.classList.remove("input-error");
                 }
 
                 individualDetails = {
@@ -719,7 +745,11 @@ document.addEventListener("DOMContentLoaded", () => {
             let orgDetails = null;
             if (accountType === 'donor_org') {
                 const orgNumEl = document.getElementById("regOrgNumber");
-                const orgNameInput = document.getElementById("regOrgName")?.value.trim() || name;
+                const orgNum = orgNumEl ? orgNumEl.value.trim() : "";
+                const orgNameInput = document.getElementById("regOrgName")?.value.trim() || "";
+                const repName = document.getElementById("regRepName")?.value.trim() || "";
+                const repDesignation = document.getElementById("regRepDesignation")?.value.trim() || "";
+                const repPhone = document.getElementById("regRepPhone")?.value.trim() || "";
                 let brDoc = document.getElementById("regBrDocUrl")?.value || "";
 
                 const brInput = document.getElementById("brUploadInput");
@@ -733,20 +763,51 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (!orgNameInput) {
                     showToast("Please provide your Organisation Name.", "warning");
+                    document.getElementById("regOrgName")?.focus();
+                    return;
+                }
+
+                if (!orgNum) {
+                    showToast("Please provide your Official Registration Number (BR / NGO).", "warning");
+                    document.getElementById("regOrgNumber")?.focus();
+                    return;
+                }
+
+                if (!repName) {
+                    showToast("Please provide the Authorised Representative Name.", "warning");
+                    document.getElementById("regRepName")?.focus();
+                    return;
+                }
+
+                if (!repDesignation) {
+                    showToast("Please provide the Representative Designation.", "warning");
+                    document.getElementById("regRepDesignation")?.focus();
+                    return;
+                }
+
+                if (!repPhone) {
+                    showToast("Please provide the Representative Phone Number.", "warning");
+                    document.getElementById("regRepPhone")?.focus();
                     return;
                 }
 
                 if (!brDoc) {
-                    // Fallback to placeholder notice if user did not choose a file
-                    brDoc = "attached_via_registration_form";
+                    showToast("Please upload your Business Registration (BR) or NGO certification document.", "warning");
+                    if (brInput) {
+                        brInput.classList.add("input-error");
+                        brInput.focus();
+                    }
+                    return;
+                } else if (brInput) {
+                    brInput.classList.remove("input-error");
                 }
 
                 orgDetails = {
                     orgName: orgNameInput,
-                    registrationNumber: orgNumEl ? orgNumEl.value.trim() : "",
-                    repName: document.getElementById("regRepName")?.value.trim() || name,
-                    repDesignation: document.getElementById("regRepDesignation")?.value.trim() || "Authorised Representative",
-                    repPhone: document.getElementById("regRepPhone")?.value.trim() || phone,
+                    registrationNumber: orgNum,
+                    repName: repName,
+                    repDesignation: repDesignation,
+                    repPhone: repPhone,
                     brDocUrl: brDoc
                 };
             }
@@ -754,6 +815,13 @@ document.addEventListener("DOMContentLoaded", () => {
             let receiverDetails = null;
             if (accountType === 'receiver') {
                 const recNumEl = document.getElementById("regReceiverRegNumber");
+                const recNum = recNumEl ? recNumEl.value.trim() : "";
+                const recAddress = document.getElementById("regReceiverAddress")?.value.trim() || address;
+                const recRep = document.getElementById("regReceiverRep")?.value.trim() || "";
+                const bankName = document.getElementById("regBankName")?.value.trim();
+                const accountName = document.getElementById("regAccountName")?.value.trim() || name;
+                const accountNumber = document.getElementById("regAccountNumber")?.value.trim();
+                const bankBranch = document.getElementById("regBankBranch")?.value.trim() || "";
                 let recDoc = document.getElementById("regReceiverDocUrl")?.value || "";
                 let bankDoc = document.getElementById("regBankDocUrl")?.value || "";
 
@@ -769,25 +837,84 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (document.getElementById("regBankDocUrl")) document.getElementById("regBankDocUrl").value = bankDoc;
                 }
 
-                const bankName = document.getElementById("regBankName")?.value.trim();
-                const accountNumber = document.getElementById("regAccountNumber")?.value.trim();
-
-                if (!bankName || !accountNumber) {
-                    showToast("Please provide Bank Name and Account Number.", "warning");
+                if (!receiverCategory) {
+                    showToast("Please select your Receiver Category.", "warning");
+                    document.getElementById("regReceiverCategory")?.focus();
                     return;
                 }
 
-                if (!recDoc) recDoc = "attached_via_registration_form";
-                if (!bankDoc) bankDoc = "attached_via_registration_form";
+                if (!recAddress) {
+                    showToast("Please enter the Full Official Address of your organisation.", "warning");
+                    document.getElementById("regReceiverAddress")?.focus();
+                    return;
+                }
+
+                if (!recNum) {
+                    showToast("Please provide your Official NGO / Government Registration Number.", "warning");
+                    document.getElementById("regReceiverRegNumber")?.focus();
+                    return;
+                }
+
+                if (!recRep) {
+                    showToast("Please provide the Authorised Representative Name.", "warning");
+                    document.getElementById("regReceiverRep")?.focus();
+                    return;
+                }
+
+                if (!bankName) {
+                    showToast("Please enter your Bank Name.", "warning");
+                    document.getElementById("regBankName")?.focus();
+                    return;
+                }
+
+                if (!accountName) {
+                    showToast("Please enter your Official Bank Account Name.", "warning");
+                    document.getElementById("regAccountName")?.focus();
+                    return;
+                }
+
+                if (!accountNumber) {
+                    showToast("Please enter your Bank Account Number.", "warning");
+                    document.getElementById("regAccountNumber")?.focus();
+                    return;
+                }
+
+                if (!bankBranch) {
+                    showToast("Please enter your Bank Branch.", "warning");
+                    document.getElementById("regBankBranch")?.focus();
+                    return;
+                }
+
+                if (!recDoc) {
+                    showToast("Please upload your Official Organisation Registration Certificate.", "warning");
+                    if (recInput) {
+                        recInput.classList.add("input-error");
+                        recInput.focus();
+                    }
+                    return;
+                } else if (recInput) {
+                    recInput.classList.remove("input-error");
+                }
+
+                if (!bankDoc) {
+                    showToast("Please upload your Official Bank Account Proof / statement header.", "warning");
+                    if (bankInput) {
+                        bankInput.classList.add("input-error");
+                        bankInput.focus();
+                    }
+                    return;
+                } else if (bankInput) {
+                    bankInput.classList.remove("input-error");
+                }
 
                 receiverDetails = {
-                    address: address,
-                    registrationNumber: recNumEl ? recNumEl.value.trim() : "",
-                    repName: document.getElementById("regReceiverRep")?.value.trim() || name,
+                    address: recAddress,
+                    registrationNumber: recNum,
+                    repName: recRep,
                     bankName: bankName,
-                    accountName: document.getElementById("regAccountName")?.value.trim() || name,
+                    accountName: accountName,
                     accountNumber: accountNumber,
-                    bankBranch: document.getElementById("regBankBranch")?.value.trim() || "",
+                    bankBranch: bankBranch,
                     registrationDocUrl: recDoc,
                     bankDocUrl: bankDoc
                 };

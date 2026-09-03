@@ -12,39 +12,87 @@ if (isset($_SESSION['user'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register | GiveGo</title>
     
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <!-- External CSS -->
-    <link rel="stylesheet" href="css/styles.css">
-    
+    <link rel="stylesheet" href="css/styles.css?v=112.0">
+
     <!-- Firebase Compat SDKs (CDN) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
-</head>
-<body style="background-color: var(--color-bg-base);">
 
-    <div class="container" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 24px;">
-        <div class="glass-panel fade-in" style="width: 100%; max-width: 800px; padding: 40px; border-radius: var(--radius-lg); position: relative; overflow: hidden; background: #FFFFFF;">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif;
+            background-color: var(--color-bg-base);
+            margin: 0;
+            padding: 0;
+        }
+        @media (max-width: 600px) {
+            .reg-container { padding: 16px 10px !important; }
+            .reg-panel { padding: 24px 16px !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="top-navbar">
+        <div class="nav-container">
+            <!-- Brand Logo & Name -->
+            <a href="index.php#home" class="nav-brand">
+                <img src="uploads/logo.png" alt="GiveGo Logo" class="nav-brand-logo" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=150&q=80';">
+                <span class="nav-brand-name">GiveGo</span>
+            </a>
+
+            <!-- Center Navigation Links -->
+            <nav>
+                <ul class="nav-menu" id="navMenu">
+                    <li class="nav-menu-item"><a href="index.php#home">Home</a></li>
+                    <li class="nav-menu-item"><a href="index.php#about">About Us</a></li>
+                    <li class="nav-menu-item"><a href="index.php#pillars">Our Pillars</a></li>
+                    <li class="nav-menu-item"><a href="index.php#gallery">Gallery</a></li>
+                    <li class="nav-menu-item"><a href="index.php#preview">Directory</a></li>
+                    <li class="nav-menu-item"><a href="index.php#contact">Contact Us</a></li>
+                </ul>
+            </nav>
+
+            <!-- Right Actions -->
+            <div class="nav-actions">
+                <a href="index.php" class="btn-nav-login">Sign In</a>
+                <a href="register.php" class="btn-royal-blue" style="padding: 9px 20px; font-size: 0.88rem;">Join GiveGo</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container reg-container" style="min-height: calc(100vh - 70px); display: flex; align-items: center; justify-content: center; padding: 40px 24px;">
+        <div class="glass-panel reg-panel" style="width: 100%; max-width: 820px; padding: 40px; border-radius: var(--radius-lg); background: #FFFFFF; border: 1px solid var(--color-border); box-shadow: 0 10px 30px rgba(0,0,0,0.06);">
             
             <!-- Header section -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 2px solid var(--color-border); padding-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 2px solid var(--color-bg-base); padding-bottom: 16px;">
                 <div>
-                    <img src="uploads/logo.png" alt="GiveGo Logo" style="max-height: 60px; width: auto; object-fit: contain;">
+                    <h2 style="font-size: 1.8rem; color: var(--color-teal-primary); margin: 0; font-weight: 800;">Create Your Account</h2>
                 </div>
-                <a href="index.php" style="color: var(--color-primary); text-decoration: none; font-size: 0.9rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; transition: var(--transition-smooth);">
-                    Back to Sign In
+                <a href="index.php" style="color: var(--color-teal-primary); text-decoration: none; font-size: 0.85rem; font-weight: 800;">
+                    ← Back to Home
                 </a>
             </div>
 
-            <h2 style="font-size: 2rem; color: var(--color-primary); margin-bottom: 6px;">Join the GiveGo Network</h2>
-            <p style="color: var(--color-text-muted); font-size: 0.95rem; margin-bottom: 24px;">Register as a Donor or a Receiver Organisation to manage essential charitable support.</p>
-            
-            <form id="registerForm">
+            <p style="color: var(--color-text-muted); font-size: 0.95rem; margin-bottom: 24px;">
+                Register as a Donor or a Receiver Organisation to coordinate transparent humanitarian material support.
+            </p>
+
+            <form id="registerForm" novalidate>
                 <!-- 1. Account Role Selection -->
-                <div class="form-group" style="margin-bottom: 24px;">
+                <div class="form-group" style="margin-bottom: 22px;">
                     <label class="form-label" for="regAccountType">Account Type</label>
-                    <select class="form-control form-select" id="regAccountType" required style="font-weight: 700; font-size: 1rem;">
+                    <select class="form-control form-select" id="regAccountType" required style="font-weight: 700; font-size: 0.95rem;">
                         <option value="donor_individual">Donor — Individual</option>
                         <option value="donor_org">Donor — Organisation / Corporate</option>
                         <option value="receiver">Receiver Organisation (Hospital, Elder's Home, Children's Home, Disaster Management, Other)</option>
@@ -54,12 +102,12 @@ if (isset($_SESSION['user'])) {
                 <!-- 2. Basic Profile Credentials (All Users) -->
                 <div class="grid-cols-2">
                     <div class="form-group">
-                        <label class="form-label" for="regName" id="lblRegName">Full Name</label>
+                        <label class="form-label" for="regName" id="lblRegName">Full Name <span style="color:#E53E3E;">*</span></label>
                         <input class="form-control" type="text" id="regName" placeholder="e.g. Anura Silva" required>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="regPhone">Contact Phone Number</label>
+                        <label class="form-label" for="regPhone">Contact Phone Number <span style="color:#E53E3E;">*</span></label>
                         <input class="form-control" type="tel" id="regPhone" placeholder="e.g. +94 77 123 4567" required>
                     </div>
                 </div>
@@ -96,9 +144,10 @@ if (isset($_SESSION['user'])) {
                     </div>
                 </div>
 
+                <!-- Location & Categories -->
                 <div class="grid-cols-2">
                     <div class="form-group">
-                        <label class="form-label" for="regDistrict">District / Operating Location</label>
+                        <label class="form-label" for="regDistrict">District / Operating Location <span style="color:#E53E3E;">*</span></label>
                         <select class="form-control form-select" id="regDistrict" required>
                             <option value="Colombo">Colombo</option>
                             <option value="Gampaha">Gampaha</option>
@@ -140,187 +189,194 @@ if (isset($_SESSION['user'])) {
                     </div>
                 </div>
 
-                <!-- 3. Organisational Donor Specific Fields -->
-                <div id="sectionOrgDonor" style="display: none; background: #FBF5DD; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--color-border-dark); margin-bottom: 20px;">
-                    <h4 style="color: var(--color-primary); margin-bottom: 12px; font-size: 1rem;">Organisational Details</h4>
-                    
+                <!-- 3A. Individual Donor Specific Fields (NIC Identification) -->
+                <div id="sectionIndividualDonor" style="background: #F5EFE0; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--color-border); margin-bottom: 20px;">
+                    <h4 style="color: var(--color-teal-primary); margin-bottom: 12px; font-size: 0.95rem; font-weight: 800;">Personal Identity Verification (NIC)</h4>
                     <div class="grid-cols-2">
                         <div class="form-group">
-                            <label class="form-label" for="regOrgName">Organisation Official Name</label>
+                            <label class="form-label" for="regNicNumber">National Identity Card (NIC) Number <span style="color:#E53E3E;">*</span></label>
+                            <input class="form-control" type="text" id="regNicNumber" placeholder="e.g. 199512345678 / 951234567V" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">NIC Front / Document Copy (PDF / Image) <span style="color:#E53E3E;">*</span></label>
+                            <input type="file" id="nicUploadInput" class="form-control" accept=".pdf,.png,.jpg,.jpeg" onchange="handleDocUpload(this, 'regNicDocUrl')" required>
+                            <input type="hidden" id="regNicDocUrl" value="">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3B. Organisational Donor Specific Fields -->
+                <div id="sectionOrgDonor" style="display: none; background: #F5EFE0; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--color-border); margin-bottom: 20px;">
+                    <h4 style="color: var(--color-teal-primary); margin-bottom: 12px; font-size: 0.95rem; font-weight: 800;">Organisational Details & Business Registration (BR)</h4>
+                    <div class="grid-cols-2">
+                        <div class="form-group">
+                            <label class="form-label" for="regOrgName">Organisation Official Name <span style="color:#E53E3E;">*</span></label>
                             <input class="form-control" type="text" id="regOrgName" placeholder="e.g. Apex Global Foundation">
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="regRepName">Authorised Representative Name</label>
-                            <input class="form-control" type="text" id="regRepName" placeholder="e.g. Dr. Nimal Jayasinghe">
+                            <label class="form-label" for="regOrgNumber">Official Registration Number (BR / NGO) <span style="color:#E53E3E;">*</span></label>
+                            <input class="form-control" type="text" id="regOrgNumber" placeholder="e.g. PV-12345 / NGO-LK-889">
                         </div>
                     </div>
-
                     <div class="grid-cols-2">
                         <div class="form-group">
-                            <label class="form-label" for="regRepDesignation">Representative Designation</label>
-                            <input class="form-control" type="text" id="regRepDesignation" placeholder="e.g. CSR Manager / Director">
+                            <label class="form-label" for="regRepName">Authorised Representative Name <span style="color:#E53E3E;">*</span></label>
+                            <input class="form-control" type="text" id="regRepName" placeholder="e.g. Dr. Nimal Jayasinghe">
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="regRepPhone">Representative Phone</label>
-                            <input class="form-control" type="tel" id="regRepPhone" placeholder="e.g. +94 71 987 6543">
+                            <label class="form-label" for="regRepDesignation">Representative Designation <span style="color:#E53E3E;">*</span></label>
+                            <input class="form-control" type="text" id="regRepDesignation" placeholder="e.g. CSR Manager / Director">
                         </div>
                     </div>
-
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label">Business Registration (BR) Document (PDF / Image)</label>
-                        <input type="file" id="brUploadInput" class="form-control" accept=".pdf,.png,.jpg,.jpeg">
-                        <input type="hidden" id="regBrDocUrl" value="">
+                    <div class="grid-cols-2">
+                        <div class="form-group">
+                            <label class="form-label" for="regRepPhone">Representative Phone <span style="color:#E53E3E;">*</span></label>
+                            <input class="form-control" type="tel" id="regRepPhone" placeholder="e.g. +94 71 987 6543">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Business Registration (BR) Document (PDF / Image) <span style="color:#E53E3E;">*</span></label>
+                            <input type="file" id="brUploadInput" class="form-control" accept=".pdf,.png,.jpg,.jpeg" onchange="handleDocUpload(this, 'regBrDocUrl')">
+                            <input type="hidden" id="regBrDocUrl" value="">
+                        </div>
                     </div>
                 </div>
 
                 <!-- 4. Receiver Specific Fields & Official Bank Details -->
-                <div id="sectionReceiver" style="display: none; background: #FBF5DD; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--color-border-dark); margin-bottom: 20px;">
-                    <h4 style="color: var(--color-primary); margin-bottom: 12px; font-size: 1rem;">Receiver Organisation Details & Official Bank Account</h4>
-                    
-                    <div class="form-group">
-                        <label class="form-label" for="regReceiverAddress">Full Official Address</label>
-                        <input class="form-control" type="text" id="regReceiverAddress" placeholder="e.g. No 45, Kandy Road, Peradeniya">
-                    </div>
-
+                <div id="sectionReceiver" style="display: none; background: #F5EFE0; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--color-border); margin-bottom: 20px;">
+                    <h4 style="color: var(--color-teal-primary); margin-bottom: 12px; font-size: 0.95rem; font-weight: 800;">Receiver Organisation Details & Official Bank Account</h4>
                     <div class="grid-cols-2">
                         <div class="form-group">
-                            <label class="form-label" for="regReceiverRep">Authorised Representative Name</label>
+                            <label class="form-label" for="regReceiverAddress">Full Official Address <span style="color:#E53E3E;">*</span></label>
+                            <input class="form-control" type="text" id="regReceiverAddress" placeholder="e.g. No 45, Kandy Road, Peradeniya">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="regReceiverRegNumber">Official NGO / Government Reg Number <span style="color:#E53E3E;">*</span></label>
+                            <input class="form-control" type="text" id="regReceiverRegNumber" placeholder="e.g. NGO-LK-2024-889">
+                        </div>
+                    </div>
+                    <div class="grid-cols-2">
+                        <div class="form-group">
+                            <label class="form-label" for="regReceiverRep">Authorised Representative Name <span style="color:#E53E3E;">*</span></label>
                             <input class="form-control" type="text" id="regReceiverRep" placeholder="e.g. Rev. Sister Mary">
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="regBankName">Bank Name</label>
+                            <label class="form-label" for="regBankName">Bank Name <span style="color:#E53E3E;">*</span></label>
                             <input class="form-control" type="text" id="regBankName" placeholder="e.g. Bank of Ceylon">
                         </div>
                     </div>
-
                     <div class="grid-cols-3">
                         <div class="form-group">
-                            <label class="form-label" for="regAccountName">Account Name</label>
+                            <label class="form-label" for="regAccountName">Account Name <span style="color:#E53E3E;">*</span></label>
                             <input class="form-control" type="text" id="regAccountName" placeholder="e.g. Grace Elders Home Fund">
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="regAccountNumber">Account Number</label>
+                            <label class="form-label" for="regAccountNumber">Account Number <span style="color:#E53E3E;">*</span></label>
                             <input class="form-control" type="text" id="regAccountNumber" placeholder="e.g. 789012345">
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="regBankBranch">Branch</label>
+                            <label class="form-label" for="regBankBranch">Branch <span style="color:#E53E3E;">*</span></label>
                             <input class="form-control" type="text" id="regBankBranch" placeholder="e.g. Kandy Main Branch">
                         </div>
                     </div>
-
                     <div class="grid-cols-2" style="margin-bottom: 0;">
                         <div class="form-group">
-                            <label class="form-label">Registration Certificate (PDF/Image)</label>
-                            <input type="file" id="receiverRegUploadInput" class="form-control" accept=".pdf,.png,.jpg,.jpeg">
+                            <label class="form-label">Registration Certificate (PDF/Image) <span style="color:#E53E3E;">*</span></label>
+                            <input type="file" id="receiverRegUploadInput" class="form-control" accept=".pdf,.png,.jpg,.jpeg" onchange="handleDocUpload(this, 'regReceiverDocUrl')">
                             <input type="hidden" id="regReceiverDocUrl" value="">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Official Bank Account Proof (PDF/Image)</label>
-                            <input type="file" id="bankDocUploadInput" class="form-control" accept=".pdf,.png,.jpg,.jpeg">
+                            <label class="form-label">Official Bank Account Proof (PDF/Image) <span style="color:#E53E3E;">*</span></label>
+                            <input type="file" id="bankDocUploadInput" class="form-control" accept=".pdf,.png,.jpg,.jpeg" onchange="handleDocUpload(this, 'regBankDocUrl')">
                             <input type="hidden" id="regBankDocUrl" value="">
                         </div>
                     </div>
                 </div>
 
-                <!-- 5. Geolocation Coordinates -->
-                <div class="glass-panel" style="padding: 16px; border-radius: var(--radius-md); margin-bottom: 24px; background: #FBF5DD;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <label class="form-label" style="margin-bottom: 0;">GPS Location Coordinates</label>
-                        <button type="button" id="btnGeolocate" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 4px;">
-                            Detect Location
-                        </button>
+                <!-- 5. Operating Address & Location -->
+                <div class="glass-panel" style="padding: 20px; border-radius: var(--radius-md); margin-bottom: 24px; background: #F5EFE0;">
+                    <h4 style="color: var(--color-teal-primary); margin-bottom: 12px; font-size: 0.95rem; font-weight: 800;">Operating Address & Premise Location</h4>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label class="form-label" for="regAddress">Street Address / Premise Details <span style="color:#E53E3E;">*</span></label>
+                        <input class="form-control" type="text" id="regAddress" placeholder="e.g. No. 45, Galle Road, Bambalapitiya" required>
                     </div>
-                    
                     <div class="grid-cols-2" style="gap: 16px;">
                         <div class="form-group" style="margin-bottom: 0;">
-                            <label class="form-label" style="font-size: 0.75rem;">Latitude</label>
-                            <input class="form-control" type="number" step="any" id="regLat" value="6.927100" required>
+                            <label class="form-label" for="regCity">City / Town <span style="color:#E53E3E;">*</span></label>
+                            <input class="form-control" type="text" id="regCity" placeholder="e.g. Colombo 04" required>
                         </div>
                         <div class="form-group" style="margin-bottom: 0;">
-                            <label class="form-label" style="font-size: 0.75rem;">Longitude</label>
-                            <input class="form-control" type="number" step="any" id="regLng" value="79.861200" required>
+                            <label class="form-label" for="regPostalCode">Postal Code (Optional)</label>
+                            <input class="form-control" type="text" id="regPostalCode" placeholder="e.g. 00400">
                         </div>
                     </div>
                 </div>
 
-                <button class="btn btn-primary" type="submit" style="width: 100%; font-size: 1rem; padding: 12px;">
+                <button class="btn btn-primary" type="submit" style="width: 100%; font-size: 1rem; padding: 14px; font-weight: 800;">
                     Complete Registration
                 </button>
             </form>
+
+            <div style="text-align: center; margin-top: 18px; font-size: 0.85rem; color: #667067;">
+                Already registered? <a href="index.php" style="color: #0D7C7A; font-weight: 800; text-decoration: none;">Sign In</a> | <a href="index.php" style="color: #0D7C7A; font-weight: 700; text-decoration: none;">About Us</a> | <a href="index.php" style="color: #0D7C7A; font-weight: 700; text-decoration: none;">Contact Us</a>
+            </div>
         </div>
     </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
 
     <!-- Core Javascript Files -->
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
     <script>
+        window.handleDocUpload = function(input, targetHiddenId) {
+            const file = input.files && input.files[0];
+            const targetHidden = document.getElementById(targetHiddenId);
+            if (!file) {
+                if (targetHidden) targetHidden.value = "";
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (targetHidden) targetHidden.value = e.target.result;
+                if (window.showToast) window.showToast("Document attached: " + file.name, "success");
+            };
+            reader.readAsDataURL(file);
+        };
+
         document.addEventListener("DOMContentLoaded", () => {
             const accTypeSelect = document.getElementById("regAccountType");
+            const secIndividualDonor = document.getElementById("sectionIndividualDonor");
             const secOrgDonor = document.getElementById("sectionOrgDonor");
             const secReceiver = document.getElementById("sectionReceiver");
-            const groupDonorCat = document.getElementById("groupDonorCategories");
             const groupRecCat = document.getElementById("groupReceiverCategory");
             const lblName = document.getElementById("lblRegName");
 
             function toggleAccountTypeUI() {
                 const val = accTypeSelect.value;
                 if (val === 'donor_individual') {
+                    if (secIndividualDonor) secIndividualDonor.style.display = "block";
                     if (secOrgDonor) secOrgDonor.style.display = "none";
                     if (secReceiver) secReceiver.style.display = "none";
                     if (groupRecCat) groupRecCat.style.display = "none";
-                    lblName.textContent = "Full Name";
+                    lblName.textContent = "Full Name *";
                 } else if (val === 'donor_org') {
+                    if (secIndividualDonor) secIndividualDonor.style.display = "none";
                     if (secOrgDonor) secOrgDonor.style.display = "block";
                     if (secReceiver) secReceiver.style.display = "none";
                     if (groupRecCat) groupRecCat.style.display = "none";
-                    lblName.textContent = "Contact Person Name";
+                    lblName.textContent = "Contact Person Name *";
                 } else if (val === 'receiver') {
+                    if (secIndividualDonor) secIndividualDonor.style.display = "none";
                     if (secOrgDonor) secOrgDonor.style.display = "none";
                     if (secReceiver) secReceiver.style.display = "block";
                     if (groupRecCat) groupRecCat.style.display = "block";
-                    lblName.textContent = "Official Organisation Name";
+                    lblName.textContent = "Official Organisation Name *";
                 }
             }
 
             accTypeSelect.addEventListener("change", toggleAccountTypeUI);
             toggleAccountTypeUI();
-
-            async function bindFileUpload(inputId, hiddenFieldId) {
-                const input = document.getElementById(inputId);
-                const hidden = document.getElementById(hiddenFieldId);
-                if (!input || !hidden) return;
-
-                input.addEventListener("change", async (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-
-                    const formData = new FormData();
-                    formData.append("file", file);
-                    if (window.showToast) window.showToast("Uploading document...", "info");
-
-                    try {
-                        const response = await fetch("api/upload_handler.php", {
-                            method: "POST",
-                            body: formData
-                        });
-                        const result = await response.json();
-                        if (result.success) {
-                            hidden.value = result.filePath;
-                            if (window.showToast) window.showToast("Document uploaded successfully", "success");
-                        } else {
-                            if (window.showToast) window.showToast(result.error || "Upload failed.", "danger");
-                            input.value = "";
-                        }
-                    } catch (err) {
-                        if (window.showToast) window.showToast("Upload server error.", "danger");
-                        console.error(err);
-                    }
-                });
-            }
-
-            bindFileUpload("brUploadInput", "regBrDocUrl");
-            bindFileUpload("receiverRegUploadInput", "regReceiverDocUrl");
-            bindFileUpload("bankDocUploadInput", "regBankDocUrl");
         });
     </script>
 </body>
