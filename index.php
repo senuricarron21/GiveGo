@@ -174,7 +174,7 @@ if (isset($_SESSION['user'])) {
                     <!-- Circular Card 1: Surplus Materials -->
                     <div class="wavy-round-card" onclick="window.location.href='register.php'">
                         <span class="wavy-card-tag">Direct Aid</span>
-                        <div class="wavy-card-icon">📦</div>
+                        <img src="https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=300&q=80" alt="Surplus Materials & Food Provisions" class="wavy-card-img">
                         <div class="wavy-card-title">Surplus Materials</div>
                         <div class="wavy-card-meta">100% Free Handover</div>
                         <a href="register.php" class="wavy-card-btn">Donate Now</a>
@@ -183,7 +183,7 @@ if (isset($_SESSION['user'])) {
                     <!-- Circular Card 2: Charity Requests -->
                     <div class="wavy-round-card" onclick="window.location.href='register.php'">
                         <span class="wavy-card-tag">Verified NGO</span>
-                        <div class="wavy-card-icon">🏥</div>
+                        <img src="https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=300&q=80" alt="Charity & Medical Requests" class="wavy-card-img">
                         <div class="wavy-card-title">Charity Requests</div>
                         <div class="wavy-card-meta">High-Priority Needs</div>
                         <a href="register.php" class="wavy-card-btn">Fulfill Need</a>
@@ -192,7 +192,7 @@ if (isset($_SESSION['user'])) {
                     <!-- Circular Card 3: Smart GPS Matching -->
                     <div class="wavy-round-card" onclick="window.location.href='#preview'">
                         <span class="wavy-card-tag">Smart Match</span>
-                        <div class="wavy-card-icon">⚡</div>
+                        <img src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=300&q=80" alt="Dispatch Logistics & Tracking" class="wavy-card-img">
                         <div class="wavy-card-title">Dispatch & Telemetry</div>
                         <div class="wavy-card-meta">Live GPS Tracking</div>
                         <a href="#preview" class="wavy-card-btn">Track Radar</a>
@@ -201,7 +201,7 @@ if (isset($_SESSION['user'])) {
                     <!-- Circular Card 4: SLA Monetary Aid -->
                     <div class="wavy-round-card" onclick="window.location.href='#about'">
                         <span class="wavy-card-tag">14-Day SLA</span>
-                        <div class="wavy-card-icon">💳</div>
+                        <img src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=300&q=80" alt="Audited Monetary Aid & Receipts" class="wavy-card-img">
                         <div class="wavy-card-title">Audited Monetary Aid</div>
                         <div class="wavy-card-meta">Direct Disbursement</div>
                         <a href="#about" class="wavy-card-btn">Audit Proof</a>

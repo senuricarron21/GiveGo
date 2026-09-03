@@ -813,14 +813,24 @@ input[type="file"].form-control {
     border: 1px solid #BCE5E3;
 }
 
-.wavy-card-icon {
-    font-size: 2.2rem;
-    margin-top: 12px;
+.wavy-card-img {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-top: 14px;
     margin-bottom: 8px;
+    border: 2.5px solid #0D7C7A;
+    box-shadow: 0 4px 10px rgba(13, 124, 122, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.wavy-round-card:hover .wavy-card-img {
+    transform: scale(1.08);
 }
 
 .wavy-card-title {
-    font-size: 1rem;
+    font-size: 0.98rem;
     font-weight: 800;
     color: #1E293B;
     margin-bottom: 4px;
