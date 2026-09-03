@@ -316,8 +316,8 @@ if (isset($_SESSION['user'])) {
                 </button>
             </form>
 
-            <div style="text-align: center; margin-top: 18px; font-size: 0.85rem; color: #667067;">
-                Already registered? <a href="index.php" style="color: #0D7C7A; font-weight: 800; text-decoration: none;">Sign In</a> | <a href="index.php" style="color: #0D7C7A; font-weight: 700; text-decoration: none;">About Us</a> | <a href="index.php" style="color: #0D7C7A; font-weight: 700; text-decoration: none;">Contact Us</a>
+            <div style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #64748B;">
+                Already registered? <a href="index.php" style="color: #0D7C7A; font-weight: 800; text-decoration: none;">Sign In</a>
             </div>
         </div>
     </div>
