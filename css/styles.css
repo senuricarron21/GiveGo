@@ -729,86 +729,169 @@ input[type="file"].form-control {
     text-decoration: underline;
 }
 
-/* 4. FOUR COLORED HERO CARDS */
-.pillars-section {
+/* 4. WAVY ORGANIC PILLARS BANNER (MATCHING USER REFERENCE) */
+.wavy-pillars-section {
     padding: 80px 20px;
-    background: #F8FAFC;
-    border-top: 1px solid #E2E8F0;
-    border-bottom: 1px solid #E2E8F0;
+    background: #F4F8F7;
+    position: relative;
+    overflow: hidden;
 }
 
-.pillars-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-    max-width: 1240px;
+.wavy-banner-container {
+    max-width: 1260px;
+    margin: 0 auto;
+    background: linear-gradient(135deg, #0D7C7A 0%, #0A6664 50%, #085250 100%);
+    border-radius: 40px 100px 40px 100px / 80px 40px 80px 40px;
+    padding: 50px 36px 44px 36px;
+    box-shadow: 0 16px 40px rgba(13, 124, 122, 0.22);
+    position: relative;
+}
+
+.wavy-banner-header {
+    text-align: center;
+    color: #FFFFFF;
+    margin-bottom: 30px;
+}
+
+.wavy-banner-title {
+    font-size: 2.3rem;
+    font-weight: 900;
+    color: #FFFFFF;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+}
+
+.wavy-banner-subtitle {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.88);
+    max-width: 600px;
     margin: 0 auto;
 }
 
-.pillar-card {
-    border-radius: 12px;
-    padding: 32px 24px;
-    color: #FFFFFF;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    min-height: 320px;
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+.wavy-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 22px;
+    margin-top: 26px;
+    margin-bottom: 28px;
 }
 
-.pillar-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 28px rgba(0,0,0,0.14);
-}
-
-.pillar-card-yellow { background: #E5A93C; }
-.pillar-card-teal { background: #207D76; }
-.pillar-card-blue { background: #3B5ACB; }
-.pillar-card-coral { background: #E05A47; }
-
-.pillar-icon-badge {
-    width: 52px;
-    height: 52px;
+.wavy-round-card {
     background: #FFFFFF;
     border-radius: 50%;
+    aspect-ratio: 1 / 1;
+    min-height: 250px;
+    border: 4px solid rgba(255, 255, 255, 0.9);
+    padding: 24px 16px;
+    text-align: center;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: 1.4rem;
-    margin-bottom: 22px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    position: relative;
+    cursor: pointer;
 }
 
-.pillar-card-title {
-    font-size: 1.25rem;
+.wavy-round-card:hover {
+    transform: translateY(-8px) scale(1.03);
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.22);
+}
+
+.wavy-card-tag {
+    position: absolute;
+    top: 14px;
+    background: #E6F7F6;
+    color: #0D7C7A;
+    font-size: 0.7rem;
     font-weight: 800;
-    margin-bottom: 12px;
-    color: #FFFFFF;
+    padding: 3px 10px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid #BCE5E3;
+}
+
+.wavy-card-icon {
+    font-size: 2.2rem;
+    margin-top: 12px;
+    margin-bottom: 8px;
+}
+
+.wavy-card-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #1E293B;
+    margin-bottom: 4px;
     line-height: 1.25;
 }
 
-.pillar-card-desc {
-    font-size: 0.88rem;
-    line-height: 1.6;
-    color: rgba(255, 255, 255, 0.9);
-    margin-bottom: 20px;
+.wavy-card-meta {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #0D7C7A;
+    margin-bottom: 8px;
 }
 
-.pillar-card-link {
+.wavy-card-btn {
+    background: #0D7C7A;
     color: #FFFFFF;
-    font-size: 0.85rem;
+    font-size: 0.72rem;
     font-weight: 800;
+    padding: 5px 14px;
+    border-radius: 14px;
     text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    border-top: 1px solid rgba(255, 255, 255, 0.25);
-    padding-top: 14px;
+    display: inline-block;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(13, 124, 122, 0.25);
 }
 
-.pillar-card-link:hover {
-    opacity: 0.85;
+.wavy-card-btn:hover {
+    background: #095958;
+    color: #FFFFFF;
+}
+
+.wavy-carousel-indicators {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.wavy-indicator-pill {
+    width: 28px;
+    height: 6px;
+    background: #FFFFFF;
+    border-radius: 4px;
+}
+
+.wavy-indicator-dot {
+    width: 6px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+}
+
+@media (max-width: 1024px) {
+    .wavy-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+    .wavy-banner-container {
+        border-radius: 30px;
+        padding: 40px 24px;
+    }
+}
+
+@media (max-width: 600px) {
+    .wavy-cards-grid {
+        grid-template-columns: 1fr;
+    }
+    .wavy-round-card {
+        max-width: 260px;
+        margin: 0 auto;
+    }
 }
 
 /* 5. MASONRY BENTO GALLERY */

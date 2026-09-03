@@ -159,63 +159,61 @@ if (isset($_SESSION['user'])) {
             </div>
         </section>
 
-        <!-- 3. OUR PILLARS / 4 COLORED HERO CARDS (EXACT MOCKUP MATCH) -->
-        <section id="pillars" class="pillars-section">
-            <div class="mockup-section-header">
-                <span class="mockup-eyebrow">Our Workflow & Pillars</span>
-                <h2 class="mockup-title">We Do It For All People</h2>
-                <p class="mockup-subtitle">
-                    Four purpose-built modules designed to bring complete accountability, speed, and dignity to community aid.
-                </p>
-            </div>
-
-            <div class="pillars-grid">
-                <!-- Card 1: Yellow -->
-                <div class="pillar-card pillar-card-yellow">
-                    <div>
-                        <div class="pillar-icon-badge" style="color: #E5A93C;">📦</div>
-                        <h3 class="pillar-card-title">Surplus Material Donations</h3>
-                        <p class="pillar-card-desc">
-                            Donors easily list surplus physical goods including food rations, school stationery, hospital linens, and furniture.
-                        </p>
-                    </div>
-                    <a href="register.php" class="pillar-card-link">List Surplus Material →</a>
+        <!-- 3. OUR PILLARS / WAVY ORGANIC BANNER & FLOATING CIRCULAR CARDS (EXACT REFERENCE MATCH) -->
+        <section id="pillars" class="wavy-pillars-section">
+            <div class="wavy-banner-container">
+                <div class="wavy-banner-header">
+                    <h2 class="wavy-banner-title">Our Core Platform Pillars</h2>
+                    <p class="wavy-banner-subtitle">
+                        Direct material redistribution, smart distance matching, and verified 14-day SLA proof of utilisation.
+                    </p>
                 </div>
 
-                <!-- Card 2: Teal -->
-                <div class="pillar-card pillar-card-teal">
-                    <div>
-                        <div class="pillar-icon-badge" style="color: #207D76;">🏥</div>
-                        <h3 class="pillar-card-title">Verified Charity Requests</h3>
-                        <p class="pillar-card-desc">
-                            Audited welfare institutions post specific item requirements and emergency needs with transparent quantities.
-                        </p>
+                <!-- Floating Circular Pod Cards (Reference Match) -->
+                <div class="wavy-cards-grid">
+                    <!-- Circular Card 1: Surplus Materials -->
+                    <div class="wavy-round-card" onclick="window.location.href='register.php'">
+                        <span class="wavy-card-tag">Direct Aid</span>
+                        <div class="wavy-card-icon">📦</div>
+                        <div class="wavy-card-title">Surplus Materials</div>
+                        <div class="wavy-card-meta">100% Free Handover</div>
+                        <a href="register.php" class="wavy-card-btn">Donate Now</a>
                     </div>
-                    <a href="register.php" class="pillar-card-link">Submit Needs Request →</a>
+
+                    <!-- Circular Card 2: Charity Requests -->
+                    <div class="wavy-round-card" onclick="window.location.href='register.php'">
+                        <span class="wavy-card-tag">Verified NGO</span>
+                        <div class="wavy-card-icon">🏥</div>
+                        <div class="wavy-card-title">Charity Requests</div>
+                        <div class="wavy-card-meta">High-Priority Needs</div>
+                        <a href="register.php" class="wavy-card-btn">Fulfill Need</a>
+                    </div>
+
+                    <!-- Circular Card 3: Smart GPS Matching -->
+                    <div class="wavy-round-card" onclick="window.location.href='#preview'">
+                        <span class="wavy-card-tag">Smart Match</span>
+                        <div class="wavy-card-icon">⚡</div>
+                        <div class="wavy-card-title">Dispatch & Telemetry</div>
+                        <div class="wavy-card-meta">Live GPS Tracking</div>
+                        <a href="#preview" class="wavy-card-btn">Track Radar</a>
+                    </div>
+
+                    <!-- Circular Card 4: SLA Monetary Aid -->
+                    <div class="wavy-round-card" onclick="window.location.href='#about'">
+                        <span class="wavy-card-tag">14-Day SLA</span>
+                        <div class="wavy-card-icon">💳</div>
+                        <div class="wavy-card-title">Audited Monetary Aid</div>
+                        <div class="wavy-card-meta">Direct Disbursement</div>
+                        <a href="#about" class="wavy-card-btn">Audit Proof</a>
+                    </div>
                 </div>
 
-                <!-- Card 3: Blue -->
-                <div class="pillar-card pillar-card-blue">
-                    <div>
-                        <div class="pillar-icon-badge" style="color: #3B5ACB;">⚡</div>
-                        <h3 class="pillar-card-title">Intelligent Match & Dispatch</h3>
-                        <p class="pillar-card-desc">
-                            Real-time matching engine connects nearby donors and charities with in-app chat coordination and live GPS radar.
-                        </p>
-                    </div>
-                    <a href="#preview" class="pillar-card-link">Explore Match System →</a>
-                </div>
-
-                <!-- Card 4: Coral -->
-                <div class="pillar-card pillar-card-coral">
-                    <div>
-                        <div class="pillar-icon-badge" style="color: #E05A47;">💳</div>
-                        <h3 class="pillar-card-title">SLA Proof & Monetary Aid</h3>
-                        <p class="pillar-card-desc">
-                            Direct bank disbursement protected by a 14-day verified proof-of-utilisation evidence and invoice upload system.
-                        </p>
-                    </div>
-                    <a href="#about" class="pillar-card-link">View Audit Framework →</a>
+                <!-- Carousel Slider Indicators (Reference Match) -->
+                <div class="wavy-carousel-indicators">
+                    <span class="wavy-indicator-pill"></span>
+                    <span class="wavy-indicator-dot"></span>
+                    <span class="wavy-indicator-dot"></span>
+                    <span class="wavy-indicator-dot"></span>
                 </div>
             </div>
         </section>
