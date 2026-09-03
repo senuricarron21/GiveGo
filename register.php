@@ -95,7 +95,7 @@ if (isset($_SESSION['user'])) {
                     <select class="form-control form-select" id="regAccountType" required style="font-weight: 700; font-size: 0.95rem;">
                         <option value="donor_individual">Donor — Individual</option>
                         <option value="donor_org">Donor — Organisation / Corporate</option>
-                        <option value="receiver">Receiver Organisation (Hospital, Elder's Home, Children's Home, Disaster Management, Other)</option>
+                        <option value="receiver">Receiver Organisation (Hospital, Elder's Home, Children's Home, Educational Institutions, Disaster Management, Other)</option>
                     </select>
                 </div>
 
@@ -183,6 +183,7 @@ if (isset($_SESSION['user'])) {
                             <option value="Hospital / Medical">Hospital / Medical</option>
                             <option value="Elder's Home">Elder's Home</option>
                             <option value="Children's Home">Children's Home</option>
+                            <option value="Educational Institutions">Educational Institutions</option>
                             <option value="Disaster Management">Disaster Management</option>
                             <option value="Other">Other</option>
                         </select>
