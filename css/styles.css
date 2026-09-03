@@ -60,23 +60,33 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
     font-weight: 700;
     border-radius: var(--radius-sm);
-    padding: 10px 18px;
+    padding: 10px 20px;
+    min-height: 42px;
     cursor: pointer;
-    border: none;
+    border: 1px solid transparent;
     transition: var(--transition-smooth);
     text-decoration: none;
-    font-size: 0.85rem;
+    font-size: 0.88rem;
+    line-height: 1.2;
+    box-sizing: border-box;
+    white-space: nowrap;
+    text-align: center;
 }
 
 .btn-primary {
     background-color: var(--color-teal-primary);
     color: #FFFFFF;
+    border-color: var(--color-teal-primary);
+    box-shadow: 0 2px 6px rgba(13, 124, 122, 0.2);
 }
 
 .btn-primary:hover {
     background-color: var(--color-teal-dark);
+    border-color: var(--color-teal-dark);
+    box-shadow: 0 4px 12px rgba(13, 124, 122, 0.3);
 }
 
 .btn-secondary {
@@ -87,56 +97,120 @@ body {
 
 .btn-secondary:hover {
     background-color: #D8CE9C;
+    color: var(--color-teal-dark);
 }
 
 .btn-danger {
     background-color: #DC3545;
     color: #FFFFFF;
+    border-color: #DC3545;
+}
+
+.btn-danger:hover {
+    background-color: #BD2130;
+    border-color: #B21F2D;
 }
 
 .btn-warning {
     background-color: #FFC107;
     color: #212529;
+    border-color: #FFC107;
 }
 
-/* Forms */
+.btn-warning:hover {
+    background-color: #E0A800;
+}
+
+/* Grids & Layout Alignments */
+.grid-cols-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    align-items: start;
+    width: 100%;
+}
+
+.grid-cols-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    align-items: start;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .grid-cols-2,
+    .grid-cols-3 {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+}
+
+/* Forms & Input Controls */
 .form-group {
-    margin-bottom: 16px;
+    margin-bottom: 18px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .form-label {
     display: block;
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     font-weight: 800;
     color: var(--color-teal-primary);
     margin-bottom: 6px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    line-height: 1.2;
 }
 
 .form-control {
     width: 100%;
+    min-height: 42px;
     padding: 10px 14px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--color-border);
+    border: 1.5px solid var(--color-border);
     background-color: #FFFFFF;
     color: var(--color-text-dark);
-    font-size: 0.9rem;
+    font-size: 0.92rem;
+    font-family: inherit;
     outline: none;
     transition: var(--transition-smooth);
+    box-sizing: border-box;
 }
 
 .form-control:focus {
     border-color: var(--color-teal-primary);
-    box-shadow: 0 0 0 3px rgba(13, 124, 122, 0.12);
+    box-shadow: 0 0 0 3px rgba(13, 124, 122, 0.15);
+}
+
+.form-control::placeholder {
+    color: #8C998E;
+    font-size: 0.88rem;
+}
+
+textarea.form-control {
+    min-height: 90px;
+    resize: vertical;
+    line-height: 1.5;
 }
 
 .form-select {
     appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%230D7C7A' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 14px center;
-    padding-right: 36px;
+    padding-right: 38px;
+    cursor: pointer;
+}
+
+input[type="file"].form-control {
+    padding: 7px 12px;
+    background: #FAF8F2;
+    cursor: pointer;
 }
 
 /* Toast Container & Alerts */
