@@ -773,13 +773,38 @@ document.addEventListener("DOMContentLoaded", () => {
     if (reqTypeSelect) {
         const toggleReqTypeFields = () => {
             const val = reqTypeSelect.value;
+            const groupCat = document.getElementById("groupReqCategory");
+            const groupItemName = document.getElementById("groupReqItemName");
+            const reqItemNameInput = document.getElementById("reqItemName");
+            const reqCategorySelect = document.getElementById("reqCategory");
             const secPhys = document.getElementById("secReqPhysical");
             const secMon = document.getElementById("secReqMonetary");
             const secVol = document.getElementById("secReqVolunteer");
 
-            if (secPhys) secPhys.style.display = val === 'physical' ? 'block' : 'none';
-            if (secMon) secMon.style.display = val === 'monetary' ? 'block' : 'none';
-            if (secVol) secVol.style.display = val === 'volunteer' ? 'block' : 'none';
+            if (val === 'physical') {
+                if (groupCat) groupCat.style.display = "block";
+                if (groupItemName) groupItemName.style.display = "block";
+                if (reqItemNameInput) reqItemNameInput.required = true;
+                if (reqCategorySelect) reqCategorySelect.required = true;
+                if (secPhys) secPhys.style.display = "block";
+                if (secMon) secMon.style.display = "none";
+                if (secVol) secVol.style.display = "none";
+            } else {
+                // When volunteer or monetary is selected, Category and Item/Need Title disappear
+                if (groupCat) groupCat.style.display = "none";
+                if (groupItemName) groupItemName.style.display = "none";
+                if (reqItemNameInput) reqItemNameInput.required = false;
+                if (reqCategorySelect) reqCategorySelect.required = false;
+                if (secPhys) secPhys.style.display = "none";
+
+                if (val === 'monetary') {
+                    if (secMon) secMon.style.display = "block";
+                    if (secVol) secVol.style.display = "none";
+                } else if (val === 'volunteer') {
+                    if (secMon) secMon.style.display = "none";
+                    if (secVol) secVol.style.display = "block";
+                }
+            }
         };
 
         reqTypeSelect.addEventListener("change", toggleReqTypeFields);
@@ -807,12 +832,31 @@ document.addEventListener("DOMContentLoaded", () => {
             const db = helper.db();
 
             const reqType = document.getElementById("reqType").value;
-            const itemName = document.getElementById("reqItemName").value.trim();
-            const category = document.getElementById("reqCategory").value;
+            let itemName = "";
+            let category = "";
             const description = document.getElementById("reqDescription").value.trim();
 
-            if (!itemName || !category || !description) {
-                showToast("Please complete all required request fields.", "warning");
+            if (reqType === 'physical') {
+                itemName = document.getElementById("reqItemName")?.value.trim() || "";
+                category = document.getElementById("reqCategory")?.value || "General Supplies";
+                if (!itemName) {
+                    showToast("Please enter the Item / Need Title.", "warning");
+                    document.getElementById("reqItemName")?.focus();
+                    return;
+                }
+            } else if (reqType === 'monetary') {
+                const amount = parseFloat(document.getElementById("reqAmount")?.value) || 0;
+                itemName = amount > 0 ? `Monetary Support Request (LKR ${amount.toLocaleString()})` : "Monetary Donation Request";
+                category = "Monetary Donation";
+            } else if (reqType === 'volunteer') {
+                const volCount = parseInt(document.getElementById("reqVolunteersCount")?.value) || 5;
+                itemName = `Volunteer Support Request (${volCount} Volunteers)`;
+                category = "Volunteer Support";
+            }
+
+            if (!description) {
+                showToast("Please complete the detailed request description.", "warning");
+                document.getElementById("reqDescription")?.focus();
                 return;
             }
 
@@ -861,6 +905,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 await db.collection("requests").add(requestDoc);
                 showToast("Request submitted successfully. Pending Admin review.", "success");
                 formRequestMaterials.reset();
+                if (reqTypeSelect) {
+                    reqTypeSelect.value = "physical";
+                    reqTypeSelect.dispatchEvent(new Event("change"));
+                }
                 updateOverviewStats();
             } catch (err) {
                 showToast("Error publishing request.", "danger");
