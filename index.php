@@ -10,10 +10,15 @@ if (isset($_SESSION['user'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GiveGo | From your hands to the hearts that need it</title>
+    <title>GiveGo | Verified Material Donation & Dispatch Management Platform</title>
+    
+    <!-- Google Fonts: Playfair Display (Editorial Serif) & Plus Jakarta Sans / Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- External CSS -->
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles.css?v=110.0">
     
     <!-- Firebase Compat SDKs (CDN) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -21,80 +26,593 @@ if (isset($_SESSION['user'])) {
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
+    
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif; margin: 0; padding: 0; background: #FFFFFF; color: #1E293B; }
+    </style>
 </head>
-<body style="background-color: var(--color-bg-base);">
+<body>
 
-    <!-- Main Landing Layout -->
-    <div class="container" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 24px;">
-        <div class="grid-cols-2" style="align-items: center; width: 100%; max-width: 1100px;">
-            
-            <!-- Left Side: Platform Mission Branding -->
-            <div class="fade-in" style="padding-right: 20px;">
-                <div style="margin-bottom: 24px;">
-                    <img src="uploads/logo.png" alt="GiveGo - From your hands to the hearts that need it." style="max-height: 110px; width: auto; object-fit: contain;">
-                </div>
-                
-                <h1 class="gradient-text" style="font-size: 2.8rem; line-height: 1.15; margin-bottom: 16px;">
-                    Connecting generous donors with <span class="gradient-accent-text">verified receiver needs.</span>
+    <!-- TOP NAVIGATION BAR -->
+    <header class="top-navbar">
+        <div class="nav-container">
+            <!-- Brand Logo & Name -->
+            <a href="#home" class="nav-brand">
+                <img src="uploads/logo.png" alt="GiveGo Logo" class="nav-brand-logo" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=150&q=80';">
+                <span class="nav-brand-name">GiveGo</span>
+            </a>
+
+            <!-- Center Navigation Links -->
+            <nav>
+                <ul class="nav-menu" id="navMenu">
+                    <li class="nav-menu-item"><a href="#home" class="active">Home</a></li>
+                    <li class="nav-menu-item"><a href="#about">About Us</a></li>
+                    <li class="nav-menu-item"><a href="#pillars">Our Pillars</a></li>
+                    <li class="nav-menu-item"><a href="#gallery">Gallery</a></li>
+                    <li class="nav-menu-item"><a href="#preview">Live Directory</a></li>
+                    <li class="nav-menu-item"><a href="#contact">Contact Us</a></li>
+                </ul>
+            </nav>
+
+            <!-- Right Actions: Login & Register Buttons -->
+            <div class="nav-actions" id="navAuthActions">
+                <button type="button" class="btn-nav-login" onclick="openLoginModal()">Sign In</button>
+                <a href="register.php" class="btn-royal-blue" style="padding: 9px 20px; font-size: 0.88rem;">Join GiveGo</a>
+                <button type="button" class="mobile-nav-toggle-btn" onclick="toggleMobileNav()" aria-label="Toggle navigation menu">☰</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN HOMEPAGE CONTENT -->
+    <main>
+
+        <!-- 1. EDITORIAL SPLIT HERO SECTION (EXACT MOCKUP MATCH) -->
+        <section id="home" class="editorial-hero">
+            <div class="editorial-hero-left">
+                <div class="editorial-hero-tag">Transparent Giving Platform</div>
+                <h1 class="editorial-hero-title">
+                    Charity is an<br>
+                    act of a soft<br>
+                    heart
                 </h1>
-                
-                <p style="color: var(--color-text-muted); font-size: 1.05rem; margin-bottom: 28px; max-width: 500px;">
-                    GiveGo is an intelligent, location-aware donation platform designed for transparent material support, monetary funding tracking with 14-day utilisation proof, and coordinated volunteer activities.
+                <p class="editorial-hero-desc">
+                    GiveGo powers verified material donation, transparent monetary aid with 14-day SLA proof, and real-time dispatch logistics across schools, hospitals, and welfare institutions.
                 </p>
-                
-                <!-- Quick Stats -->
-                <div style="display: flex; gap: 40px; margin-top: 20px;">
-                    <div>
-                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--color-primary);">1,420+</div>
-                        <div style="font-size: 0.8rem; color: var(--color-text-muted); font-weight: 700; text-transform: uppercase;">Matches Made</div>
+                <div class="editorial-hero-actions">
+                    <a href="register.php" class="btn-royal-blue">Donate Now</a>
+                    <a href="#about" class="spin-badge-wrapper">
+                        <div class="spin-badge-circle">▶</div>
+                        <span class="spin-badge-text">Learn More</span>
+                    </a>
+                </div>
+            </div>
+            <div class="editorial-hero-right">
+                <img src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80" alt="Smiling Children Receiving Community Support" class="editorial-hero-img">
+            </div>
+        </section>
+
+        <!-- 2. LEARN ABOUT US SECTION (EXACT MOCKUP MATCH) -->
+        <section id="about" class="about-section">
+            <div class="about-grid">
+                <!-- Left: Description & 4-Stat Metrics -->
+                <div>
+                    <span class="mockup-eyebrow">Fundraiser Network</span>
+                    <h2 class="mockup-title" style="font-size: 2.5rem;">Learn About Us</h2>
+                    <p style="color: #475569; font-size: 1rem; line-height: 1.7; margin-bottom: 16px;">
+                        Every year, tons of usable educational materials, medical equipment, and surplus supplies are wasted while registered welfare homes face shortages due to fragmented communication.
+                    </p>
+                    <p style="color: #475569; font-size: 0.95rem; line-height: 1.7; margin-bottom: 24px;">
+                        GiveGo connects generous individual and corporate donors directly with vetted charitable organizations through automated matching, live GPS telemetry, and auditable proof of delivery.
+                    </p>
+
+                    <!-- 4-Stat Metric Grid -->
+                    <div class="about-stats-grid">
+                        <div class="about-stat-item">
+                            <div class="about-stat-num">1,420+</div>
+                            <div class="about-stat-label">Projects Completed</div>
+                        </div>
+                        <div class="about-stat-item">
+                            <div class="about-stat-num">50k+</div>
+                            <div class="about-stat-label">Beneficiaries Impacted</div>
+                        </div>
+                        <div class="about-stat-item">
+                            <div class="about-stat-num">25</div>
+                            <div class="about-stat-label">Districts Covered</div>
+                        </div>
+                        <div class="about-stat-item">
+                            <div class="about-stat-num">100%</div>
+                            <div class="about-stat-label">SLA Evidence Verified</div>
+                        </div>
                     </div>
-                    <div>
-                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--color-secondary);">890 kg+</div>
-                        <div style="font-size: 0.8rem; color: var(--color-text-muted); font-weight: 700; text-transform: uppercase;">Materials Distributed</div>
+                </div>
+
+                <!-- Right: 3 Stacked Cards with Number Badges -->
+                <div>
+                    <div class="stacked-card">
+                        <div class="stacked-card-num" style="background: #207D76;">1</div>
+                        <div>
+                            <div class="stacked-card-title">Mission & Vision</div>
+                            <div class="stacked-card-desc">Establishing 100% closed-loop transparency for humanitarian aid and surplus redistribution across Sri Lanka.</div>
+                            <a href="#pillars" class="stacked-card-link">Learn More →</a>
+                        </div>
                     </div>
-                    <div>
-                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--color-primary);">99.4%</div>
-                        <div style="font-size: 0.8rem; color: var(--color-text-muted); font-weight: 700; text-transform: uppercase;">SLA Compliance</div>
+
+                    <div class="stacked-card">
+                        <div class="stacked-card-num" style="background: #E5A93C;">2</div>
+                        <div>
+                            <div class="stacked-card-title">Smart Matching Engine</div>
+                            <div class="stacked-card-desc">Automatic pairing algorithm connecting donors and verified receivers by geographic district and urgency.</div>
+                            <a href="#pillars" class="stacked-card-link">Learn More →</a>
+                        </div>
+                    </div>
+
+                    <div class="stacked-card">
+                        <div class="stacked-card-num" style="background: #E05A47;">3</div>
+                        <div>
+                            <div class="stacked-card-title">Strict Governance & Audit</div>
+                            <div class="stacked-card-desc">Official NGO registration vetting, bank validation, and 14-day mandatory proof of utilisation receipts.</div>
+                            <a href="#pillars" class="stacked-card-link">Learn More →</a>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Right Side: Login Panel -->
-            <div class="glass-panel fade-in" style="padding: 40px; border-radius: var(--radius-lg); position: relative; overflow: hidden; background: #FFFFFF;">
-                <div style="position: relative; z-index: 2;">
-                    <h2 style="font-size: 2rem; color: var(--color-primary); margin-bottom: 8px;">Welcome Back</h2>
-                    <p style="color: var(--color-text-muted); font-size: 0.95rem; margin-bottom: 30px;">Sign in to access your GiveGo donation dashboard.</p>
-                    
-                    <form id="loginForm">
-                        <div class="form-group">
-                            <label class="form-label" for="loginEmail">Email Address</label>
-                            <input class="form-control" type="email" id="loginEmail" placeholder="e.g. donor@givego.lk" required>
-                        </div>
-                        
-                        <div class="form-group" style="margin-bottom: 24px;">
-                            <label class="form-label" for="loginPassword">Password</label>
-                            <input class="form-control" type="password" id="loginPassword" placeholder="••••••••" required>
-                        </div>
-                        
-                        <button class="btn btn-primary" type="submit" style="width: 100%; margin-bottom: 20px; font-size: 1rem; padding: 12px;">
-                            Sign In
-                        </button>
-                    </form>
-                    
-                    <div style="text-align: center; font-size: 0.95rem; color: var(--color-text-muted);">
-                        New to GiveGo? 
-                        <a href="register.php" style="color: var(--color-primary); text-decoration: none; font-weight: 700; margin-left: 4px;">
-                            Create an Account
-                        </a>
+        </section>
+
+        <!-- 3. OUR PILLARS / 4 COLORED HERO CARDS (EXACT MOCKUP MATCH) -->
+        <section id="pillars" class="pillars-section">
+            <div class="mockup-section-header">
+                <span class="mockup-eyebrow">Our Workflow & Pillars</span>
+                <h2 class="mockup-title">We Do It For All People</h2>
+                <p class="mockup-subtitle">
+                    Four purpose-built modules designed to bring complete accountability, speed, and dignity to community aid.
+                </p>
+            </div>
+
+            <div class="pillars-grid">
+                <!-- Card 1: Yellow -->
+                <div class="pillar-card pillar-card-yellow">
+                    <div>
+                        <div class="pillar-icon-badge" style="color: #E5A93C;">📦</div>
+                        <h3 class="pillar-card-title">Surplus Material Donations</h3>
+                        <p class="pillar-card-desc">
+                            Donors easily list surplus physical goods including food rations, school stationery, hospital linens, and furniture.
+                        </p>
+                    </div>
+                    <a href="register.php" class="pillar-card-link">List Surplus Material →</a>
+                </div>
+
+                <!-- Card 2: Teal -->
+                <div class="pillar-card pillar-card-teal">
+                    <div>
+                        <div class="pillar-icon-badge" style="color: #207D76;">🏥</div>
+                        <h3 class="pillar-card-title">Verified Charity Requests</h3>
+                        <p class="pillar-card-desc">
+                            Audited welfare institutions post specific item requirements and emergency needs with transparent quantities.
+                        </p>
+                    </div>
+                    <a href="register.php" class="pillar-card-link">Submit Needs Request →</a>
+                </div>
+
+                <!-- Card 3: Blue -->
+                <div class="pillar-card pillar-card-blue">
+                    <div>
+                        <div class="pillar-icon-badge" style="color: #3B5ACB;">⚡</div>
+                        <h3 class="pillar-card-title">Intelligent Match & Dispatch</h3>
+                        <p class="pillar-card-desc">
+                            Real-time matching engine connects nearby donors and charities with in-app chat coordination and live GPS radar.
+                        </p>
+                    </div>
+                    <a href="#preview" class="pillar-card-link">Explore Match System →</a>
+                </div>
+
+                <!-- Card 4: Coral -->
+                <div class="pillar-card pillar-card-coral">
+                    <div>
+                        <div class="pillar-icon-badge" style="color: #E05A47;">💳</div>
+                        <h3 class="pillar-card-title">SLA Proof & Monetary Aid</h3>
+                        <p class="pillar-card-desc">
+                            Direct bank disbursement protected by a 14-day verified proof-of-utilisation evidence and invoice upload system.
+                        </p>
+                    </div>
+                    <a href="#about" class="pillar-card-link">View Audit Framework →</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. OUR GALLERY SECTION (MASONRY BENTO PHOTO GRID) -->
+        <section id="gallery" class="gallery-section">
+            <div class="mockup-section-header">
+                <span class="mockup-eyebrow">Our Impact Gallery</span>
+                <h2 class="mockup-title">Help Children Rise Out of Poverty</h2>
+                <p class="mockup-subtitle">
+                    Real moments of transparent material redistribution, relief deliveries, and smiles created across Sri Lanka.
+                </p>
+            </div>
+
+            <div class="gallery-grid">
+                <!-- Item 1 (Tall) -->
+                <div class="gallery-item gallery-item-tall">
+                    <img src="https://images.unsplash.com/photo-1509099836639-18ba1795216d?auto=format&fit=crop&w=800&q=80" alt="Children learning with donated school supplies">
+                    <div class="gallery-overlay">
+                        <span class="gallery-overlay-text">School Stationery & Learning Packs</span>
+                    </div>
+                </div>
+
+                <!-- Item 2 -->
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=800&q=80" alt="Rural community welfare mission">
+                    <div class="gallery-overlay">
+                        <span class="gallery-overlay-text">Rural Community Health & Care</span>
+                    </div>
+                </div>
+
+                <!-- Item 3 -->
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1542810634-71277d95dcbb?auto=format&fit=crop&w=800&q=80" alt="Children receiving aid">
+                    <div class="gallery-overlay">
+                        <span class="gallery-overlay-text">Children's Orphanage Aid Support</span>
+                    </div>
+                </div>
+
+                <!-- Item 4 -->
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=800&q=80" alt="Packing dry ration food packages">
+                    <div class="gallery-overlay">
+                        <span class="gallery-overlay-text">Food Rations & Essential Supplies</span>
+                    </div>
+                </div>
+
+                <!-- Item 5 -->
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1578357078586-491adf1aa5ba?auto=format&fit=crop&w=800&q=80" alt="Volunteer logistics dispatch truck">
+                    <div class="gallery-overlay">
+                        <span class="gallery-overlay-text">Direct Handover & Verified Delivery</span>
                     </div>
                 </div>
             </div>
-            
+        </section>
+
+        <!-- 5. JOIN OUR ACTION CTA SPLIT (EXACT MOCKUP MATCH) -->
+        <section class="action-cta-section">
+            <div class="action-cta-grid">
+                <!-- Left: Action Text & Buttons -->
+                <div>
+                    <span class="mockup-eyebrow">Give Your Big Hands</span>
+                    <h2 class="mockup-title" style="font-size: 2.4rem; margin-bottom: 16px;">
+                        Join Our Action!<br>
+                        Everyone Can Help
+                    </h2>
+                    <p style="color: #64748B; font-size: 1rem; line-height: 1.7; margin-bottom: 28px;">
+                        Whether you are an individual with surplus goods, a company seeking CSR accountability, or a charity in need of essential supplies, your involvement powers real change.
+                    </p>
+                    <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+                        <a href="register.php" class="btn-royal-blue">Join GiveGo</a>
+                        <button type="button" onclick="openLoginModal()" class="btn-nav-login" style="padding: 12px 24px; font-size: 0.95rem;">Sign In</button>
+                    </div>
+                    <!-- Decorative Dots -->
+                    <div class="dot-pattern">
+                        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                </div>
+
+                <!-- Right: Volunteers Team Image -->
+                <div class="action-cta-img-card">
+                    <img src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=800&q=80" alt="Cheerful Volunteer Community Team">
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. LIVE PLATFORM DIRECTORY (REAL-TIME FIRESTORE LISTINGS) -->
+        <section id="preview" style="padding: 70px 20px; max-width: 1240px; margin: 0 auto;">
+            <div class="mockup-section-header">
+                <span class="mockup-eyebrow">Real-Time Directory</span>
+                <h2 class="mockup-title">Current Material Exchanges</h2>
+                <p class="mockup-subtitle">
+                    Explore live physical surplus items and active community requests currently listed on the GiveGo network.
+                </p>
+            </div>
+            <div class="landing-card-grid" id="liveLandingItemsContainer">
+                <div style="text-align:center; grid-column:1/-1; padding:30px; color:#64748B;">
+                    Loading live platform listings...
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. CONTACT US SECTION -->
+        <section id="contact" style="padding: 70px 20px; background: #F8FAFC; border-top: 1px solid #E2E8F0;">
+            <div style="max-width: 1100px; margin: 0 auto;">
+                <div class="mockup-section-header">
+                    <span class="mockup-eyebrow">Get in Touch</span>
+                    <h2 class="mockup-title">Contact GiveGo Support</h2>
+                    <p class="mockup-subtitle">
+                        Have inquiries about listing donations, organizational verification, or partnering with us? Reach out anytime.
+                    </p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 36px;" class="grid-cols-2">
+                    <!-- Left: Direct Info -->
+                    <div class="glass-panel" style="padding: 32px; background: #FFFFFF; border-radius: 16px;">
+                        <h4 style="color: #1E293B; font-weight: 800; font-size: 1.2rem; margin-bottom: 20px;">Support Channels</h4>
+                        <div style="margin-bottom: 18px;">
+                            <div style="font-size: 0.75rem; font-weight: 800; color: #64748B; text-transform: uppercase;">Headquarters</div>
+                            <div style="font-size: 0.95rem; font-weight: 700; color: #1E293B; margin-top: 4px;">GiveGo Central Hub, Colombo 03, Sri Lanka</div>
+                        </div>
+                        <div style="margin-bottom: 18px;">
+                            <div style="font-size: 0.75rem; font-weight: 800; color: #64748B; text-transform: uppercase;">Support Desk Hotline</div>
+                            <div style="font-size: 0.95rem; font-weight: 700; color: #3B5ACB; margin-top: 4px;">+94 (11) 234-5678</div>
+                        </div>
+                        <div style="margin-bottom: 18px;">
+                            <div style="font-size: 0.75rem; font-weight: 800; color: #64748B; text-transform: uppercase;">Inquiries Email</div>
+                            <div style="font-size: 0.95rem; font-weight: 700; color: #3B5ACB; margin-top: 4px;">support@givego.lk</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; font-weight: 800; color: #64748B; text-transform: uppercase;">Hours of Operation</div>
+                            <div style="font-size: 0.9rem; color: #1E293B; margin-top: 4px;">Monday – Saturday: 8:00 AM – 7:00 PM</div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Contact Form -->
+                    <div class="glass-panel" style="padding: 32px; background: #FFFFFF; border-radius: 16px;">
+                        <form id="formLandingContact" onsubmit="event.preventDefault(); showToast('Thank you! Your message has been sent to GiveGo Support.', 'success'); this.reset();">
+                            <h4 style="color: #1E293B; font-weight: 800; font-size: 1.2rem; margin-bottom: 20px;">Send Us a Message</h4>
+                            <div class="grid-cols-2">
+                                <div class="form-group">
+                                    <label class="form-label">Your Name</label>
+                                    <input class="form-control" type="text" placeholder="e.g. Ruwan Silva" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Email Address</label>
+                                    <input class="form-control" type="email" placeholder="e.g. ruwan@example.com" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Subject / Category</label>
+                                <select class="form-control form-select" required>
+                                    <option value="">Select Inquiry Topic...</option>
+                                    <option value="donor">Donor Support & Item Listing</option>
+                                    <option value="receiver">Charity / NGO Verification</option>
+                                    <option value="dispatch">Dispatch & Tracking Assistance</option>
+                                    <option value="partnership">Corporate / Institutional Partnership</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Your Message</label>
+                                <textarea class="form-control" rows="3" placeholder="How can our GiveGo team assist you?" required></textarea>
+                            </div>
+                            <button type="submit" class="btn-royal-blue" style="width: 100%; border-radius: 8px;">
+                                Submit Message to Support
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 8. DARK FOOTER (EXACT MOCKUP MATCH) -->
+    <footer class="dark-mockup-footer">
+        <div class="dark-footer-grid">
+            <!-- Brand Column -->
+            <div>
+                <div class="dark-footer-brand">
+                    <img src="uploads/logo.png" alt="GiveGo Logo" style="height:34px; filter:brightness(0) invert(1);" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=150&q=80';">
+                    <span>GiveGo</span>
+                </div>
+                <p class="dark-footer-desc">
+                    Intelligent material donation, verified dispatch logistics, and SLA-backed accountability network empowering Sri Lanka.
+                </p>
+                <div class="dark-social-links">
+                    <a href="#" class="dark-social-icon" aria-label="Facebook">f</a>
+                    <a href="#" class="dark-social-icon" aria-label="Twitter">t</a>
+                    <a href="#" class="dark-social-icon" aria-label="LinkedIn">in</a>
+                    <a href="#" class="dark-social-icon" aria-label="Instagram">ig</a>
+                </div>
+            </div>
+
+            <!-- Useful Links -->
+            <div>
+                <div class="dark-footer-col-title">Useful Links</div>
+                <ul class="dark-footer-links">
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#about">About Us</a></li>
+                    <li><a href="#pillars">Our Pillars</a></li>
+                    <li><a href="#gallery">Gallery</a></li>
+                    <li><a href="#contact">Contact Us</a></li>
+                </ul>
+            </div>
+
+            <!-- Engage -->
+            <div>
+                <div class="dark-footer-col-title">Engage</div>
+                <ul class="dark-footer-links">
+                    <li><a href="register.php">For Donors</a></li>
+                    <li><a href="register.php">For Receivers</a></li>
+                    <li><a href="#preview">Available Items</a></li>
+                    <li><a href="javascript:void(0)" onclick="openLoginModal()">Sign In</a></li>
+                    <li><a href="register.php">Register Account</a></li>
+                </ul>
+            </div>
+
+            <!-- Contacts Us -->
+            <div>
+                <div class="dark-footer-col-title">Contacts Us</div>
+                <div style="font-size: 0.88rem; color: #94A3B8; line-height: 1.7;">
+                    <div>GiveGo Central Hub, Colombo 03</div>
+                    <div style="margin-top: 6px; color: #FFFFFF; font-weight: 700;">support@givego.lk</div>
+                    <div style="margin-top: 4px; color: #3B5ACB; font-weight: 800;">+94 (11) 234-5678</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dark-footer-bottom">
+            &copy; 2026 GiveGo Platform. All rights reserved. Registered under humanitarian material dispatch guidelines.
+        </div>
+    </footer>
+
+    <!-- INTERACTIVE SIGN IN MODAL -->
+    <div id="modalLogin" class="modal">
+        <div class="modal-content glass-panel" style="background:#FFFFFF; border-radius:20px; padding:36px; max-width:440px; width:90%; border:1px solid #E2E8F0; box-shadow:0 16px 40px rgba(0,0,0,0.2); position:relative;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1.5px solid #F1F5F9; padding-bottom:14px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <img src="uploads/logo.png" alt="Logo" style="height:32px;" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=150&q=80';">
+                    <h3 style="color:#1E293B; font-weight:800; font-size:1.2rem; margin:0;">Sign In to GiveGo</h3>
+                </div>
+                <button type="button" onclick="closeLoginModal()" style="background:#F1F5F9; border:none; padding:6px 12px; border-radius:6px; font-weight:800; cursor:pointer; color:#475569;">✕</button>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label for="loginEmail" class="form-label">Email Address</label>
+                    <input type="email" id="loginEmail" class="form-control" placeholder="e.g. user@givego.lk" required autocomplete="email">
+                </div>
+
+                <div class="form-group" style="margin-bottom:20px;">
+                    <label for="loginPassword" class="form-label">Password</label>
+                    <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+
+                <button class="btn-royal-blue" type="submit" style="width:100%; padding:12px; border-radius:8px; font-size:1rem; margin-bottom:16px;">
+                    Sign In to Dashboard
+                </button>
+            </form>
+
+            <div style="text-align:center; font-size:0.88rem; color:#64748B; border-top:1px solid #F1F5F9; padding-top:14px;">
+                New to GiveGo? <a href="register.php" style="color:#3B5ACB; font-weight:800; text-decoration:none;">Create an Account</a>
+            </div>
         </div>
     </div>
 
-    <!-- Core Javascript Files -->
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Firebase Config & Auth Scripts -->
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
+    <script>
+        // Interactive Navigation & Modal Controls
+        function openLoginModal() {
+            const modal = document.getElementById("modalLogin");
+            if (modal) modal.classList.add("active");
+        }
+        function closeLoginModal() {
+            const modal = document.getElementById("modalLogin");
+            if (modal) modal.classList.remove("active");
+        }
+        function toggleMobileNav() {
+            const nav = document.getElementById("navMenu");
+            if (nav) nav.classList.toggle("open");
+        }
+
+        // Close mobile nav when link clicked
+        document.querySelectorAll(".nav-menu-item a").forEach(link => {
+            link.addEventListener("click", () => {
+                const nav = document.getElementById("navMenu");
+                if (nav) nav.classList.remove("open");
+            });
+        });
+
+        // Real-time live material listings from Firestore
+        function initLiveLandingItems() {
+            const container = document.getElementById("liveLandingItemsContainer");
+            if (!container) return;
+
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            if (!helper || !helper.db()) {
+                setTimeout(initLiveLandingItems, 400);
+                return;
+            }
+
+            const db = helper.db();
+            let liveDonations = [];
+            let liveRequests = [];
+
+            const renderLiveCards = () => {
+                let combined = [];
+
+                liveDonations.forEach(d => {
+                    combined.push({
+                        type: 'donation',
+                        id: d.id,
+                        title: d.itemName || 'Material Item',
+                        description: d.description || 'Surplus material available for verified recipients.',
+                        quantity: d.quantity ? `${d.quantity} ${d.unit || 'units'}` : 'Available',
+                        location: d.district || d.donorDistrict || 'Sri Lanka',
+                        condition: d.condition || 'Good Condition'
+                    });
+                });
+
+                liveRequests.forEach(r => {
+                    combined.push({
+                        type: 'request',
+                        id: r.id,
+                        title: r.itemName || 'Material Request',
+                        description: r.description || r.purpose || 'Material requested for community support.',
+                        quantity: r.quantity ? `${r.quantity} ${r.unit || 'units'}` : 'Requested',
+                        location: r.district || r.receiverDistrict || 'Sri Lanka'
+                    });
+                });
+
+                if (combined.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align:center; grid-column:1/-1; padding:40px; color:#64748B; background:#FFFFFF; border-radius:14px; border:1px solid #E2E8F0;">
+                            <div style="font-size:1.8rem; margin-bottom:8px;">📦</div>
+                            <div style="font-weight:800; font-size:1.05rem; color:#1E293B;">No active listings at the moment</div>
+                            <div style="font-size:0.85rem; margin-top:4px;">Sign in to list surplus materials or submit a community request.</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = combined.slice(0, 6).map(item => {
+                    const isDonation = item.type === 'donation';
+                    const badgeType = isDonation 
+                        ? `<span style="font-size:0.75rem; font-weight:800; color:#207D76; text-transform:uppercase;">Surplus Available</span>` 
+                        : `<span style="font-size:0.75rem; font-weight:800; color:#E05A47; text-transform:uppercase;">Community Need</span>`;
+                    
+                    const metaInfo = isDonation 
+                        ? `Qty: ${item.quantity} • ${item.location}` 
+                        : `Target: ${item.quantity} • ${item.location}`;
+
+                    const actionBtn = isDonation
+                        ? `<button onclick="openLoginModal()" class="btn-royal-blue" style="width:100%; padding:9px; font-size:0.85rem; border-radius:6px;">Claim Item</button>`
+                        : `<button onclick="openLoginModal()" class="btn-royal-blue" style="width:100%; padding:9px; font-size:0.85rem; border-radius:6px; background:#E05A47;">Fulfill Need</button>`;
+
+                    return `
+                        <div class="landing-feature-card" style="display:flex; flex-direction:column; justify-content:space-between;">
+                            <div>
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                                    ${badgeType}
+                                    <span class="badge badge-success">Verified</span>
+                                </div>
+                                <h4 style="font-size:1.15rem; font-weight:800; color:#1E293B; margin-bottom:8px;">${item.title}</h4>
+                                <p style="font-size:0.85rem; color:#64748B; margin-bottom:14px; line-height:1.5;">${item.description}</p>
+                                <div style="font-size:0.8rem; font-weight:700; color:#3B5ACB; margin-bottom:16px;">${metaInfo}</div>
+                            </div>
+                            <div>
+                                ${actionBtn}
+                            </div>
+                        </div>
+                    `;
+                }).join("");
+            };
+
+            // Real-time Firestore Listeners
+            db.collection("donations").where("status", "==", "available").onSnapshot(snap => {
+                liveDonations = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderLiveCards();
+            }, () => renderLiveCards());
+
+            db.collection("requests").where("status", "==", "published").onSnapshot(snap => {
+                liveRequests = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderLiveCards();
+            }, () => renderLiveCards());
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            initLiveLandingItems();
+        });
+    </script>
 </body>
 </html>
