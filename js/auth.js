@@ -228,6 +228,40 @@ window.validateConfirmPassword = function(password, confirmPassword) {
     return { isValid: true, message: "" };
 };
 
+// Strict Exactly 10-Character NIC Validation (9 digits + V/X or 10 digits)
+window.validateNicDetailed = function(nic) {
+    if (!nic || typeof nic !== 'string' || !nic.trim()) {
+        return { isValid: false, message: "National Identity Card (NIC) number is required." };
+    }
+    const cleanNic = nic.trim().toUpperCase();
+    if (cleanNic.length !== 10) {
+        return { 
+            isValid: false, 
+            message: `NIC Number must contain exactly 10 characters (currently ${cleanNic.length} characters). E.g. 951234567V.` 
+        };
+    }
+    const nicRegex = /^([0-9]{9}[VX]|[0-9]{10})$/;
+    if (!nicRegex.test(cleanNic)) {
+        return { 
+            isValid: false, 
+            message: "Invalid NIC format. 10-character NIC must be 9 digits followed by 'V' or 'X' (e.g. 951234567V)." 
+        };
+    }
+    return { isValid: true, message: "" };
+};
+
+// Required Postal Code Validation
+window.validatePostalCodeDetailed = function(postalCode) {
+    if (!postalCode || typeof postalCode !== 'string' || !postalCode.trim()) {
+        return { isValid: false, message: "Postal code is required." };
+    }
+    const clean = postalCode.trim();
+    if (!/^[0-9]{4,6}$/.test(clean)) {
+        return { isValid: false, message: "Please enter a valid postal code (e.g. 00400 or 5 digits)." };
+    }
+    return { isValid: true, message: "" };
+};
+
 // Global Password Visibility Toggle (Eye Icon)
 window.togglePasswordVisibility = function(inputId, btnEl) {
     const input = document.getElementById(inputId);
@@ -814,6 +848,36 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
+        // Live validation for NIC Number (Strict 10 characters)
+        const nicInputEl = document.getElementById("regNicNumber");
+        if (nicInputEl) {
+            nicInputEl.addEventListener("input", () => {
+                if (nicInputEl.value.length > 0) {
+                    const res = window.validateNicDetailed(nicInputEl.value);
+                    updateFieldFeedback(nicInputEl, "nicValidationFeedback", res);
+                } else {
+                    nicInputEl.classList.remove("input-error", "input-success");
+                    const fb = document.getElementById("nicValidationFeedback");
+                    if (fb) fb.style.display = "none";
+                }
+            });
+        }
+
+        // Live validation for Postal Code (Required)
+        const postalInputEl = document.getElementById("regPostalCode");
+        if (postalInputEl) {
+            postalInputEl.addEventListener("input", () => {
+                if (postalInputEl.value.length > 0) {
+                    const res = window.validatePostalCodeDetailed(postalInputEl.value);
+                    updateFieldFeedback(postalInputEl, "postalValidationFeedback", res);
+                } else {
+                    postalInputEl.classList.remove("input-error", "input-success");
+                    const fb = document.getElementById("postalValidationFeedback");
+                    if (fb) fb.style.display = "none";
+                }
+            });
+        }
+
         const readFileAsDataUrl = (file) => {
             return new Promise((resolve) => {
                 if (!file) return resolve("");
@@ -892,7 +956,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // 5. Role-Specific Strict Field & Document Upload Validation
+            // 5. Required Postal Code Validation Check
+            const postalValidation = window.validatePostalCodeDetailed(postalCode);
+            if (!postalValidation.isValid) {
+                showToast(postalValidation.message, "warning");
+                updateFieldFeedback(postalInputEl, "postalValidationFeedback", postalValidation);
+                postalInputEl?.focus();
+                return;
+            }
+
+            // 6. Role-Specific Strict Field & Document Upload Validation
             let individualDetails = null;
             if (accountType === 'donor_individual') {
                 const nicNumber = document.getElementById("regNicNumber")?.value.trim() || "";
@@ -907,17 +980,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
 
-                if (!nicNumber) {
-                    showToast("Please provide your National Identity Card (NIC) number.", "warning");
-                    document.getElementById("regNicNumber")?.focus();
-                    return;
-                }
-
-                // Strict NIC Format Check (Sri Lankan NIC format: 9 digits + V/X or 12 digits)
-                const nicRegex = /^([0-9]{9}[vVxX]|[0-9]{12})$/;
-                if (!nicRegex.test(nicNumber)) {
-                    showToast("Please enter a valid NIC Number (e.g. 199512345678 or 951234567V).", "warning");
-                    document.getElementById("regNicNumber")?.focus();
+                // Strict Exactly 10-Character NIC Format Check
+                const nicValidation = window.validateNicDetailed(nicNumber);
+                if (!nicValidation.isValid) {
+                    showToast(nicValidation.message, "warning");
+                    updateFieldFeedback(nicInputEl, "nicValidationFeedback", nicValidation);
+                    nicInputEl?.focus();
                     return;
                 }
 
