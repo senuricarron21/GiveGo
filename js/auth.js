@@ -429,13 +429,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
 
                     if (role !== 'admin') {
-                        const isOrg = profileData.donorType === 'organisation' || (profileData.accountType && profileData.accountType.includes('org')) || !!profileData.orgDetails || role === 'receiver';
-
-                        if (profileData.status === 'pending' && isOrg) {
+                        if (profileData.status === 'pending') {
                             await helper.auth().signOut();
                             localStorage.removeItem("givego_user");
                             sessionStorage.clear();
-                            showToast("Your organisation account is pending Administrator approval. Please wait for an Admin to verify and approve your account before logging in.", "warning");
+                            showToast("Your account registration is currently pending Administrator approval. Please wait for an Admin to review and verify your account before logging in.", "warning");
                             return;
                         }
                         if (profileData.status === 'suspended') {
@@ -568,12 +566,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 let role = "donor";
                 let donorType = "individual";
-                let status = "verified";
+                let status = "pending"; // ALL registrations require Admin approval
 
                 if (accountType === 'donor_individual') {
                     role = "donor";
                     donorType = "individual";
-                    status = "verified";
+                    status = "pending";
                 } else if (accountType === 'donor_org') {
                     role = "donor";
                     donorType = "organisation";
@@ -643,7 +641,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (window.clearToasts) window.clearToasts();
 
-                // Sign out after registration so user can sign in fresh through the login page
+                // Sign out after registration so user can sign in fresh through the login page once approved
                 try {
                     await auth.signOut();
                     localStorage.removeItem("givego_user");
@@ -653,23 +651,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 if (submitBtn) {
-                    submitBtn.innerHTML = `<span>✓ Account Created Successfully!</span>`;
+                    submitBtn.innerHTML = `<span>✓ Registration Submitted!</span>`;
                     submitBtn.style.backgroundColor = "#27AE60";
                 }
 
-                if (status === 'verified') {
-                    showToast("✅ Account created successfully! Please sign in with your credentials. Redirecting to login page...", "success");
-                    setTimeout(() => {
-                        const targetPage = window.location.pathname.endsWith(".php") ? "index.php?registered=true" : "index.html?registered=true";
-                        window.location.href = targetPage;
-                    }, 1600);
-                } else {
-                    showToast("✅ Account created successfully! Your organisation account is submitted for Admin review. Redirecting to login page...", "success");
-                    setTimeout(() => {
-                        const targetPage = window.location.pathname.endsWith(".php") ? "index.php?registered=true" : "index.html?registered=true";
-                        window.location.href = targetPage;
-                    }, 2000);
-                }
+                showToast("✅ Account created successfully! Your registration is submitted and pending Administrator approval.", "success");
+                setTimeout(() => {
+                    const targetPage = window.location.pathname.endsWith(".php") ? "index.php?pending=true" : "index.html?pending=true";
+                    window.location.href = targetPage;
+                }, 2000);
             } catch (error) {
                 if (submitBtn) {
                     submitBtn.disabled = false;

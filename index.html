@@ -613,7 +613,11 @@
             initLiveLandingItems();
 
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get("registered") === "true") {
+            if (urlParams.get("pending") === "true") {
+                if (window.showToast) {
+                    window.showToast("📋 Registration submitted! Your account is pending Administrator approval. Once approved, you can sign in.", "info");
+                }
+            } else if (urlParams.get("registered") === "true") {
                 if (window.showToast) {
                     window.showToast("✅ Account created successfully! Please sign in with your email and password.", "success");
                 }
