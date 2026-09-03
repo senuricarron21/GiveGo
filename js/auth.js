@@ -1,6 +1,117 @@
 // Client-Side Authentication, Role Guard & Validation Logic
 
-// Detailed Email Validation with exact, actionable error messages
+// Levenshtein distance helper for spelling & typo detection
+function getLevenshteinDistance(a, b) {
+    if (a.length === 0) return b.length;
+    if (b.length === 0) return a.length;
+    const matrix = [];
+    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+    for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+            if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1, // substitution
+                    matrix[i][j - 1] + 1,     // insertion
+                    matrix[i - 1][j] + 1      // deletion
+                );
+            }
+        }
+    }
+    return matrix[b.length][a.length];
+}
+
+// Known email domain typos mapping
+const COMMON_EMAIL_DOMAIN_TYPOS = {
+    // Gmail typos
+    "gmil.com": "gmail.com",
+    "gmai.com": "gmail.com",
+    "gamil.com": "gmail.com",
+    "gmial.com": "gmail.com",
+    "gmaill.com": "gmail.com",
+    "gmaik.com": "gmail.com",
+    "gmal.com": "gmail.com",
+    "gmeil.com": "gmail.com",
+    "gmaol.com": "gmail.com",
+    "gmaul.com": "gmail.com",
+    "gmail.co": "gmail.com",
+    "gmail.con": "gmail.com",
+    "gmail.cpm": "gmail.com",
+    "gmail.cm": "gmail.com",
+    "gmail.clm": "gmail.com",
+    "gmail.om": "gmail.com",
+    "gmail.co.m": "gmail.com",
+    "g.mail.com": "gmail.com",
+    "googlemail.con": "googlemail.com",
+
+    // Yahoo typos
+    "yaho.com": "yahoo.com",
+    "yahooo.com": "yahoo.com",
+    "yhoo.com": "yahoo.com",
+    "yahou.com": "yahoo.com",
+    "ymail.co": "ymail.com",
+    "yahoo.con": "yahoo.com",
+    "yahoo.cpm": "yahoo.com",
+
+    // Outlook / Hotmail typos
+    "outlok.com": "outlook.com",
+    "outloo.com": "outlook.com",
+    "ootlook.com": "outlook.com",
+    "outlock.com": "outlook.com",
+    "outlookk.com": "outlook.com",
+    "outlook.con": "outlook.com",
+    "hotmial.com": "hotmail.com",
+    "hotmai.com": "hotmail.com",
+    "hotmaill.com": "hotmail.com",
+    "hotmil.com": "hotmail.com",
+    "hotmail.con": "hotmail.com",
+
+    // iCloud / Apple typos
+    "icoud.com": "icloud.com",
+    "iclod.com": "icloud.com",
+    "icloude.com": "icloud.com",
+    "icloud.con": "icloud.com",
+
+    // GiveGo domain typos
+    "givego.con": "givego.lk",
+    "givego.lkk": "givego.lk",
+    "givgo.lk": "givego.lk"
+};
+
+// Popular trusted domains for proximity distance checking
+const POPULAR_EMAIL_DOMAINS = [
+    "gmail.com",
+    "yahoo.com",
+    "outlook.com",
+    "hotmail.com",
+    "icloud.com",
+    "givego.lk",
+    "live.com",
+    "msn.com",
+    "mail.com",
+    "zoho.com",
+    "proton.me",
+    "protonmail.com",
+    "aol.com"
+];
+
+// Common TLD typos
+const TLD_TYPOS = {
+    "con": ".com",
+    "cpm": ".com",
+    "clm": ".com",
+    "cm": ".com",
+    "comm": ".com",
+    "om": ".com",
+    "orgg": ".org",
+    "og": ".org",
+    "nett": ".net",
+    "lkk": ".lk"
+};
+
+// Detailed Email Validation with exact, actionable error messages and spelling checks
 window.validateEmailDetailed = function(email) {
     if (!email || typeof email !== 'string' || !email.trim()) {
         return { isValid: false, message: "Email address is required." };
@@ -10,34 +121,35 @@ window.validateEmailDetailed = function(email) {
         return { isValid: false, message: "Email address cannot contain spaces." };
     }
     if (!cleanEmail.includes("@")) {
-        return { isValid: false, message: "Email address is missing the '@' symbol (e.g. user@givego.lk or name@example.com)." };
+        return { isValid: false, message: "Email address is missing the '@' symbol (e.g. user@givego.lk or name@gmail.com)." };
     }
     const atParts = cleanEmail.split("@");
     if (atParts.length > 2) {
         return { isValid: false, message: "Email address cannot contain multiple '@' symbols." };
     }
     const username = atParts[0];
-    const domain = atParts[1];
+    const rawDomain = atParts[1];
     
     if (!username) {
-        return { isValid: false, message: "Email address is missing the username before '@' (e.g. name@example.com)." };
+        return { isValid: false, message: "Email address is missing the username before '@' (e.g. name@gmail.com)." };
     }
     if (!/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+$/.test(username)) {
         return { isValid: false, message: "Email username before '@' contains invalid characters." };
     }
-    if (!domain) {
+    if (!rawDomain) {
         return { isValid: false, message: "Email address is missing the domain after '@' (e.g. @givego.lk or @gmail.com)." };
     }
-    if (!domain.includes(".")) {
-        return { isValid: false, message: "Email address domain is missing a dot '.' (e.g. domain.com or givego.lk)." };
+    if (!rawDomain.includes(".")) {
+        return { isValid: false, message: "Email address domain is missing a dot '.' (e.g. gmail.com or givego.lk)." };
     }
     
+    const domain = rawDomain.toLowerCase();
     const domainParts = domain.split(".");
     const domainName = domainParts[0];
     const topLevelDomain = domainParts[domainParts.length - 1];
     
     if (!domainName) {
-        return { isValid: false, message: "Email domain name is missing before '.' (e.g. example.com)." };
+        return { isValid: false, message: "Email domain name is missing before '.' (e.g. gmail.com)." };
     }
     if (domainName.startsWith("-") || domainName.endsWith("-")) {
         return { isValid: false, message: "Email domain name cannot start or end with a hyphen." };
@@ -48,11 +160,43 @@ window.validateEmailDetailed = function(email) {
     if (!/^[a-zA-Z]{2,24}$/.test(topLevelDomain)) {
         return { isValid: false, message: "Email domain extension (e.g. .com, .lk) must only contain letters." };
     }
+
+    // 1. Check direct domain typo mapping (e.g. gmil.com -> gmail.com)
+    if (COMMON_EMAIL_DOMAIN_TYPOS[domain]) {
+        const correctDomain = COMMON_EMAIL_DOMAIN_TYPOS[domain];
+        return {
+            isValid: false,
+            message: `Spelling error in domain '@${rawDomain}'. Did you mean '@${correctDomain}'?`
+        };
+    }
+
+    // 2. Check top-level domain typos (e.g. .con -> .com)
+    if (TLD_TYPOS[topLevelDomain]) {
+        const correctTld = TLD_TYPOS[topLevelDomain];
+        return {
+            isValid: false,
+            message: `Invalid domain extension '.${topLevelDomain}'. Did you mean '${correctTld}'?`
+        };
+    }
+
+    // 3. Proximity / Levenshtein Distance Check against popular providers
+    if (!POPULAR_EMAIL_DOMAINS.includes(domain)) {
+        for (const popularDomain of POPULAR_EMAIL_DOMAINS) {
+            const dist = getLevenshteinDistance(domain, popularDomain);
+            // If domain is very close (1 or 2 character typo away from a popular domain)
+            if (dist > 0 && dist <= 2) {
+                return {
+                    isValid: false,
+                    message: `Spelling error in domain '@${rawDomain}'. Did you mean '@${popularDomain}'?`
+                };
+            }
+        }
+    }
     
-    // Standard RFC-compliant check
+    // 4. Standard RFC-compliant check
     const rfcRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
     if (!rfcRegex.test(cleanEmail)) {
-        return { isValid: false, message: "Email address format is invalid. Please enter a valid email address (e.g. user@givego.lk)." };
+        return { isValid: false, message: "Email address format is invalid. Please enter a valid email address (e.g. user@givego.lk or name@gmail.com)." };
     }
     
     return { isValid: true, message: "" };
