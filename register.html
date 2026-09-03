@@ -325,19 +325,21 @@
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
     <script>
-        window.handleDocUpload = function(input, targetHiddenId) {
+        window.handleDocUpload = async function(input, targetHiddenId) {
             const file = input.files && input.files[0];
             const targetHidden = document.getElementById(targetHiddenId);
             if (!file) {
                 if (targetHidden) targetHidden.value = "";
                 return;
             }
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                if (targetHidden) targetHidden.value = e.target.result;
-                if (window.showToast) window.showToast("Document attached: " + file.name, "success");
-            };
-            reader.readAsDataURL(file);
+            try {
+                if (window.showToast) window.showToast("Attaching and optimizing document: " + file.name + "...", "info");
+                const compressed = await window.compressAndReadFile(file);
+                if (targetHidden) targetHidden.value = compressed;
+                if (window.showToast) window.showToast("✓ Document attached: " + file.name, "success");
+            } catch (err) {
+                console.error("Error attaching document:", err);
+            }
         };
 
         document.addEventListener("DOMContentLoaded", () => {

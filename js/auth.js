@@ -878,11 +878,57 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        const readFileAsDataUrl = (file) => {
+        // Universal High-Performance Image Compressor & File Reader (< 50KB to respect Firestore limits)
+        window.compressAndReadFile = function(file, maxDimension = 900, quality = 0.65) {
             return new Promise((resolve) => {
                 if (!file) return resolve("");
+
+                // If file is an image, compress via Canvas
+                if (file.type && (file.type.startsWith("image/") || /\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(file.name))) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            let width = img.width;
+                            let height = img.height;
+
+                            if (width > height) {
+                                if (width > maxDimension) {
+                                    height = Math.round((height * maxDimension) / width);
+                                    width = maxDimension;
+                                }
+                            } else {
+                                if (height > maxDimension) {
+                                    width = Math.round((width * maxDimension) / height);
+                                    height = maxDimension;
+                                }
+                            }
+
+                            const canvas = document.createElement("canvas");
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext("2d");
+                            ctx.fillStyle = "#FFFFFF";
+                            ctx.fillRect(0, 0, width, height);
+                            ctx.drawImage(img, 0, 0, width, height);
+
+                            // Compress to lightweight JPEG (< 50KB)
+                            const compressedDataUrl = canvas.toDataURL("image/jpeg", quality);
+                            resolve(compressedDataUrl);
+                        };
+                        img.onerror = () => {
+                            resolve(e.target.result || "");
+                        };
+                        img.src = e.target.result;
+                    };
+                    reader.onerror = () => resolve("");
+                    reader.readAsDataURL(file);
+                    return;
+                }
+
+                // For PDF or other documents, read standard Data URL
                 const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
+                reader.onload = (e) => resolve(e.target.result || "");
                 reader.onerror = () => resolve("");
                 reader.readAsDataURL(file);
             });
@@ -973,8 +1019,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const nicInput = document.getElementById("nicUploadInput");
                 if (!nicDoc && nicInput && nicInput.files && nicInput.files[0]) {
-                    showToast("Attaching NIC document...", "info");
-                    nicDoc = await readFileAsDataUrl(nicInput.files[0]);
+                    showToast("Optimizing & attaching NIC document...", "info");
+                    nicDoc = await window.compressAndReadFile(nicInput.files[0]);
                     if (document.getElementById("regNicDocUrl")) {
                         document.getElementById("regNicDocUrl").value = nicDoc;
                     }
@@ -1019,8 +1065,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const brInput = document.getElementById("brUploadInput");
                 if (!brDoc && brInput && brInput.files && brInput.files[0]) {
-                    showToast("Attaching BR document...", "info");
-                    brDoc = await readFileAsDataUrl(brInput.files[0]);
+                    showToast("Optimizing & attaching BR document...", "info");
+                    brDoc = await window.compressAndReadFile(brInput.files[0]);
                     if (document.getElementById("regBrDocUrl")) {
                         document.getElementById("regBrDocUrl").value = brDoc;
                     }
@@ -1092,13 +1138,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const recInput = document.getElementById("receiverRegUploadInput");
                 if (!recDoc && recInput && recInput.files && recInput.files[0]) {
-                    recDoc = await readFileAsDataUrl(recInput.files[0]);
+                    showToast("Optimizing & attaching certificate...", "info");
+                    recDoc = await window.compressAndReadFile(recInput.files[0]);
                     if (document.getElementById("regReceiverDocUrl")) document.getElementById("regReceiverDocUrl").value = recDoc;
                 }
 
                 const bankInput = document.getElementById("bankDocUploadInput");
                 if (!bankDoc && bankInput && bankInput.files && bankInput.files[0]) {
-                    bankDoc = await readFileAsDataUrl(bankInput.files[0]);
+                    showToast("Optimizing & attaching bank proof...", "info");
+                    bankDoc = await window.compressAndReadFile(bankInput.files[0]);
                     if (document.getElementById("regBankDocUrl")) document.getElementById("regBankDocUrl").value = bankDoc;
                 }
 
