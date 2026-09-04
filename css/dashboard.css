@@ -724,9 +724,230 @@ body {
     padding: 10px;
     display: flex;
     flex-direction: column;
+    gap: 12px;
+}
+
+/* Partner Conversation Group & Donation Threads */
+.partner-group-block {
+    background: #FFFFFF;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+    transition: border-color 0.2s ease;
+}
+
+.partner-group-block:hover {
+    border-color: #D8CE9C;
+}
+
+.partner-group-header {
+    padding: 10px 14px;
+    background: #F6F3EB;
+    border-bottom: 1px solid #EBE6DC;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.partner-group-user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.partner-group-avatar {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 50%;
+    background: var(--color-teal-primary);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.88rem;
+}
+
+.partner-group-name {
+    font-weight: 800;
+    font-size: 0.88rem;
+    color: var(--color-teal-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.partner-group-role {
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+.partner-thread-count-badge {
+    background: #EAE6DB;
+    color: var(--color-teal-primary);
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+.donation-history-subheading {
+    padding: 8px 14px 4px 14px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+}
+
+.donation-threads-list {
+    padding: 4px 8px 8px 8px;
+    display: flex;
+    flex-direction: column;
     gap: 6px;
 }
 
+.donation-thread-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #FAF8F2;
+    border: 1px solid #EBE6DC;
+    transition: all 0.18s ease;
+    text-decoration: none;
+    position: relative;
+}
+
+.donation-thread-item:hover {
+    background: #F3ECE0;
+    border-color: #D8CE9C;
+    transform: translateY(-1px);
+}
+
+.donation-thread-item.active {
+    background: #E8F5F4 !important;
+    border: 1.5px solid var(--color-teal-primary) !important;
+    box-shadow: 0 2px 8px rgba(13, 124, 122, 0.14);
+}
+
+.donation-thread-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.donation-thread-item-name {
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: var(--color-text-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.donation-thread-status-badge {
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 6px;
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+.donation-thread-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.74rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+.donation-thread-qty {
+    color: var(--color-teal-primary);
+    font-weight: 700;
+}
+
+.donation-thread-msg-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    margin-top: 2px;
+    padding-top: 4px;
+    border-top: 1px dashed #E5DFD2;
+}
+
+.donation-thread-msg-snippet {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+}
+
+.donation-thread-unread-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-teal-primary);
+    box-shadow: 0 0 0 2px #FFFFFF;
+}
+
+.partner-threads-container {
+    padding: 4px 8px 8px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.donation-thread-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+/* Active Chat Context Bar for Donation Items */
+.chat-donation-context-bar {
+    padding: 8px 20px;
+    background: #FAF8F2;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.chat-context-item-tag {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--color-teal-primary);
+    background: #FFFFFF;
+    border: 1px solid #D8CE9C;
+    padding: 4px 10px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Backward compatibility thread item */
 .conversation-thread-item {
     display: flex;
     align-items: center;
@@ -748,7 +969,7 @@ body {
 }
 
 .conversation-thread-item.active {
-    background: #F5EFE0 !important;
+    background: #E8F5F4 !important;
     border: 1.5px solid var(--color-teal-primary) !important;
     box-shadow: 0 2px 8px rgba(13, 124, 122, 0.12);
 }

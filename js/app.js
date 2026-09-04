@@ -4285,6 +4285,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // ==========================================
+    // DONATION CONVERSATION & CHAT SUBSYSTEM
+    // Organised by Organisation & Donation Item Threads
+    // ==========================================
+
     function escapeChatHtml(str) {
         if (!str) return "";
         return String(str)
@@ -4293,6 +4298,66 @@ document.addEventListener("DOMContentLoaded", () => {
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
+    }
+
+    function getDonationStatusInfo(status) {
+        const s = (status || "").toLowerCase().trim();
+        switch (s) {
+            case "accepted":
+                return { label: "Accepted", bg: "#E6F4EA", color: "#137333", border: "#CEEAD6" };
+            case "in_discussion":
+                return { label: "In Discussion", bg: "#E8F0FE", color: "#1967D2", border: "#D2E3FC" };
+            case "schedule_proposed":
+            case "reschedule_requested":
+                return { label: "Schedule Proposed", bg: "#FEF7E0", color: "#B06000", border: "#FEEFC3" };
+            case "schedule_accepted":
+                return { label: "Schedule Confirmed", bg: "#E6FCF5", color: "#0D7C7A", border: "#B2EBF2" };
+            case "in_transit":
+                return { label: "In Transit", bg: "#F3E8FD", color: "#8430CE", border: "#E9D2FD" };
+            case "delivered":
+            case "completed":
+            case "fulfilled":
+                return { label: "Delivered", bg: "#E6F4EA", color: "#137333", border: "#CEEAD6" };
+            case "pending":
+            case "pending_admin":
+                return { label: "Pending", bg: "#FFF8E1", color: "#E65100", border: "#FFE082" };
+            case "rejected":
+            case "cancelled":
+                return { label: "Rejected", bg: "#FCE8E6", color: "#C5221F", border: "#FAD2CF" };
+            default:
+                return { 
+                    label: s ? (s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ')) : "Active",
+                    bg: "#F1F3F4", 
+                    color: "#5F6368", 
+                    border: "#E0E0E0" 
+                };
+        }
+    }
+
+    function formatChatDate(isoString) {
+        if (!isoString) return "";
+        try {
+            const d = new Date(isoString);
+            if (isNaN(d.getTime())) return isoString;
+            const now = new Date();
+            const isToday = d.toDateString() === now.toDateString();
+            const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            if (isToday) return `Today, ${timeStr}`;
+
+            const yesterday = new Date();
+            yesterday.setDate(now.getDate() - 1);
+            if (d.toDateString() === yesterday.toDateString()) {
+                return `Yesterday, ${timeStr}`;
+            }
+
+            const day = String(d.getDate()).padStart(2, '0');
+            const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+            const mon = months[d.getMonth()];
+            const year = d.getFullYear();
+            return `${day} ${mon} ${year}`;
+        } catch(e) {
+            return "";
+        }
     }
 
     function formatChatTime(isoString) {
@@ -4321,21 +4386,49 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    window.filterChatConversations = function(query) {
+    window.filterDonationChatList = function(query) {
         chatSearchQuery = (query || "").trim().toLowerCase();
         renderChatMatchesList();
     };
 
-    function getConversationThreads() {
+    window.filterChatConversations = window.filterDonationChatList;
+
+    /**
+     * Builds hierarchical organisation-to-donation-threads data model.
+     * Groups matches & messages under unique partner relationships.
+     */
+    function getDonationConversationsHierarchy() {
         if (!currentUser) return [];
         const currentUid = currentUser.uid || currentUser.id || "";
         const currentEmail = (currentUser.email || "").toLowerCase();
         const currentRole = ((currentUser.role) || (currentUser.accountType) || "").toLowerCase();
 
-        // Map of partnerId -> Thread Object
-        const threadMap = new Map();
+        // Map: partnerId -> PartnerGroup
+        // PartnerGroup: { partnerId, partnerName, partnerRole, unreadCount, latestTimeMs, threads: Map<matchId, Thread> }
+        const partnerMap = new Map();
 
-        // 1. Process matches to seed or populate threads
+        function getOrCreatePartner(partnerId, initialName, initialRole) {
+            if (!partnerMap.has(partnerId)) {
+                partnerMap.set(partnerId, {
+                    partnerId: partnerId,
+                    partnerName: initialName || (currentRole.includes("donor") ? "Receiver Organisation" : "Donor"),
+                    partnerRole: initialRole || (currentRole.includes("donor") ? "Receiver Organisation" : "Donor"),
+                    unreadCount: 0,
+                    latestTimeMs: 0,
+                    threads: new Map()
+                });
+            }
+            const p = partnerMap.get(partnerId);
+            if (initialName && (!p.partnerName || p.partnerName === "Donor" || p.partnerName === "Receiver Organisation")) {
+                p.partnerName = initialName;
+            }
+            if (initialRole && (!p.partnerRole || p.partnerRole === "Donor" || p.partnerRole === "Receiver Organisation")) {
+                p.partnerRole = initialRole;
+            }
+            return p;
+        }
+
+        // 1. Process matches to register donation item threads under partners
         if (Array.isArray(matchesList)) {
             matchesList.forEach(m => {
                 const isDonor = m.donorId === currentUid || (currentEmail && (m.donorEmail || "").toLowerCase() === currentEmail);
@@ -4343,40 +4436,51 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (!isDonor && !isReceiver) return;
 
-                const partnerId = isDonor ? (m.receiverId || m.receiverEmail || m.receiverName) : (m.donorId || m.donorEmail || m.donorName);
+                const partnerId = isDonor 
+                    ? (m.receiverId || m.receiverEmail || m.receiverName) 
+                    : (m.donorId || m.donorEmail || m.donorName);
                 if (!partnerId) return;
 
                 const partnerName = isDonor ? (m.receiverName || "Receiver Organisation") : (m.donorName || "Donor");
                 const partnerRole = isDonor ? "Receiver Organisation" : "Donor";
 
-                if (!threadMap.has(partnerId)) {
-                    threadMap.set(partnerId, {
-                        partnerId: partnerId,
-                        partnerName: partnerName,
-                        partnerRole: partnerRole,
-                        matchIds: [m.id],
-                        matches: [m],
-                        primaryMatchId: m.id,
+                const partner = getOrCreatePartner(partnerId, partnerName, partnerRole);
+                const matchId = m.id;
+                const matchTimeMs = new Date(m.updatedAt || m.createdAt || 0).getTime() || 0;
+
+                if (!partner.threads.has(matchId)) {
+                    partner.threads.set(matchId, {
+                        threadId: matchId,
+                        matchId: matchId,
+                        match: m,
+                        itemName: m.requestName || m.itemName || m.donorListingName || "Donation Offer",
+                        quantity: m.quantity || m.offeredQuantity || m.donorQuantity || "",
+                        unit: m.unit || m.offeredUnit || "",
+                        category: m.category || "",
+                        status: m.status || "in_discussion",
+                        createdAt: m.createdAt || new Date().toISOString(),
+                        updatedAt: m.updatedAt || m.createdAt || new Date().toISOString(),
+                        latestTimeMs: matchTimeMs,
+                        latestSnippet: `Donation offer for ${m.requestName || 'items'}`,
                         messages: [],
-                        latestMessage: `Connection for ${m.requestName || 'items'}`,
-                        latestTimestamp: m.createdAt || new Date().toISOString(),
-                        latestTimeMs: new Date(m.createdAt || 0).getTime() || 0,
                         unreadCount: 0
                     });
                 } else {
-                    const thread = threadMap.get(partnerId);
-                    if (!thread.matchIds.includes(m.id)) {
-                        thread.matchIds.push(m.id);
-                        thread.matches.push(m);
-                    }
-                    if (partnerName && (thread.partnerName === "Donor" || thread.partnerName === "Receiver Organisation")) {
-                        thread.partnerName = partnerName;
-                    }
+                    const thread = partner.threads.get(matchId);
+                    thread.match = m;
+                    if (m.status) thread.status = m.status;
+                    if (m.requestName) thread.itemName = m.requestName;
+                    if (m.quantity) thread.quantity = m.quantity;
+                    if (m.unit) thread.unit = m.unit;
+                }
+
+                if (matchTimeMs > partner.latestTimeMs) {
+                    partner.latestTimeMs = matchTimeMs;
                 }
             });
         }
 
-        // 2. Process all messages
+        // 2. Process all messages into corresponding item threads
         if (Array.isArray(messagesList)) {
             messagesList.forEach(msg => {
                 const isSender = msg.senderId === currentUid;
@@ -4408,115 +4512,184 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (!partnerId || partnerId === currentUid) return;
 
-                if (!threadMap.has(partnerId)) {
-                    threadMap.set(partnerId, {
-                        partnerId: partnerId,
-                        partnerName: partnerName || (currentRole.includes("donor") ? "Receiver Organisation" : "Donor"),
-                        partnerRole: currentRole.includes("donor") ? "Receiver Organisation" : "Donor",
-                        matchIds: msg.matchId ? [msg.matchId] : [],
-                        matches: [],
-                        primaryMatchId: msg.matchId || null,
+                const partner = getOrCreatePartner(partnerId, partnerName, null);
+                const msgMatchId = msg.matchId || `direct_${[currentUid, partnerId].sort().join('_')}`;
+                const msgTimeMs = new Date(msg.createdAt || 0).getTime() || 0;
+
+                if (!partner.threads.has(msgMatchId)) {
+                    // Find if match exists
+                    const match = matchesList ? matchesList.find(m => m.id === msgMatchId) : null;
+                    partner.threads.set(msgMatchId, {
+                        threadId: msgMatchId,
+                        matchId: msgMatchId,
+                        match: match,
+                        itemName: match ? (match.requestName || match.itemName || "Donation Item") : (msg.itemTitle || "Direct Conversation"),
+                        quantity: match ? (match.quantity || "") : "",
+                        unit: match ? (match.unit || "") : "",
+                        category: match ? (match.category || "") : "",
+                        status: match ? (match.status || "in_discussion") : "in_discussion",
+                        createdAt: msg.createdAt || new Date().toISOString(),
+                        updatedAt: msg.createdAt || new Date().toISOString(),
+                        latestTimeMs: msgTimeMs,
+                        latestSnippet: msg.text || "",
                         messages: [],
-                        latestMessage: msg.text || "",
-                        latestTimestamp: msg.createdAt || new Date().toISOString(),
-                        latestTimeMs: new Date(msg.createdAt || 0).getTime() || 0,
                         unreadCount: 0
                     });
                 }
 
-                const thread = threadMap.get(partnerId);
-                if (partnerName && (!thread.partnerName || thread.partnerName === "Donor" || thread.partnerName === "Receiver Organisation")) {
-                    thread.partnerName = partnerName;
-                }
-                if (msg.matchId && !thread.matchIds.includes(msg.matchId)) {
-                    thread.matchIds.push(msg.matchId);
-                }
-
-                // Append message if not already present
+                const thread = partner.threads.get(msgMatchId);
                 if (!thread.messages.some(m => m.id === msg.id)) {
                     thread.messages.push(msg);
                 }
 
-                // Calculate unread count
+                if (msgTimeMs > thread.latestTimeMs) {
+                    thread.latestTimeMs = msgTimeMs;
+                    thread.latestSnippet = msg.text || thread.latestSnippet;
+                }
+                if (msgTimeMs > partner.latestTimeMs) {
+                    partner.latestTimeMs = msgTimeMs;
+                }
+
+                // Check unread
                 if (msg.senderId === partnerId && (msg.recipientId === currentUid || !msg.recipientId) && msg.read === false) {
                     thread.unreadCount += 1;
+                    partner.unreadCount += 1;
                 }
             });
         }
 
-        // Sort messages inside each thread and establish latest time
-        const threads = Array.from(threadMap.values()).map(thread => {
-            thread.messages.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
-            if (thread.messages.length > 0) {
-                const lastMsg = thread.messages[thread.messages.length - 1];
-                thread.latestMessage = lastMsg.text || "";
-                thread.latestTimestamp = lastMsg.createdAt;
-                thread.latestTimeMs = new Date(lastMsg.createdAt || 0).getTime() || thread.latestTimeMs;
-            }
-            return thread;
+        // Convert Map to sorted array
+        const partnerGroups = Array.from(partnerMap.values()).map(p => {
+            const threadsArray = Array.from(p.threads.values()).map(t => {
+                t.messages.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+                if (t.messages.length > 0) {
+                    const lastMsg = t.messages[t.messages.length - 1];
+                    t.latestSnippet = lastMsg.text || t.latestSnippet;
+                    t.latestTimeMs = new Date(lastMsg.createdAt || 0).getTime() || t.latestTimeMs;
+                }
+                return t;
+            });
+
+            // Sort threads: most recent activity first
+            threadsArray.sort((a, b) => (b.latestTimeMs || 0) - (a.latestTimeMs || 0));
+            p.threadsList = threadsArray;
+            return p;
         });
 
-        // Sort all threads by most recent first
-        threads.sort((a, b) => (b.latestTimeMs || 0) - (a.latestTimeMs || 0));
-        return threads;
+        // Sort partner groups by most recent activity
+        partnerGroups.sort((a, b) => (b.latestTimeMs || 0) - (a.latestTimeMs || 0));
+        return partnerGroups;
     }
 
     function renderChatMatchesList() {
         const container = document.getElementById("chatMatchesList");
+        const countBadge = document.getElementById("chatConversationsCount");
         if (!container) return;
 
-        const allThreads = getConversationThreads();
-        let displayThreads = allThreads;
+        const allPartners = getDonationConversationsHierarchy();
+        let totalThreadsCount = 0;
+        allPartners.forEach(p => totalThreadsCount += p.threadsList.length);
 
-        if (chatSearchQuery) {
-            displayThreads = allThreads.filter(t => 
-                (t.partnerName || "").toLowerCase().includes(chatSearchQuery) ||
-                (t.latestMessage || "").toLowerCase().includes(chatSearchQuery)
-            );
+        if (countBadge) {
+            countBadge.textContent = String(totalThreadsCount);
         }
 
-        if (displayThreads.length === 0) {
+        let displayPartners = allPartners;
+
+        if (chatSearchQuery) {
+            displayPartners = allPartners.map(p => {
+                const partnerMatches = (p.partnerName || "").toLowerCase().includes(chatSearchQuery);
+                const matchingThreads = p.threadsList.filter(t => 
+                    partnerMatches ||
+                    (t.itemName || "").toLowerCase().includes(chatSearchQuery) ||
+                    (t.latestSnippet || "").toLowerCase().includes(chatSearchQuery) ||
+                    (t.status || "").toLowerCase().includes(chatSearchQuery)
+                );
+                return {
+                    ...p,
+                    threadsList: matchingThreads
+                };
+            }).filter(p => p.threadsList.length > 0);
+        }
+
+        if (displayPartners.length === 0) {
             container.innerHTML = `
-                <div class="chat-empty-conversations">
-                    <div class="empty-icon">💬</div>
-                    <div class="empty-title">No conversations yet.</div>
-                    <div class="empty-desc">${chatSearchQuery ? 'No matching conversations found.' : 'When you connect with a partner, your conversation threads will appear here.'}</div>
+                <div class="chat-empty-conversations" style="padding: 30px 16px; text-align: center; color: var(--color-text-muted);">
+                    <div class="empty-icon" style="font-size: 2rem; margin-bottom: 8px;">💬</div>
+                    <div class="empty-title" style="font-weight: 800; color: var(--color-teal-primary); margin-bottom: 4px;">No donation conversations yet.</div>
+                    <div class="empty-desc" style="font-size: 0.83rem; line-height: 1.4;">${chatSearchQuery ? 'No matching donation items or organisations found.' : 'When a donation match or offer is made, its conversation thread will appear here under the organisation.'}</div>
                 </div>
             `;
             return;
         }
 
-        container.innerHTML = displayThreads.map(t => {
-            const isSelected = t.partnerId === activeChatPartnerId;
-            const initial = (t.partnerName || "U").trim().charAt(0).toUpperCase();
-            const timeDisplay = formatChatTime(t.latestTimestamp);
-            const unreadBadge = t.unreadCount > 0 ? `<span class="thread-unread-badge">${t.unreadCount}</span>` : '';
+        container.innerHTML = displayPartners.map(partner => {
+            const initial = (partner.partnerName || "O").trim().charAt(0).toUpperCase();
+            const threadCount = partner.threadsList.length;
+
+            const threadsHtml = partner.threadsList.map(thread => {
+                const isSelected = thread.threadId === activeChatMatchId;
+                const statusInfo = getDonationStatusInfo(thread.status);
+                const dateDisplay = formatChatDate(thread.createdAt || thread.updatedAt);
+                const qtyText = thread.quantity ? `${thread.quantity} ${thread.unit || 'Units'}` : '';
+                const unreadDot = thread.unreadCount > 0 ? `<span class="donation-thread-unread-dot" title="${thread.unreadCount} unread message(s)"></span>` : '';
+
+                return `
+                    <div class="donation-thread-item ${isSelected ? 'active' : ''}" 
+                         onclick="window.selectDonationThread('${partner.partnerId}', '${thread.threadId}')" 
+                         role="button" 
+                         tabindex="0">
+                        <div class="donation-thread-top-row">
+                            <span class="donation-thread-item-name" title="${escapeChatHtml(thread.itemName)}">${escapeChatHtml(thread.itemName)}</span>
+                            <span class="donation-thread-status-badge" style="background:${statusInfo.bg}; color:${statusInfo.color}; border: 1px solid ${statusInfo.border};">
+                                ${escapeChatHtml(statusInfo.label)}
+                            </span>
+                        </div>
+                        <div class="donation-thread-meta-row">
+                            <span class="donation-thread-date">${dateDisplay}</span>
+                            ${qtyText ? `<span class="donation-thread-qty">${escapeChatHtml(qtyText)}</span>` : ''}
+                        </div>
+                        <div class="donation-thread-msg-row">
+                            <span class="donation-thread-msg-snippet" title="${escapeChatHtml(thread.latestSnippet)}">
+                                ${escapeChatHtml(thread.latestSnippet || 'No messages yet')}
+                            </span>
+                            ${unreadDot}
+                        </div>
+                    </div>
+                `;
+            }).join("");
 
             return `
-                <div class="conversation-thread-item ${isSelected ? 'active' : ''}" onclick="selectConversationThread('${t.partnerId}')" role="button" tabindex="0">
-                    <div class="thread-avatar">${initial}</div>
-                    <div class="thread-content">
-                        <div class="thread-top-row">
-                            <span class="thread-partner-name" title="${escapeChatHtml(t.partnerName)}">${escapeChatHtml(t.partnerName)}</span>
-                            <span class="thread-time">${timeDisplay}</span>
+                <div class="partner-group-block">
+                    <div class="partner-group-header">
+                        <div class="partner-group-user-info">
+                            <div class="partner-group-avatar">${initial}</div>
+                            <div style="min-width:0;">
+                                <h4 class="partner-group-name" title="${escapeChatHtml(partner.partnerName)}">${escapeChatHtml(partner.partnerName)}</h4>
+                                <p class="partner-group-role">${escapeChatHtml(partner.partnerRole)}</p>
+                            </div>
                         </div>
-                        <div class="thread-bottom-row">
-                            <span class="thread-last-msg" title="${escapeChatHtml(t.latestMessage)}">${escapeChatHtml(t.latestMessage)}</span>
-                            ${unreadBadge}
-                        </div>
+                        <span class="partner-thread-count-badge">${threadCount} item${threadCount === 1 ? '' : 's'}</span>
+                    </div>
+                    <div class="donation-history-subheading">Donation Conversation History:</div>
+                    <div class="partner-threads-container">
+                        ${threadsHtml}
                     </div>
                 </div>
             `;
         }).join("");
     }
 
-    window.selectConversationThread = async function(partnerId) {
+    window.selectDonationThread = async function(partnerId, threadId) {
         activeChatPartnerId = partnerId;
+        activeChatMatchId = threadId;
 
         const placeholder = document.getElementById("chatEmptyPlaceholder");
         const activeWindow = document.getElementById("chatActiveWindow");
+        const sidebarPane = document.getElementById("chatSidebarPane");
+        const backBtn = document.getElementById("btnChatBackToList");
 
-        if (!partnerId) {
+        if (!partnerId || !threadId) {
             if (placeholder) placeholder.style.display = "flex";
             if (activeWindow) activeWindow.style.display = "none";
             return;
@@ -4525,24 +4698,57 @@ document.addEventListener("DOMContentLoaded", () => {
         if (placeholder) placeholder.style.display = "none";
         if (activeWindow) activeWindow.style.display = "flex";
 
-        const allThreads = getConversationThreads();
-        const thread = allThreads.find(t => t.partnerId === partnerId);
+        // Mobile responsive switch
+        if (window.innerWidth <= 768) {
+            if (sidebarPane) sidebarPane.style.display = "none";
+            if (backBtn) backBtn.style.display = "inline-flex";
+        }
 
-        if (thread) {
+        const allPartners = getDonationConversationsHierarchy();
+        const partner = allPartners.find(p => p.partnerId === partnerId);
+        const thread = partner ? partner.threadsList.find(t => t.threadId === threadId) : null;
+
+        if (partner && thread) {
             const peerName = document.getElementById("chatPeerName");
-            const peerMeta = document.getElementById("chatPeerMeta");
-            const peerAvatar = document.getElementById("chatPeerAvatar");
+            const peerRole = document.getElementById("chatPeerRole");
+            const peerAvatar = document.getElementById("chatActiveAvatar");
+            const contextBar = document.getElementById("chatDonationContextBar");
+            const contextItemName = document.getElementById("chatContextItemName");
+            const contextStatusBadge = document.getElementById("chatContextStatusBadge");
+            const btnProposeSchedule = document.getElementById("btnChatProposeSchedule");
 
-            if (peerName) peerName.textContent = thread.partnerName;
-            if (peerMeta) peerMeta.textContent = thread.partnerRole;
-            if (peerAvatar) peerAvatar.textContent = (thread.partnerName || "U").trim().charAt(0).toUpperCase();
+            if (peerName) peerName.textContent = partner.partnerName;
+            if (peerRole) peerRole.textContent = partner.partnerRole;
+            if (peerAvatar) peerAvatar.textContent = (partner.partnerName || "O").trim().charAt(0).toUpperCase();
 
-            // Mark incoming messages from this partner as read
+            // Setup Donation Context Bar
+            if (contextBar) contextBar.style.display = "flex";
+            const qtyStr = thread.quantity ? ` – ${thread.quantity} ${thread.unit || 'Units'}` : '';
+            if (contextItemName) contextItemName.textContent = `Donation: ${thread.itemName}${qtyStr}`;
+
+            const statusInfo = getDonationStatusInfo(thread.status);
+            if (contextStatusBadge) {
+                contextStatusBadge.textContent = statusInfo.label;
+                contextStatusBadge.style.background = statusInfo.bg;
+                contextStatusBadge.style.color = statusInfo.color;
+                contextStatusBadge.style.borderColor = statusInfo.border;
+            }
+
+            // Propose Schedule button visibility
+            if (btnProposeSchedule) {
+                if (thread.match && (thread.status === 'accepted' || thread.status === 'in_discussion' || thread.status === 'schedule_proposed')) {
+                    btnProposeSchedule.style.display = "inline-flex";
+                } else {
+                    btnProposeSchedule.style.display = "none";
+                }
+            }
+
+            // Mark unread messages in this thread as read
             try {
                 const currentUid = currentUser.uid || currentUser.id || "";
                 const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
                 const db = helper.db();
-                const unreadMsgs = messagesList.filter(m => m.senderId === partnerId && (m.recipientId === currentUid || !m.recipientId) && m.read === false);
+                const unreadMsgs = thread.messages.filter(m => m.senderId === partnerId && (m.recipientId === currentUid || !m.recipientId) && m.read === false);
                 unreadMsgs.forEach(m => {
                     db.collection("messages").doc(m.id).update({ read: true }).catch(() => {});
                 });
@@ -4558,15 +4764,46 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 60);
     };
 
+    window.backToDonationList = function() {
+        const sidebarPane = document.getElementById("chatSidebarPane");
+        const activeWindow = document.getElementById("chatActiveWindow");
+        const placeholder = document.getElementById("chatEmptyPlaceholder");
+
+        if (sidebarPane) sidebarPane.style.display = "flex";
+        if (activeWindow) activeWindow.style.display = "none";
+        if (placeholder) placeholder.style.display = "flex";
+    };
+
+    window.openNegotiateFromChat = function() {
+        if (!activeChatMatchId) return;
+        const match = matchesList.find(m => m.id === activeChatMatchId);
+        if (match && typeof window.openNegotiateModal === 'function') {
+            window.openNegotiateModal(match);
+        } else {
+            showToast("Scheduling options available in Donation Progress panel.", "info");
+        }
+    };
+
+    window.selectConversationThread = function(partnerId) {
+        // Find first thread under this partner
+        const allPartners = getDonationConversationsHierarchy();
+        const partner = allPartners.find(p => p.partnerId === partnerId);
+        if (partner && partner.threadsList.length > 0) {
+            window.selectDonationThread(partnerId, partner.threadsList[0].threadId);
+        } else {
+            window.selectDonationThread(partnerId, `direct_${partnerId}`);
+        }
+    };
+
     window.selectChatMatch = (matchId) => {
         const match = matchesList.find(m => m.id === matchId);
         if (match) {
             const currentUid = currentUser.uid || currentUser.id || "";
             const isDonor = match.donorId === currentUid || (currentUser.email && match.donorEmail === currentUser.email);
             const partnerId = isDonor ? (match.receiverId || match.receiverEmail || match.receiverName) : (match.donorId || match.donorEmail || match.donorName);
-            window.selectConversationThread(partnerId);
+            window.selectDonationThread(partnerId, match.id);
         } else {
-            window.selectConversationThread(matchId);
+            window.selectDonationThread(matchId, matchId);
         }
     };
 
@@ -4575,7 +4812,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const placeholder = document.getElementById("chatEmptyPlaceholder");
         const activeWindow = document.getElementById("chatActiveWindow");
 
-        if (!activeChatPartnerId) {
+        if (!activeChatPartnerId || !activeChatMatchId) {
             if (placeholder) placeholder.style.display = "flex";
             if (activeWindow) activeWindow.style.display = "none";
             return;
@@ -4586,17 +4823,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!container) return;
 
-        const allThreads = getConversationThreads();
-        const thread = allThreads.find(t => t.partnerId === activeChatPartnerId);
+        const allPartners = getDonationConversationsHierarchy();
+        const partner = allPartners.find(p => p.partnerId === activeChatPartnerId);
+        const thread = partner ? partner.threadsList.find(t => t.threadId === activeChatMatchId) : null;
 
         if (!thread || thread.messages.length === 0) {
-            const partnerName = thread ? thread.partnerName : 'Partner';
+            const partnerName = partner ? partner.partnerName : 'Partner Organisation';
+            const itemName = thread ? thread.itemName : 'Donation Item';
             const initial = partnerName.charAt(0).toUpperCase();
             container.innerHTML = `
-                <div class="chat-thread-starter">
-                    <div class="starter-avatar">${initial}</div>
+                <div class="chat-thread-starter" style="padding: 24px; text-align: center; background: #FAF8F5; border-radius: 8px; margin: 16px;">
+                    <div class="starter-avatar" style="width: 48px; height: 48px; border-radius: 50%; background: var(--color-teal-primary); color: #FFF; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; margin: 0 auto 10px auto;">${initial}</div>
                     <h4 style="margin:0 0 6px 0; color:var(--color-teal-primary); font-weight:800;">${escapeChatHtml(partnerName)}</h4>
-                    <p style="margin:0; font-size:0.85rem; color:var(--color-text-muted);">This is the start of your direct conversation thread. Send a message below to coordinate donation items and logistics.</p>
+                    <p style="margin:0 0 8px 0; font-size:0.88rem; font-weight: 700; color: var(--color-text-dark);">Thread: ${escapeChatHtml(itemName)}</p>
+                    <p style="margin:0; font-size:0.83rem; color:var(--color-text-muted); max-width: 420px; margin: 0 auto; line-height: 1.4;">This is the dedicated conversation thread for this specific donation item. Send a message below to coordinate handover, logistics, or verification.</p>
                 </div>
             `;
             return;
@@ -4607,7 +4847,7 @@ document.addEventListener("DOMContentLoaded", () => {
         container.innerHTML = thread.messages.map(m => {
             const isOutgoing = m.senderId === currentUid;
             const timeStr = formatChatTime(m.createdAt);
-            const senderLabel = isOutgoing ? "You" : (m.senderName || thread.partnerName || "Partner");
+            const senderLabel = isOutgoing ? "You" : (m.senderName || partner.partnerName || "Partner");
 
             return `
                 <div class="chat-message-row ${isOutgoing ? 'outgoing' : 'incoming'}">
@@ -4630,25 +4870,28 @@ document.addEventListener("DOMContentLoaded", () => {
         const text = input.value.trim();
         if (!text) return;
 
-        if (!activeChatPartnerId) {
-            showToast("Please select a conversation first.", "warning");
+        if (!activeChatPartnerId || !activeChatMatchId) {
+            showToast("Please select a donation conversation thread first.", "warning");
             return;
         }
 
-        const allThreads = getConversationThreads();
-        const thread = allThreads.find(t => t.partnerId === activeChatPartnerId);
+        const allPartners = getDonationConversationsHierarchy();
+        const partner = allPartners.find(p => p.partnerId === activeChatPartnerId);
+        const thread = partner ? partner.threadsList.find(t => t.threadId === activeChatMatchId) : null;
         const currentUid = currentUser.uid || currentUser.id || "";
 
         const recipientId = activeChatPartnerId;
-        const recipientName = thread ? thread.partnerName : "Partner";
-        const primaryMatchId = thread ? thread.primaryMatchId : `direct_${currentUid}_${activeChatPartnerId}`;
+        const recipientName = partner ? partner.partnerName : "Partner";
+        const targetMatchId = activeChatMatchId;
+        const itemTitle = thread ? thread.itemName : "Donation Item";
 
         try {
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
             const db = helper.db();
 
             await db.collection("messages").add({
-                matchId: primaryMatchId || `direct_${currentUid}_${activeChatPartnerId}`,
+                matchId: targetMatchId,
+                itemTitle: itemTitle,
                 conversationId: [currentUid, activeChatPartnerId].sort().join('_'),
                 conversationPartnerId: activeChatPartnerId,
                 senderId: currentUid,
@@ -4663,7 +4906,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (recipientId && recipientId !== currentUid) {
                 await db.collection("notifications").add({
                     userId: recipientId,
-                    message: `New message from ${currentUser.name || 'User'}: "${text.substring(0, 45)}${text.length > 45 ? '...' : ''}"`,
+                    message: `New message from ${currentUser.name || 'User'} regarding "${itemTitle}": "${text.substring(0, 45)}${text.length > 45 ? '...' : ''}"`,
                     type: "chat",
                     read: false,
                     createdAt: new Date().toISOString()
@@ -4704,7 +4947,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const currentUid = currentUser.uid || currentUser.id || "";
                 const isDonor = match.donorId === currentUid || (currentUser.email && match.donorEmail === currentUser.email);
                 const partnerId = isDonor ? (match.receiverId || match.receiverEmail || match.receiverName) : (match.donorId || match.donorEmail || match.donorName);
-                window.selectConversationThread(partnerId);
+                window.selectDonationThread(partnerId, match.id);
             } else {
                 window.selectConversationThread(matchIdOrPartnerId);
             }
@@ -4719,8 +4962,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const currentUid = currentUser.uid || currentUser.id || "";
         const existingMatch = matchesList.find(m => 
-            (m.donorId === targetUserId && (m.receiverId === currentUid || (currentUser.email && m.receiverEmail === currentUser.email))) ||
-            (m.receiverId === targetUserId && (m.donorId === currentUid || (currentUser.email && m.donorEmail === currentUser.email)))
+            ((m.donorId === targetUserId && (m.receiverId === currentUid || (currentUser.email && m.receiverEmail === currentUser.email))) ||
+            (m.receiverId === targetUserId && (m.donorId === currentUid || (currentUser.email && m.donorEmail === currentUser.email)))) &&
+            (!itemTitle || m.requestName === itemTitle || m.itemName === itemTitle)
         );
 
         if (existingMatch) {
@@ -4741,13 +4985,29 @@ document.addEventListener("DOMContentLoaded", () => {
                     createdAt: new Date().toISOString()
                 });
                 window.startChatWithPartner(newDoc.id);
-                showToast(`Opened direct chat with ${targetUserName || 'partner'}`, "success");
+                showToast(`Opened donation chat with ${targetUserName || 'partner'}`, "success");
             } catch(err) {
-                console.error("Error creating direct chat session:", err);
-                window.selectConversationThread(targetUserId);
+                console.error("Error creating donation chat session:", err);
+                window.selectDonationThread(targetUserId, `direct_${targetUserId}`);
             }
         }
     };
+
+    // Chat form and search event bindings
+    const formSendMessage = document.getElementById("formSendMessage");
+    if (formSendMessage) {
+        formSendMessage.addEventListener("submit", (e) => {
+            e.preventDefault();
+            window.sendActiveChatMessage();
+        });
+    }
+
+    const chatSearchInput = document.getElementById("chatSearchInput");
+    if (chatSearchInput) {
+        chatSearchInput.addEventListener("input", (e) => {
+            window.filterDonationChatList(e.target.value);
+        });
+    }
 
     function calculateHaversineKm(lat1, lon1, lat2, lon2) {
         const R = 6371;
