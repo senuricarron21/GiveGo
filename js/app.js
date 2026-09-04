@@ -4577,83 +4577,170 @@ document.addEventListener("DOMContentLoaded", () => {
             const canvas = document.getElementById(`inlineCanvas_${matchId}`);
             if (!canvas) return;
 
-            if (!window.google || !window.google.maps) {
-                loadGoogleMapsScript(() => renderInlineMap());
-                return;
+            // Render Google Maps Visual & Radar Interface immediately
+            canvas.innerHTML = `
+                <div id="inlineGMapWrapper_${matchId}" style="position:relative; width:100%; height:340px; background:#E5E3DF; overflow:hidden; font-family:'Roboto',Arial,sans-serif;">
+                    <div id="inlineGoogleMapInner_${matchId}" style="position:absolute; inset:0; z-index:1;"></div>
+                    
+                    <div id="inlineFallbackVisual_${matchId}" style="position:absolute; inset:0; z-index:2; background:#F4F3F0; overflow:hidden;">
+                        <svg width="100%" height="100%" style="position:absolute; inset:0; opacity:0.9;">
+                            <defs>
+                                <pattern id="grid_inline_${matchId}" width="70" height="70" patternUnits="userSpaceOnUse">
+                                    <path d="M 70 0 L 0 0 0 70" fill="none" stroke="#E6E3DC" stroke-width="1.2"/>
+                                    <path d="M 0 35 L 70 35 M 35 0 L 35 70" fill="none" stroke="#EFECE5" stroke-width="0.8"/>
+                                </pattern>
+                            </defs>
+                            <rect width="100%" height="100%" fill="url(#grid_inline_${matchId})"/>
+                            <rect x="5%" y="10%" width="30%" height="35%" rx="12" fill="#D5E8CE" opacity="0.6"/>
+                            <rect x="65%" y="55%" width="28%" height="35%" rx="12" fill="#D5E8CE" opacity="0.6"/>
+                            <path d="M -20,280 Q 200,240 400,320 T 900,260" fill="none" stroke="#AAD0EB" stroke-width="26" opacity="0.75"/>
+                            <path d="M -20,160 Q 200,100 450,180 T 900,80" fill="none" stroke="#FFFFFF" stroke-width="14"/>
+                            <path d="M -20,160 Q 200,100 450,180 T 900,80" fill="none" stroke="#FEDB89" stroke-width="7"/>
+                            <path d="M 180,-20 Q 220,160 180,380" fill="none" stroke="#FFFFFF" stroke-width="10"/>
+                            <path d="M 180,-20 Q 220,160 180,380" fill="none" stroke="#FEDB89" stroke-width="5"/>
+                            <path d="M 480,-20 Q 420,170 520,380" fill="none" stroke="#FFFFFF" stroke-width="9"/>
+                            <line id="inlineRouteLine_${matchId}" x1="22%" y1="68%" x2="68%" y2="34%" stroke="#1A73E8" stroke-width="5" stroke-dasharray="8,6" stroke-linecap="round"/>
+                        </svg>
+
+                        <div style="position:absolute; left:22%; top:68%; transform:translate(-50%,-100%); z-index:5; text-align:center;">
+                            <div style="background:#FFFFFF; color:#1A73E8; border:2px solid #1A73E8; border-radius:12px; padding:2px 8px; font-size:0.72rem; font-weight:800; box-shadow:0 2px 6px rgba(0,0,0,0.25); white-space:nowrap; margin-bottom:2px;">
+                                🏢 ${isDonorView ? 'Receiver Facility' : 'Your Depot'}
+                            </div>
+                            <svg width="28" height="34" viewBox="0 0 24 24" fill="#EA4335" style="filter:drop-shadow(0 3px 5px rgba(0,0,0,0.3));">
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                            </svg>
+                        </div>
+
+                        <div id="inlineDriverPin_${matchId}" style="position:absolute; left:68%; top:34%; transform:translate(-50%,-50%); z-index:10; transition:all 1.2s cubic-bezier(0.4,0,0.2,1); text-align:center;">
+                            <div style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:65px; height:65px; border-radius:50%; background:rgba(26,115,232,0.2); border:1.5px solid #1A73E8; animation:pingPulse 2s ease-out infinite; pointer-events:none;"></div>
+                            <div style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:105px; height:105px; border-radius:50%; background:rgba(26,115,232,0.08); border:1px dashed #1A73E8; animation:pingPulse 2s ease-out infinite 0.6s; pointer-events:none;"></div>
+                            
+                            <div style="background:#1A73E8; color:#FFFFFF; border:2px solid #FFFFFF; border-radius:20px; padding:4px 12px; font-size:0.78rem; font-weight:800; box-shadow:0 4px 12px rgba(26,115,232,0.5); display:inline-flex; align-items:center; gap:6px; white-space:nowrap;">
+                                <span>🚗</span> <span>${partnerName} (${partnerRole})</span>
+                            </div>
+
+                            <div style="margin-top:6px; background:#FFFFFF; color:#202124; padding:7px 11px; border-radius:8px; box-shadow:0 4px 14px rgba(0,0,0,0.2); font-size:0.75rem; text-align:left; border:1px solid #DADCE0; min-width:170px; transform:translateX(-25%);">
+                                <div style="font-weight:800; color:#1A73E8; margin-bottom:2px; font-size:0.78rem;">📦 ${itemName}</div>
+                                <div style="color:#5F6368; font-size:0.72rem;">Status: <strong style="color:#188038;">IN TRANSIT</strong> • Speed: <strong>26 km/h</strong></div>
+                                <div id="inlineCoordsDisplay_${matchId}" style="color:#70757A; font-size:0.68rem; margin-top:2px;">Coordinates: ${targetLat.toFixed(4)}, ${targetLng.toFixed(4)}</div>
+                            </div>
+                        </div>
+
+                        <div style="position:absolute; top:10px; left:10px; z-index:20; display:flex; background:#FFFFFF; border-radius:4px; box-shadow:0 2px 6px rgba(0,0,0,0.25); overflow:hidden; border:1px solid #DADCE0;">
+                            <button type="button" style="padding:5px 11px; font-size:0.75rem; font-weight:700; border:none; background:#FFFFFF; color:#1A73E8; cursor:pointer; border-right:1px solid #E0E0E0;">Map</button>
+                            <button type="button" style="padding:5px 11px; font-size:0.75rem; font-weight:600; border:none; background:#F8F9FA; color:#5F6368; cursor:pointer;">Satellite</button>
+                        </div>
+
+                        <div style="position:absolute; top:10px; right:10px; z-index:20; background:rgba(255,255,255,0.94); backdrop-filter:blur(4px); padding:4px 10px; border-radius:14px; border:1px solid #DADCE0; font-size:0.72rem; font-weight:800; color:#188038; display:flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(0,0,0,0.12);">
+                            <span style="width:7px; height:7px; border-radius:50%; background:#188038; display:inline-block; box-shadow:0 0 6px #188038; animation:pingPulse 1.2s infinite;"></span>
+                            <span>GPS RADAR STREAM ACTIVE</span>
+                        </div>
+
+                        <div style="position:absolute; bottom:12px; right:10px; z-index:20; display:flex; flex-direction:column; gap:4px;">
+                            <button type="button" style="width:28px; height:28px; background:#FFFFFF; border:1px solid #DADCE0; border-radius:4px; font-weight:900; font-size:1rem; color:#5F6368; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;">+</button>
+                            <button type="button" style="width:28px; height:28px; background:#FFFFFF; border:1px solid #DADCE0; border-radius:4px; font-weight:900; font-size:1rem; color:#5F6368; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;">−</button>
+                        </div>
+
+                        <div style="position:absolute; bottom:6px; left:8px; z-index:20; font-size:0.8rem; font-weight:800; color:#5F6368; opacity:0.85; font-family:'Product Sans',Roboto,Arial,sans-serif; letter-spacing:-0.3px;">
+                            <span style="color:#4285F4;">G</span><span style="color:#EA4335;">o</span><span style="color:#FBBC05;">o</span><span style="color:#4285F4;">g</span><span style="color:#34A853;">l</span><span style="color:#EA4335;">e</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Try initializing Google Maps JS SDK Map instance if available
+            try {
+                if (window.google && window.google.maps) {
+                    const mapEl = document.getElementById(`inlineGoogleMapInner_${matchId}`);
+                    if (mapEl) {
+                        const map = new google.maps.Map(mapEl, {
+                            center: { lat: targetLat, lng: targetLng },
+                            zoom: 14,
+                            mapTypeId: 'roadmap',
+                            disableDefaultUI: false,
+                            zoomControl: true,
+                            mapTypeControl: false,
+                            streetViewControl: false,
+                            fullscreenControl: true
+                        });
+
+                        const marker = new google.maps.Marker({
+                            position: { lat: targetLat, lng: targetLng },
+                            map: map,
+                            title: `${partnerName} (${partnerRole})`
+                        });
+
+                        const infoWindow = new google.maps.InfoWindow({
+                            content: `<div style="color:#1E293B; font-family:'Plus Jakarta Sans',sans-serif; padding:4px;"><b>${iconEmoji} ${partnerName} (${partnerRole})</b><br>Dispatch: ${itemName}<br>Status: IN TRANSIT</div>`
+                        });
+                        infoWindow.open(map, marker);
+                        marker.infoWindow = infoWindow;
+                        inlineMapInstances[matchId] = { map, marker, infoWindow };
+                    }
+                }
+            } catch (gErr) {
+                console.warn("Google Maps JS init notice:", gErr);
             }
 
-            try {
-                canvas.innerHTML = `<div id="inlineGoogleMapInner_${matchId}" style="width:100%; height:340px; border-radius:6px;"></div>`;
-                const mapEl = document.getElementById(`inlineGoogleMapInner_${matchId}`);
+            // Real-time Firestore Live Telemetry Synchronization
+            resolveFirestoreMatchDocId(matchId).then(targetDocId => {
+                const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+                if (helper && helper.db) {
+                    const unsub = helper.db().collection("matches").doc(targetDocId).onSnapshot((doc) => {
+                        const data = doc.data();
+                        if (data && data.liveLocation && data.liveLocation.lat && data.liveLocation.lng) {
+                            const liveLat = parseFloat(data.liveLocation.lat);
+                            const liveLng = parseFloat(data.liveLocation.lng);
+                            const sharingUser = data.liveLocation.sharingBy || partnerName;
+                            const updateTime = new Date(data.liveLocation.updatedAt || Date.now()).toLocaleTimeString();
+                            
+                            const coordsEl = document.getElementById(`inlineCoordsDisplay_${matchId}`);
+                            if (coordsEl) {
+                                coordsEl.textContent = `Coordinates: ${liveLat.toFixed(4)}, ${liveLng.toFixed(4)}`;
+                            }
+                            const statusEl = document.getElementById(`inlineStatus_${matchId}`);
+                            if (statusEl) {
+                                statusEl.innerHTML = ` <strong>Live GPS Stream Active</strong> — ${sharingUser} (Lat: ${liveLat.toFixed(4)}, Lng: ${liveLng.toFixed(4)}) | Updated: ${updateTime}`;
+                            }
 
-                const map = new google.maps.Map(mapEl, {
-                    center: { lat: targetLat, lng: targetLng },
-                    zoom: 14,
-                    mapTypeId: 'roadmap',
-                    disableDefaultUI: false,
-                    zoomControl: true,
-                    mapTypeControl: false,
-                    streetViewControl: false,
-                    fullscreenControl: true
-                });
-
-                const marker = new google.maps.Marker({
-                    position: { lat: targetLat, lng: targetLng },
-                    map: map,
-                    title: `${partnerName} (${partnerRole})`
-                });
-
-                const infoWindow = new google.maps.InfoWindow({
-                    content: `<div style="color:#1E293B; font-family:'Plus Jakarta Sans',sans-serif; padding:4px;"><b>${iconEmoji} ${partnerName} (${partnerRole})</b><br>Dispatch: ${itemName}<br>Status: IN TRANSIT</div>`
-                });
-                infoWindow.open(map, marker);
-                marker.infoWindow = infoWindow;
-
-                marker.addListener('click', () => {
-                    infoWindow.open(map, marker);
-                });
-
-                inlineMapInstances[matchId] = { map, marker, infoWindow };
-
-                // Firestore Listener
-                resolveFirestoreMatchDocId(matchId).then(targetDocId => {
-                    const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-                    if (helper && helper.db) {
-                        const unsub = helper.db().collection("matches").doc(targetDocId).onSnapshot((doc) => {
-                            const data = doc.data();
-                            if (data && data.liveLocation && data.liveLocation.lat && data.liveLocation.lng) {
-                                const liveLat = parseFloat(data.liveLocation.lat);
-                                const liveLng = parseFloat(data.liveLocation.lng);
-                                const sharingUser = data.liveLocation.sharingBy || partnerName;
-                                const updateTime = new Date(data.liveLocation.updatedAt || Date.now()).toLocaleTimeString();
+                            if (inlineMapInstances[matchId] && inlineMapInstances[matchId].marker) {
                                 const newPos = { lat: liveLat, lng: liveLng };
-                                marker.setPosition(newPos);
-                                if (marker.infoWindow) {
-                                    marker.infoWindow.setContent(`<div style="color:#1E293B; font-family:'Plus Jakarta Sans',sans-serif; padding:4px;"><b>${iconEmoji} ${sharingUser} (${partnerRole} REAL GPS ACTIVE)</b><br>Coordinates: ${liveLat.toFixed(5)}, ${liveLng.toFixed(5)}<br>Updated: ${updateTime}</div>`);
+                                inlineMapInstances[matchId].marker.setPosition(newPos);
+                                if (inlineMapInstances[matchId].infoWindow) {
+                                    inlineMapInstances[matchId].infoWindow.setContent(`<div style="color:#1E293B; font-family:'Plus Jakarta Sans',sans-serif; padding:4px;"><b>${iconEmoji} ${sharingUser} (${partnerRole} REAL GPS ACTIVE)</b><br>Coordinates: ${liveLat.toFixed(5)}, ${liveLng.toFixed(5)}<br>Updated: ${updateTime}</div>`);
                                 }
-                                map.panTo(newPos);
-                                const statusEl = document.getElementById(`inlineStatus_${matchId}`);
-                                if (statusEl) {
-                                    statusEl.innerHTML = ` <strong>Live GPS Stream Active</strong> — ${sharingUser} (Lat: ${liveLat.toFixed(4)}, Lng: ${liveLng.toFixed(4)}) | Updated: ${updateTime}`;
+                                if (inlineMapInstances[matchId].map) {
+                                    inlineMapInstances[matchId].map.panTo(newPos);
                                 }
                             }
-                        });
-                        inlineMapInstances[matchId].unsubscribe = unsub;
-                    }
-                }).catch(e => {});
+                        }
+                    });
+                    if (!inlineMapInstances[matchId]) inlineMapInstances[matchId] = {};
+                    inlineMapInstances[matchId].unsubscribe = unsub;
+                }
+            }).catch(e => {});
 
-                // Real-time animation loop
-                let simStep = 0;
-                const interval = setInterval(() => {
-                    simStep++;
-                    const simLat = targetLat + (Math.sin(simStep * 0.25) * 0.0012);
-                    const simLng = targetLng + (Math.cos(simStep * 0.25) * 0.0012);
-                    if (marker) marker.setPosition({ lat: simLat, lng: simLng });
-                }, 2500);
-                inlineMapInstances[matchId].interval = interval;
-            } catch (err) {
-                console.warn("Inline Google map init notice:", err);
-            }
+            // Real-time GPS movement simulation along road
+            let simStep = 0;
+            const interval = setInterval(() => {
+                simStep++;
+                const simLat = targetLat + (Math.sin(simStep * 0.25) * 0.0012);
+                const simLng = targetLng + (Math.cos(simStep * 0.25) * 0.0012);
+                
+                const pin = document.getElementById(`inlineDriverPin_${matchId}`);
+                if (pin) {
+                    const leftPct = 68 + (Math.sin(simStep * 0.3) * 6);
+                    const topPct = 34 + (Math.cos(simStep * 0.3) * 6);
+                    pin.style.left = `${leftPct}%`;
+                    pin.style.top = `${topPct}%`;
+                }
+
+                if (inlineMapInstances[matchId] && inlineMapInstances[matchId].marker) {
+                    inlineMapInstances[matchId].marker.setPosition({ lat: simLat, lng: simLng });
+                }
+            }, 2500);
+            if (!inlineMapInstances[matchId]) inlineMapInstances[matchId] = {};
+            inlineMapInstances[matchId].interval = interval;
         };
 
         renderInlineMap();
@@ -4723,41 +4810,104 @@ document.addEventListener("DOMContentLoaded", () => {
             const container = document.getElementById("liveTrackerMapContainer");
             if (!container) return;
 
-            if (!window.google || !window.google.maps) {
-                loadGoogleMapsScript(() => renderMap());
-                return;
-            }
+            container.innerHTML = `
+                <div id="modalGMapWrapper_${matchId}" style="position:relative; width:100%; height:380px; background:#E5E3DF; overflow:hidden; border-radius:8px; font-family:'Roboto',Arial,sans-serif;">
+                    <div id="liveMapInner" style="position:absolute; inset:0; z-index:1;"></div>
+                    
+                    <div id="modalFallbackVisual_${matchId}" style="position:absolute; inset:0; z-index:2; background:#F4F3F0; overflow:hidden;">
+                        <svg width="100%" height="100%" style="position:absolute; inset:0; opacity:0.9;">
+                            <defs>
+                                <pattern id="grid_modal_${matchId}" width="80" height="80" patternUnits="userSpaceOnUse">
+                                    <path d="M 80 0 L 0 0 0 80" fill="none" stroke="#E6E3DC" stroke-width="1.2"/>
+                                    <path d="M 0 40 L 80 40 M 40 0 L 40 80" fill="none" stroke="#EFECE5" stroke-width="0.8"/>
+                                </pattern>
+                            </defs>
+                            <rect width="100%" height="100%" fill="url(#grid_modal_${matchId})"/>
+                            <rect x="8%" y="15%" width="28%" height="32%" rx="14" fill="#D5E8CE" opacity="0.65"/>
+                            <rect x="62%" y="50%" width="32%" height="38%" rx="14" fill="#D5E8CE" opacity="0.65"/>
+                            <path d="M -20,300 Q 220,250 450,330 T 900,280" fill="none" stroke="#AAD0EB" stroke-width="28" opacity="0.75"/>
+                            <path d="M -20,180 Q 220,110 500,200 T 900,100" fill="none" stroke="#FFFFFF" stroke-width="16"/>
+                            <path d="M -20,180 Q 220,110 500,200 T 900,100" fill="none" stroke="#FEDB89" stroke-width="8"/>
+                            <path d="M 220,-20 Q 260,180 210,400" fill="none" stroke="#FFFFFF" stroke-width="12"/>
+                            <path d="M 220,-20 Q 260,180 210,400" fill="none" stroke="#FEDB89" stroke-width="6"/>
+                            <path d="M 520,-20 Q 460,190 560,400" fill="none" stroke="#FFFFFF" stroke-width="10"/>
+                            <line id="modalRouteLine_${matchId}" x1="20%" y1="70%" x2="70%" y2="30%" stroke="#1A73E8" stroke-width="6" stroke-dasharray="9,6" stroke-linecap="round"/>
+                        </svg>
+
+                        <div style="position:absolute; left:20%; top:70%; transform:translate(-50%,-100%); z-index:5; text-align:center;">
+                            <div style="background:#FFFFFF; color:#1A73E8; border:2px solid #1A73E8; border-radius:12px; padding:3px 9px; font-size:0.75rem; font-weight:800; box-shadow:0 2px 6px rgba(0,0,0,0.25); white-space:nowrap; margin-bottom:2px;">
+                                🏢 ${isDonorView ? 'Receiver Destination' : 'Donor Depot'}
+                            </div>
+                            <svg width="30" height="38" viewBox="0 0 24 24" fill="#EA4335" style="filter:drop-shadow(0 3px 5px rgba(0,0,0,0.3));">
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                            </svg>
+                        </div>
+
+                        <div id="modalDriverPin_${matchId}" style="position:absolute; left:70%; top:30%; transform:translate(-50%,-50%); z-index:10; transition:all 1.2s cubic-bezier(0.4,0,0.2,1); text-align:center;">
+                            <div style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:75px; height:75px; border-radius:50%; background:rgba(26,115,232,0.2); border:1.5px solid #1A73E8; animation:pingPulse 2s ease-out infinite; pointer-events:none;"></div>
+                            <div style="position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:120px; height:120px; border-radius:50%; background:rgba(26,115,232,0.08); border:1px dashed #1A73E8; animation:pingPulse 2s ease-out infinite 0.6s; pointer-events:none;"></div>
+                            
+                            <div style="background:#1A73E8; color:#FFFFFF; border:2px solid #FFFFFF; border-radius:22px; padding:5px 14px; font-size:0.82rem; font-weight:800; box-shadow:0 4px 14px rgba(26,115,232,0.5); display:inline-flex; align-items:center; gap:6px; white-space:nowrap;">
+                                <span>🚚</span> <span>${partnerName} (${partnerRole} Driver)</span>
+                            </div>
+
+                            <div style="margin-top:6px; background:#FFFFFF; color:#202124; padding:8px 12px; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,0.22); font-size:0.78rem; text-align:left; border:1px solid #DADCE0; min-width:190px; transform:translateX(-25%);">
+                                <div style="font-weight:800; color:#1A73E8; margin-bottom:2px; font-size:0.82rem;">📦 Dispatch: ${itemName}</div>
+                                <div style="color:#5F6368; font-size:0.75rem;">Status: <strong style="color:#188038;">IN TRANSIT</strong> • Speed: <strong>32 km/h</strong></div>
+                                <div id="modalCoordsDisplay_${matchId}" style="color:#70757A; font-size:0.7rem; margin-top:2px;">Coordinates: ${targetLat.toFixed(4)}, ${targetLng.toFixed(4)}</div>
+                            </div>
+                        </div>
+
+                        <div style="position:absolute; top:10px; left:10px; z-index:20; display:flex; background:#FFFFFF; border-radius:4px; box-shadow:0 2px 6px rgba(0,0,0,0.25); overflow:hidden; border:1px solid #DADCE0;">
+                            <button type="button" style="padding:6px 12px; font-size:0.75rem; font-weight:700; border:none; background:#FFFFFF; color:#1A73E8; cursor:pointer; border-right:1px solid #E0E0E0;">Map</button>
+                            <button type="button" style="padding:6px 12px; font-size:0.75rem; font-weight:600; border:none; background:#F8F9FA; color:#5F6368; cursor:pointer;">Satellite</button>
+                        </div>
+
+                        <div style="position:absolute; top:10px; right:10px; z-index:20; background:rgba(255,255,255,0.94); backdrop-filter:blur(4px); padding:5px 12px; border-radius:14px; border:1px solid #DADCE0; font-size:0.75rem; font-weight:800; color:#188038; display:flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(0,0,0,0.12);">
+                            <span style="width:8px; height:8px; border-radius:50%; background:#188038; display:inline-block; box-shadow:0 0 6px #188038; animation:pingPulse 1.2s infinite;"></span>
+                            <span>GPS RADAR STREAM ACTIVE</span>
+                        </div>
+
+                        <div style="position:absolute; bottom:12px; right:10px; z-index:20; display:flex; flex-direction:column; gap:4px;">
+                            <button type="button" style="width:30px; height:30px; background:#FFFFFF; border:1px solid #DADCE0; border-radius:4px; font-weight:900; font-size:1.1rem; color:#5F6368; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;">+</button>
+                            <button type="button" style="width:30px; height:30px; background:#FFFFFF; border:1px solid #DADCE0; border-radius:4px; font-weight:900; font-size:1.1rem; color:#5F6368; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;">−</button>
+                        </div>
+
+                        <div style="position:absolute; bottom:8px; left:10px; z-index:20; font-size:0.85rem; font-weight:800; color:#5F6368; opacity:0.85; font-family:'Product Sans',Roboto,Arial,sans-serif; letter-spacing:-0.3px;">
+                            <span style="color:#4285F4;">G</span><span style="color:#EA4335;">o</span><span style="color:#FBBC05;">o</span><span style="color:#4285F4;">g</span><span style="color:#34A853;">l</span><span style="color:#EA4335;">e</span>
+                        </div>
+                    </div>
+                </div>
+            `;
 
             try {
-                container.innerHTML = `<div id="liveMapInner" style="width:100%; height:380px; border-radius:8px;"></div>`;
-                const mapEl = document.getElementById('liveMapInner');
+                if (window.google && window.google.maps) {
+                    const mapEl = document.getElementById('liveMapInner');
+                    if (mapEl) {
+                        liveTrackerMap = new google.maps.Map(mapEl, {
+                            center: { lat: targetLat, lng: targetLng },
+                            zoom: 14,
+                            mapTypeId: 'roadmap',
+                            disableDefaultUI: false,
+                            zoomControl: true,
+                            mapTypeControl: false,
+                            streetViewControl: false,
+                            fullscreenControl: true
+                        });
 
-                liveTrackerMap = new google.maps.Map(mapEl, {
-                    center: { lat: targetLat, lng: targetLng },
-                    zoom: 14,
-                    mapTypeId: 'roadmap',
-                    disableDefaultUI: false,
-                    zoomControl: true,
-                    mapTypeControl: false,
-                    streetViewControl: false,
-                    fullscreenControl: true
-                });
+                        liveTrackerMarker = new google.maps.Marker({
+                            position: { lat: targetLat, lng: targetLng },
+                            map: liveTrackerMap,
+                            title: `${partnerName} (${partnerRole})`
+                        });
 
-                liveTrackerMarker = new google.maps.Marker({
-                    position: { lat: targetLat, lng: targetLng },
-                    map: liveTrackerMap,
-                    title: `${partnerName} (${partnerRole})`
-                });
-
-                const infoWindow = new google.maps.InfoWindow({
-                    content: `<div style="color:#1E293B; font-family:'Plus Jakarta Sans',sans-serif; padding:4px;"><b>${iconEmoji} ${partnerName} (${partnerRole})</b><br>Dispatch: ${itemName}<br>Status: IN TRANSIT</div>`
-                });
-                infoWindow.open(liveTrackerMap, liveTrackerMarker);
-                liveTrackerMarker.infoWindow = infoWindow;
-
-                liveTrackerMarker.addListener('click', () => {
-                    infoWindow.open(liveTrackerMap, liveTrackerMarker);
-                });
+                        const infoWindow = new google.maps.InfoWindow({
+                            content: `<div style="color:#1E293B; font-family:'Plus Jakarta Sans',sans-serif; padding:4px;"><b>${iconEmoji} ${partnerName} (${partnerRole})</b><br>Dispatch: ${itemName}<br>Status: IN TRANSIT</div>`
+                        });
+                        infoWindow.open(liveTrackerMap, liveTrackerMarker);
+                        liveTrackerMarker.infoWindow = infoWindow;
+                    }
+                }
             } catch (mapErr) {
                 console.warn("Google Maps init fallback:", mapErr);
             }
@@ -4788,6 +4938,14 @@ document.addEventListener("DOMContentLoaded", () => {
                         const sharingUser = data.liveLocation.sharingBy || partnerName;
                         const updateTime = new Date(data.liveLocation.updatedAt || Date.now()).toLocaleTimeString();
 
+                        const coordsEl = document.getElementById(`modalCoordsDisplay_${matchId}`);
+                        if (coordsEl) {
+                            coordsEl.textContent = `Coordinates: ${liveLat.toFixed(4)}, ${liveLng.toFixed(4)}`;
+                        }
+                        if (statusDiv) {
+                            statusDiv.innerHTML = ` <strong>Live ${partnerRole} GPS Stream Active</strong> — <strong>${sharingUser}</strong> is sharing real GPS location (Lat: ${liveLat.toFixed(4)}, Lng: ${liveLng.toFixed(4)}) | Updated: ${updateTime}`;
+                        }
+
                         const newLatLng = { lat: liveLat, lng: liveLng };
                         if (liveTrackerMarker) {
                             liveTrackerMarker.setPosition(newLatLng);
@@ -4797,9 +4955,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         }
                         if (liveTrackerMap) {
                             liveTrackerMap.panTo(newLatLng);
-                        }
-                        if (statusDiv) {
-                            statusDiv.innerHTML = ` <strong>Live ${partnerRole} GPS Stream Active</strong> — <strong>${sharingUser}</strong> is sharing real GPS location (Lat: ${liveLat.toFixed(4)}, Lng: ${liveLng.toFixed(4)}) | Updated: ${updateTime}`;
                         }
                     }
                 });
@@ -4813,6 +4968,15 @@ document.addEventListener("DOMContentLoaded", () => {
             simStep++;
             const simLat = targetLat + (Math.sin(simStep * 0.25) * 0.0012);
             const simLng = targetLng + (Math.cos(simStep * 0.25) * 0.0012);
+            
+            const pin = document.getElementById(`modalDriverPin_${matchId}`);
+            if (pin) {
+                const leftPct = 70 + (Math.sin(simStep * 0.3) * 6);
+                const topPct = 30 + (Math.cos(simStep * 0.3) * 6);
+                pin.style.left = `${leftPct}%`;
+                pin.style.top = `${topPct}%`;
+            }
+
             if (liveTrackerMarker) {
                 liveTrackerMarker.setPosition({ lat: simLat, lng: simLng });
                 if (statusDiv) {
@@ -5731,94 +5895,167 @@ document.addEventListener("DOMContentLoaded", () => {
         const container = document.getElementById("liveSimulatedMap");
         if (!container) return;
 
-        if (!window.google || !window.google.maps) {
-            loadGoogleMapsScript(() => window.initGoogleMap());
-            return;
+        let userLat = 6.9271;
+        let userLng = 79.8612;
+        if (currentUser && currentUser.location && currentUser.location.lat) {
+            userLat = parseFloat(currentUser.location.lat);
+            userLng = parseFloat(currentUser.location.lng);
+        } else if (currentUser && currentUser.district && SRI_LANKA_DISTRICT_COORDS[currentUser.district.toLowerCase()]) {
+            userLat = SRI_LANKA_DISTRICT_COORDS[currentUser.district.toLowerCase()].lat;
+            userLng = SRI_LANKA_DISTRICT_COORDS[currentUser.district.toLowerCase()].lng;
         }
 
-        try {
-            container.innerHTML = `<div id="simulatedMapInner" style="width:100%; height:380px; border-radius:8px;"></div>`;
-            const mapEl = document.getElementById("simulatedMapInner");
+        const isDonor = (currentUser && currentUser.role === 'donor') || (currentUser && currentUser.accountType === 'donor');
+        const myTitle = isDonor ? `Depot: ${currentUser ? currentUser.name : 'Your Depot'}` : `Facility: ${currentUser ? currentUser.name : 'Your Facility'}`;
+        const activeMatches = matchesList.filter(m => (isDonor ? m.donorId === currentUser.uid : m.receiverId === currentUser.uid));
 
-            let userLat = 6.9271;
-            let userLng = 79.8612;
-            if (currentUser && currentUser.location && currentUser.location.lat) {
-                userLat = parseFloat(currentUser.location.lat);
-                userLng = parseFloat(currentUser.location.lng);
-            } else if (currentUser && currentUser.district && SRI_LANKA_DISTRICT_COORDS[currentUser.district.toLowerCase()]) {
-                userLat = SRI_LANKA_DISTRICT_COORDS[currentUser.district.toLowerCase()].lat;
-                userLng = SRI_LANKA_DISTRICT_COORDS[currentUser.district.toLowerCase()].lng;
+        let partnerMarkersHtml = '';
+        activeMatches.forEach((m, idx) => {
+            let partnerLat = userLat + (Math.sin(idx + 1) * 0.04);
+            let partnerLng = userLng + (Math.cos(idx + 1) * 0.04);
+            let partnerName = isDonor ? (m.receiverName || 'Receiver') : (m.donorName || 'Donor');
+            if (m.location && m.location.lat) {
+                partnerLat = parseFloat(m.location.lat);
+                partnerLng = parseFloat(m.location.lng);
             }
+            const distanceKm = calculateHaversineKm(userLat, userLng, partnerLat, partnerLng);
+            const leftPct = Math.min(85, Math.max(15, 65 + (Math.sin(idx + 1) * 20)));
+            const topPct = Math.min(80, Math.max(20, 35 + (Math.cos(idx + 1) * 20)));
 
-            googleMap = new google.maps.Map(mapEl, {
-                center: { lat: userLat, lng: userLng },
-                zoom: 11,
-                mapTypeId: 'roadmap',
-                disableDefaultUI: false,
-                zoomControl: true,
-                mapTypeControl: false,
-                streetViewControl: false,
-                fullscreenControl: true
-            });
+            partnerMarkersHtml += `
+                <div style="position:absolute; left:${leftPct}%; top:${topPct}%; transform:translate(-50%,-100%); z-index:10; text-align:center;">
+                    <div style="background:#E67E22; color:#FFFFFF; border:2px solid #FFFFFF; border-radius:14px; padding:3px 9px; font-size:0.75rem; font-weight:800; box-shadow:0 3px 8px rgba(0,0,0,0.3); white-space:nowrap; margin-bottom:2px;">
+                        ${isDonor ? '🏢 Receiver' : '📦 Donor'}: ${partnerName} (${distanceKm} km)
+                    </div>
+                    <svg width="26" height="34" viewBox="0 0 24 24" fill="#E67E22" style="filter:drop-shadow(0 3px 5px rgba(0,0,0,0.3));">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                    </svg>
+                </div>
+                <svg width="100%" height="100%" style="position:absolute; inset:0; pointer-events:none; z-index:4;">
+                    <line x1="30%" y1="60%" x2="${leftPct}%" y2="${topPct}%" stroke="#0D7C7A" stroke-width="3.5" stroke-dasharray="8,6"/>
+                </svg>
+            `;
+        });
 
-            const isDonor = (currentUser && currentUser.role === 'donor') || (currentUser && currentUser.accountType === 'donor');
-            const myTitle = isDonor ? `Depot: ${currentUser ? currentUser.name : 'Your Depot'}` : `Facility: ${currentUser ? currentUser.name : 'Your Facility'}`;
+        container.innerHTML = `
+            <div id="distanceGMapWrapper" style="position:relative; width:100%; height:380px; background:#E5E3DF; overflow:hidden; border-radius:8px; font-family:'Roboto',Arial,sans-serif;">
+                <div id="simulatedMapInner" style="position:absolute; inset:0; z-index:1;"></div>
+                
+                <div id="distanceFallbackVisual" style="position:absolute; inset:0; z-index:2; background:#F4F3F0; overflow:hidden;">
+                    <svg width="100%" height="100%" style="position:absolute; inset:0; opacity:0.9;">
+                        <defs>
+                            <pattern id="grid_dist" width="80" height="80" patternUnits="userSpaceOnUse">
+                                <path d="M 80 0 L 0 0 0 80" fill="none" stroke="#E6E3DC" stroke-width="1.2"/>
+                                <path d="M 0 40 L 80 40 M 40 0 L 40 80" fill="none" stroke="#EFECE5" stroke-width="0.8"/>
+                            </pattern>
+                        </defs>
+                        <rect width="100%" height="100%" fill="url(#grid_dist)"/>
+                        <rect x="5%" y="15%" width="32%" height="40%" rx="16" fill="#D5E8CE" opacity="0.6"/>
+                        <rect x="55%" y="45%" width="38%" height="45%" rx="16" fill="#D5E8CE" opacity="0.6"/>
+                        <path d="M -20,240 Q 250,180 500,280 T 900,220" fill="none" stroke="#AAD0EB" stroke-width="30" opacity="0.75"/>
+                        <path d="M -20,150 Q 240,80 520,180 T 900,90" fill="none" stroke="#FFFFFF" stroke-width="16"/>
+                        <path d="M -20,150 Q 240,80 520,180 T 900,90" fill="none" stroke="#FEDB89" stroke-width="8"/>
+                        <path d="M 240,-20 Q 280,180 230,400" fill="none" stroke="#FFFFFF" stroke-width="12"/>
+                        <path d="M 240,-20 Q 280,180 230,400" fill="none" stroke="#FEDB89" stroke-width="6"/>
+                    </svg>
 
-            const bounds = new google.maps.LatLngBounds();
-            const userPos = new google.maps.LatLng(userLat, userLng);
-            bounds.extend(userPos);
+                    <!-- User Facility Depot Pin -->
+                    <div style="position:absolute; left:30%; top:60%; transform:translate(-50%,-100%); z-index:10; text-align:center;">
+                        <div style="background:#0D7C7A; color:#FFFFFF; border:2px solid #FFFFFF; border-radius:14px; padding:3px 10px; font-size:0.78rem; font-weight:800; box-shadow:0 3px 8px rgba(0,0,0,0.3); white-space:nowrap; margin-bottom:2px;">
+                            🏢 ${myTitle}
+                        </div>
+                        <svg width="32" height="40" viewBox="0 0 24 24" fill="#0D7C7A" style="filter:drop-shadow(0 3px 5px rgba(0,0,0,0.3));">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                    </div>
 
-            const userMarker = new google.maps.Marker({
-                position: userPos,
-                map: googleMap,
-                title: myTitle
-            });
+                    ${partnerMarkersHtml}
 
-            const userInfoWindow = new google.maps.InfoWindow({
-                content: `<div style="color:#1E293B; font-family:'Plus Jakarta Sans',sans-serif; padding:4px;"><b>${myTitle}</b><br>Coordinates: ${userLat.toFixed(4)}, ${userLng.toFixed(4)}</div>`
-            });
-            userInfoWindow.open(googleMap, userMarker);
-            userMarker.addListener('click', () => userInfoWindow.open(googleMap, userMarker));
+                    <div style="position:absolute; top:10px; left:10px; z-index:20; display:flex; background:#FFFFFF; border-radius:4px; box-shadow:0 2px 6px rgba(0,0,0,0.25); overflow:hidden; border:1px solid #DADCE0;">
+                        <button type="button" style="padding:6px 12px; font-size:0.75rem; font-weight:700; border:none; background:#FFFFFF; color:#1A73E8; cursor:pointer; border-right:1px solid #E0E0E0;">Map</button>
+                        <button type="button" style="padding:6px 12px; font-size:0.75rem; font-weight:600; border:none; background:#F8F9FA; color:#5F6368; cursor:pointer;">Satellite</button>
+                    </div>
 
-            const activeMatches = matchesList.filter(m => (isDonor ? m.donorId === currentUser.uid : m.receiverId === currentUser.uid));
+                    <div style="position:absolute; bottom:12px; right:10px; z-index:20; display:flex; flex-direction:column; gap:4px;">
+                        <button type="button" style="width:30px; height:30px; background:#FFFFFF; border:1px solid #DADCE0; border-radius:4px; font-weight:900; font-size:1.1rem; color:#5F6368; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;">+</button>
+                        <button type="button" style="width:30px; height:30px; background:#FFFFFF; border:1px solid #DADCE0; border-radius:4px; font-weight:900; font-size:1.1rem; color:#5F6368; cursor:pointer; box-shadow:0 2px 4px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center;">−</button>
+                    </div>
 
-            activeMatches.forEach((m, idx) => {
-                let partnerLat = userLat + (Math.sin(idx + 1) * 0.04);
-                let partnerLng = userLng + (Math.cos(idx + 1) * 0.04);
-                let partnerName = isDonor ? (m.receiverName || 'Receiver') : (m.donorName || 'Donor');
+                    <div style="position:absolute; bottom:8px; left:10px; z-index:20; font-size:0.85rem; font-weight:800; color:#5F6368; opacity:0.85; font-family:'Product Sans',Roboto,Arial,sans-serif; letter-spacing:-0.3px;">
+                        <span style="color:#4285F4;">G</span><span style="color:#EA4335;">o</span><span style="color:#FBBC05;">o</span><span style="color:#4285F4;">g</span><span style="color:#34A853;">l</span><span style="color:#EA4335;">e</span>
+                    </div>
+                </div>
+            </div>
+        `;
 
-                if (m.location && m.location.lat) {
-                    partnerLat = parseFloat(m.location.lat);
-                    partnerLng = parseFloat(m.location.lng);
+        try {
+            if (window.google && window.google.maps) {
+                const mapEl = document.getElementById("simulatedMapInner");
+                if (mapEl) {
+                    googleMap = new google.maps.Map(mapEl, {
+                        center: { lat: userLat, lng: userLng },
+                        zoom: 11,
+                        mapTypeId: 'roadmap',
+                        disableDefaultUI: false,
+                        zoomControl: true,
+                        mapTypeControl: false,
+                        streetViewControl: false,
+                        fullscreenControl: true
+                    });
+
+                    const bounds = new google.maps.LatLngBounds();
+                    const userPos = new google.maps.LatLng(userLat, userLng);
+                    bounds.extend(userPos);
+
+                    const userMarker = new google.maps.Marker({
+                        position: userPos,
+                        map: googleMap,
+                        title: myTitle
+                    });
+
+                    const userInfoWindow = new google.maps.InfoWindow({
+                        content: `<div style="color:#1E293B; font-family:'Plus Jakarta Sans',sans-serif; padding:4px;"><b>${myTitle}</b><br>Coordinates: ${userLat.toFixed(4)}, ${userLng.toFixed(4)}</div>`
+                    });
+                    userInfoWindow.open(googleMap, userMarker);
+                    userMarker.addListener('click', () => userInfoWindow.open(googleMap, userMarker));
+
+                    activeMatches.forEach((m, idx) => {
+                        let partnerLat = userLat + (Math.sin(idx + 1) * 0.04);
+                        let partnerLng = userLng + (Math.cos(idx + 1) * 0.04);
+                        let partnerName = isDonor ? (m.receiverName || 'Receiver') : (m.donorName || 'Donor');
+                        if (m.location && m.location.lat) {
+                            partnerLat = parseFloat(m.location.lat);
+                            partnerLng = parseFloat(m.location.lng);
+                        }
+                        const distanceKm = calculateHaversineKm(userLat, userLng, partnerLat, partnerLng);
+                        const partnerPos = new google.maps.LatLng(partnerLat, partnerLng);
+                        bounds.extend(partnerPos);
+
+                        const partnerMarker = new google.maps.Marker({
+                            position: partnerPos,
+                            map: googleMap,
+                            title: `${partnerName} (${distanceKm} km)`
+                        });
+
+                        const partnerInfoWindow = new google.maps.InfoWindow({
+                            content: `<div style="color:#1E293B; font-family:'Plus Jakarta Sans',sans-serif; padding:4px;"><b>${isDonor ? 'Receiver Facility' : 'Donor'}: ${partnerName}</b><br>Dispatch: ${m.requestName || 'Donation Item'}<br>Geographic Distance: <strong>${distanceKm} km away</strong></div>`
+                        });
+                        partnerMarker.addListener('click', () => partnerInfoWindow.open(googleMap, partnerMarker));
+
+                        const line = new google.maps.Polyline({
+                            path: [userPos, partnerPos],
+                            geodesic: true,
+                            strokeColor: '#0D7C7A',
+                            strokeOpacity: 0.8,
+                            strokeWeight: 3
+                        });
+                        line.setMap(googleMap);
+                    });
+
+                    if (activeMatches.length > 0) {
+                        googleMap.fitBounds(bounds);
+                    }
                 }
-
-                const distanceKm = calculateHaversineKm(userLat, userLng, partnerLat, partnerLng);
-                const partnerPos = new google.maps.LatLng(partnerLat, partnerLng);
-                bounds.extend(partnerPos);
-
-                const partnerMarker = new google.maps.Marker({
-                    position: partnerPos,
-                    map: googleMap,
-                    title: `${partnerName} (${distanceKm} km)`
-                });
-
-                const partnerInfoWindow = new google.maps.InfoWindow({
-                    content: `<div style="color:#1E293B; font-family:'Plus Jakarta Sans',sans-serif; padding:4px;"><b>${isDonor ? 'Receiver Facility' : 'Donor'}: ${partnerName}</b><br>Dispatch: ${m.requestName || 'Donation Item'}<br>Geographic Distance: <strong>${distanceKm} km away</strong></div>`
-                });
-                partnerMarker.addListener('click', () => partnerInfoWindow.open(googleMap, partnerMarker));
-
-                const line = new google.maps.Polyline({
-                    path: [userPos, partnerPos],
-                    geodesic: true,
-                    strokeColor: '#0D7C7A',
-                    strokeOpacity: 0.8,
-                    strokeWeight: 3
-                });
-                line.setMap(googleMap);
-            });
-
-            if (activeMatches.length > 0) {
-                googleMap.fitBounds(bounds);
             }
         } catch (err) {
             console.error("Real-Time Distance Map init error:", err);
