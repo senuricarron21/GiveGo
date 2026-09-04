@@ -41,6 +41,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 const doc = await db.collection("users").doc(user.uid).get();
                 if (doc.exists) {
                     currentUser = { ...currentUser, ...doc.data() };
+                } else {
+                    const isSystemAdmin = (user.uid === '9TVzT4p6IESEaalgHQ0xuptUqVk2' || (user.email && user.email.toLowerCase().includes("admin")));
+                    if (!isSystemAdmin) {
+                        console.warn("User account record not found in database (deleted). Terminating session...");
+                        try {
+                            await auth.signOut();
+                            localStorage.removeItem("givego_user");
+                            sessionStorage.clear();
+                        } catch (e) {}
+                        window.location.href = "index.html?deleted=true";
+                        return;
+                    }
                 }
             } catch (err) {
                 console.error("Error fetching profile: ", err);
@@ -585,6 +597,25 @@ document.addEventListener("DOMContentLoaded", () => {
         const unsubUsers = db.collection("users").onSnapshot(snapshot => {
             usersList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             const fullProfile = usersList.find(u => u.uid === currentUser.uid || u.id === currentUser.uid);
+            const roleStr = ((currentUser.role) || (currentUser.accountType) || "").toLowerCase();
+            const emailStr = ((currentUser.email) || "").toLowerCase();
+            const isAdm = roleStr.includes("admin") || emailStr.includes("admin") || currentUser.uid === '9TVzT4p6IESEaalgHQ0xuptUqVk2' || currentUser.isAdmin === true;
+
+            if (!fullProfile && !isAdm) {
+                // User record deleted from database in real time by Admin
+                showToast("Your account has been deleted by an Administrator.", "danger");
+                setTimeout(async () => {
+                    try {
+                        const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+                        if (helper && helper.auth()) await helper.auth().signOut();
+                        localStorage.removeItem("givego_user");
+                        sessionStorage.clear();
+                    } catch (e) {}
+                    window.location.href = "index.html?deleted=true";
+                }, 1000);
+                return;
+            }
+
             if (fullProfile) {
                 const prevStatus = currentUser.status;
                 currentUser = { ...currentUser, ...fullProfile };
@@ -597,8 +628,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             applyAccountSuspensionState();
 
-            const roleStr = (currentUser.role || "").toLowerCase();
-            if (roleStr.includes('admin') || currentUser.email.includes("admin")) {
+            if (isAdm) {
                 renderAdminUsers();
                 renderAdminApprovals();
                 renderAdminRequestApprovals();
@@ -1609,6 +1639,10 @@ document.addEventListener("DOMContentLoaded", () => {
             if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
             if (typeof renderDonorMatches === 'function') renderDonorMatches();
             if (typeof renderChatMatchesList === 'function') renderChatMatchesList();
+            if (typeof renderAdminApprovals === 'function') renderAdminApprovals();
+            if (typeof renderAdminRequestApprovals === 'function') renderAdminRequestApprovals();
+            if (typeof renderAdminDirectory === 'function') renderAdminDirectory();
+            if (typeof renderAdminActiveMatchesTable === 'function') renderAdminActiveMatchesTable();
             updateOverviewStats();
 
             showToast("Donation listing and all related details removed.", "success");
@@ -1773,6 +1807,10 @@ document.addEventListener("DOMContentLoaded", () => {
             if (typeof renderReceiverMatches === 'function') renderReceiverMatches();
             if (typeof renderDonorMatches === 'function') renderDonorMatches();
             if (typeof renderChatMatchesList === 'function') renderChatMatchesList();
+            if (typeof renderAdminApprovals === 'function') renderAdminApprovals();
+            if (typeof renderAdminRequestApprovals === 'function') renderAdminRequestApprovals();
+            if (typeof renderAdminDirectory === 'function') renderAdminDirectory();
+            if (typeof renderAdminActiveMatchesTable === 'function') renderAdminActiveMatchesTable();
             updateOverviewStats();
 
             showToast("Request and all related details removed.", "success");
@@ -3037,12 +3075,101 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     window.deleteUserPermanently = async (userId) => {
-        if (!confirm("Are you sure you want to permanently delete this user account from GiveGo? This action cannot be undone.")) return;
+        if (!confirm("Are you sure you want to permanently delete this user account from GiveGo? All associated donations, requests, matches, and notifications will also be purged.")) return;
         try {
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-            await helper.db().collection("users").doc(userId).delete();
-            showToast("User account permanently deleted from database.", "success");
+            if (!helper || !helper.db) {
+                showToast("Database connection not available.", "danger");
+                return;
+            }
+            const db = helper.db();
+
+            showToast("Deleting user and purging associated records...", "info");
+
+            // 1. Delete user document from 'users' collection
+            await db.collection("users").doc(userId).delete();
+
+            // 2. Cascade delete all donations posted by this user
+            try {
+                const donSnap = await db.collection("donations").where("donorId", "==", userId).get();
+                if (!donSnap.empty) {
+                    const batch = db.batch();
+                    donSnap.forEach(doc => batch.delete(doc.ref));
+                    await batch.commit();
+                }
+            } catch (dErr) {
+                console.warn("Cascade donations delete notice:", dErr);
+            }
+
+            // 3. Cascade delete all requests created by this user
+            try {
+                const reqSnap = await db.collection("requests").where("receiverId", "==", userId).get();
+                if (!reqSnap.empty) {
+                    const batch = db.batch();
+                    reqSnap.forEach(doc => batch.delete(doc.ref));
+                    await batch.commit();
+                }
+            } catch (rErr) {
+                console.warn("Cascade requests delete notice:", rErr);
+            }
+
+            // 4. Cascade delete all matches involving this user
+            try {
+                const matchDonorSnap = await db.collection("matches").where("donorId", "==", userId).get();
+                if (!matchDonorSnap.empty) {
+                    const batch = db.batch();
+                    matchDonorSnap.forEach(doc => batch.delete(doc.ref));
+                    await batch.commit();
+                }
+                const matchRecSnap = await db.collection("matches").where("receiverId", "==", userId).get();
+                if (!matchRecSnap.empty) {
+                    const batch = db.batch();
+                    matchRecSnap.forEach(doc => batch.delete(doc.ref));
+                    await batch.commit();
+                }
+            } catch (mErr) {
+                console.warn("Cascade matches delete notice:", mErr);
+            }
+
+            // 5. Cascade delete all notifications for this user
+            try {
+                const notiSnap = await db.collection("notifications").where("userId", "==", userId).get();
+                if (!notiSnap.empty) {
+                    const batch = db.batch();
+                    notiSnap.forEach(doc => batch.delete(doc.ref));
+                    await batch.commit();
+                }
+            } catch (nErr) {
+                console.warn("Cascade notifications delete notice:", nErr);
+            }
+
+            // 6. Update local in-memory arrays immediately
+            usersList = usersList.filter(u => u.id !== userId && u.uid !== userId);
+            donationsList = donationsList.filter(d => d.donorId !== userId);
+            requestsList = requestsList.filter(r => r.receiverId !== userId);
+            matchesList = matchesList.filter(m => m.donorId !== userId && m.receiverId !== userId);
+
+            // 7. Update UI tables immediately
+            if (typeof renderAdminUsers === 'function') renderAdminUsers();
+            if (typeof renderAdminApprovals === 'function') renderAdminApprovals();
+            if (typeof renderAdminRequestApprovals === 'function') renderAdminRequestApprovals();
+            if (typeof renderAdminDirectory === 'function') renderAdminDirectory();
+            if (typeof renderAdminActiveMatchesTable === 'function') renderAdminActiveMatchesTable();
+            if (typeof renderAllAvailableItems === 'function') renderAllAvailableItems();
             updateOverviewStats();
+
+            // 8. If the deleted user is the currently logged in user, terminate session immediately
+            if (currentUser && (currentUser.uid === userId || currentUser.id === userId)) {
+                try {
+                    await helper.auth().signOut();
+                    localStorage.removeItem("givego_user");
+                    sessionStorage.clear();
+                } catch (e) {}
+                window.location.href = "index.html?deleted=true";
+                return;
+            }
+
+            showToast("User account and all associated records permanently deleted.", "success");
         } catch (err) {
             console.error("Delete user error:", err);
             showToast("Failed to delete user account: " + err.message, "danger");

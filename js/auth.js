@@ -407,25 +407,33 @@ document.addEventListener("DOMContentLoaded", () => {
                             await userRef.set({ role, status }, { merge: true });
                         }
                     } else {
-                        if (authUser.uid === '9TVzT4p6IESEaalgHQ0xuptUqVk2' || authUser.email.toLowerCase().includes("admin")) {
+                        const isSystemAdmin = (authUser.uid === '9TVzT4p6IESEaalgHQ0xuptUqVk2' || (authUser.email && authUser.email.toLowerCase().includes("admin")));
+                        if (isSystemAdmin) {
                             role = "admin";
                             status = "verified";
                             name = "System Admin";
+
+                            profileData.role = role;
+                            profileData.status = status;
+                            profileData.name = name;
+
+                            await userRef.set({
+                                uid: authUser.uid,
+                                email: authUser.email,
+                                name: name,
+                                role: role,
+                                status: status,
+                                district: "Colombo",
+                                createdAt: new Date().toISOString()
+                            });
+                        } else {
+                            // User document does not exist (account deleted by administrator)
+                            await helper.auth().signOut();
+                            localStorage.removeItem("givego_user");
+                            sessionStorage.clear();
+                            showToast("This account has been deleted by an Administrator or no longer exists. Please register a new account if you wish to use GiveGo.", "danger");
+                            return;
                         }
-
-                        profileData.role = role;
-                        profileData.status = status;
-                        profileData.name = name;
-
-                        await userRef.set({
-                            uid: authUser.uid,
-                            email: authUser.email,
-                            name: name,
-                            role: role,
-                            status: status,
-                            district: "Colombo",
-                            createdAt: new Date().toISOString()
-                        });
                     }
 
                     if (role !== 'admin') {

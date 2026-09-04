@@ -631,6 +631,10 @@ if (isset($_SESSION['user'])) {
                 if (typeof openLoginModal === "function") {
                     setTimeout(() => openLoginModal(), 500);
                 }
+            } else if (urlParams.get("deleted") === "true") {
+                if (window.showToast) {
+                    window.showToast("⚠️ Your account has been deleted by an Administrator.", "danger");
+                }
             }
         });
     </script>
