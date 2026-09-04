@@ -160,6 +160,21 @@ document.addEventListener("DOMContentLoaded", () => {
         if (roleEl) roleEl.textContent = (currentUser.role || "member").toUpperCase();
         if (welcomeEl) welcomeEl.textContent = `Hello, ${(currentUser.name || "User").split(" ")[0]}`;
 
+        // Update sidebar avatar — photo or initials
+        const avatarEl = document.getElementById("sidebarProfileAvatar");
+        if (avatarEl) {
+            if (currentUser.photoURL) {
+                avatarEl.style.backgroundImage = `url('${currentUser.photoURL}')`;
+                avatarEl.style.backgroundSize = "cover";
+                avatarEl.style.backgroundPosition = "center";
+                avatarEl.textContent = "";
+            } else {
+                avatarEl.style.backgroundImage = "";
+                const initials = (currentUser.name || "U").split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
+                avatarEl.textContent = initials;
+            }
+        }
+
         const menuList = document.getElementById("sidebarMenuList");
         if (!menuList) return;
 
@@ -958,12 +973,49 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
+        // Initialize avatar preview
+        const avatarPreview = document.getElementById("editPrfAvatarPreview");
+        if (avatarPreview) {
+            if (currentUser.photoURL) {
+                avatarPreview.style.backgroundImage = `url('${currentUser.photoURL}')`;
+                avatarPreview.textContent = "";
+            } else {
+                avatarPreview.style.backgroundImage = "";
+                const initials = (currentUser.name || "U").split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
+                avatarPreview.textContent = initials;
+            }
+        }
+        window.pendingProfilePhotoDataUrl = null;
+
         if (modal) {
             modal.style.setProperty("display", "flex", "important");
             modal.style.setProperty("visibility", "visible", "important");
             modal.style.setProperty("opacity", "1", "important");
             modal.style.setProperty("z-index", "99999999", "important");
             modal.classList.add("active");
+        }
+    };
+
+    window.handleEditProfilePhotoSelected = async (input) => {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        try {
+            const compressFn = window.compressAndReadFile || (async (f) => {
+                return new Promise(res => {
+                    const r = new FileReader();
+                    r.onload = e => res(e.target.result);
+                    r.readAsDataURL(f);
+                });
+            });
+            const dataUrl = await compressFn(file, 400, 0.75);
+            window.pendingProfilePhotoDataUrl = dataUrl;
+            const avatarPreview = document.getElementById("editPrfAvatarPreview");
+            if (avatarPreview) {
+                avatarPreview.style.backgroundImage = `url('${dataUrl}')`;
+                avatarPreview.textContent = "";
+            }
+        } catch (err) {
+            console.error("Avatar preview error:", err);
         }
     };
 
@@ -1013,6 +1065,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 location,
                 updatedAt: new Date().toISOString()
             };
+
+            if (window.pendingProfilePhotoDataUrl) {
+                updates.photoURL = window.pendingProfilePhotoDataUrl;
+            }
 
             const isRec = ((currentUser.role) || "").toLowerCase().includes("receiver");
             if (isRec) {
@@ -5781,8 +5837,8 @@ document.addEventListener("DOMContentLoaded", () => {
             else if (m.status === 'confirmed') statusBadge = `<span class="badge badge-success"> Confirmed</span>`;
             else if (m.status === 'completed') statusBadge = `<span class="badge badge-success"> Completed</span>`;
 
-            return ` <tr> <td><strong>${m.requestName || 'Material Item'}</strong><br><small style="color:var(--color-teal-primary); font-weight:700;">ID: ${sessionText}</small></td> <td>${m.donorName || 'Donor'}</td> <td>${m.receiverName || 'Receiver'}</td> <td><span class="telemetry-pill">${(m.deliveryMethod || 'pending').replace('_', ' ').toUpperCase()}</span></td> <td>${statusBadge}</td> <td> <div style="display:flex; gap:6px; flex-wrap:wrap;"> <button type="button" class="btn btn-secondary" data-action="admin-chat" data-match-id="${m.id}" style="padding:4px 10px; font-size:0.75rem; font-weight:800; cursor:pointer;" onclick="adminInspectMatchChat('${m.id}')"> Monitor Live Chat</button> ${m.status === 'in_transit' ? `<button type="button" class="btn btn-warning" style="padding:4px 10px; font-size:0.75rem; font-weight:800; cursor:pointer;" onclick="openLiveTrackingMapModal('${m.id}')"> Monitor GPS Radar</button>` : ''}
-                            ${m.handoverEvidenceUrl ? `<button type="button" class="btn btn-success" data-action="view-evidence" data-match-id="${m.id}" style="padding:4px 10px; font-size:0.75rem; font-weight:800; background:#0D7C7A; color:#FFF; border:none; border-radius:4px; cursor:pointer; box-shadow:0 2px 6px rgba(13,124,122,0.3);" onclick="openEvidenceImageViewer('${m.id}')"> Inspect Handover Photo</button>` : ''} </div> </td> </tr> `;
+            return ` <tr> <td><strong>${m.requestName || 'Material Item'}</strong><br><small style="color:var(--color-teal-primary); font-weight:700;">ID: ${sessionText}</small></td> <td>${m.donorName || 'Donor'}</td> <td>${m.receiverName || 'Receiver'}</td> <td><span class="telemetry-pill">${(m.deliveryMethod || 'pending').replace('_', ' ').toUpperCase()}</span></td> <td>${statusBadge}</td> <td> <div style="display:flex; gap:6px; flex-wrap:wrap;"> <button type="button" class="btn-action" data-action="admin-chat" data-match-id="${m.id}" onclick="adminInspectMatchChat('${m.id}')">Monitor Live Chat</button> ${m.status === 'in_transit' ? `<button type="button" class="btn-action" onclick="openLiveTrackingMapModal('${m.id}')">Monitor GPS Radar</button>` : ''}
+                            ${m.handoverEvidenceUrl ? `<button type="button" class="btn-action" data-action="view-evidence" data-match-id="${m.id}" onclick="openEvidenceImageViewer('${m.id}')">Inspect Handover Photo</button>` : ''} </div> </td> </tr> `;
         }).join("");
 
         if (body1) body1.innerHTML = content;
@@ -5804,7 +5860,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         body.innerHTML = monetaryList.map(m => {
             const transferDate = m.transferDate || (m.createdAt ? new Date(m.createdAt).toLocaleDateString() : 'N/A');
-            const receiptLink = m.receiptUrl ? `<a href="${m.receiptUrl}" target="_blank" class="btn btn-secondary" style="padding:2px 6px; font-size:0.75rem;">View Receipt</a>` : 'N/A';
+            const receiptLink = m.receiptUrl ? `<a href="${m.receiptUrl}" target="_blank" class="btn-action">View Receipt</a>` : 'N/A';
             let slaStatus = `<span class="badge badge-warning">14-Day SLA Active</span>`;
 
             if (m.evidenceSubmitted) {

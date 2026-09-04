@@ -3,8 +3,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <!-- CSS styles -->
-<link rel="stylesheet" href="css/styles.css?v=34.0">
-<link rel="stylesheet" href="css/dashboard.css?v=34.0">
+<link rel="stylesheet" href="css/styles.css?v=35.0">
+<link rel="stylesheet" href="css/dashboard.css?v=35.0">
 <!-- Leaflet.js CSS for Real Map -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 <!-- Firebase Compat SDKs (CDN) -->
@@ -46,12 +46,18 @@
     </div>
     <!-- User profile footer info inside Sidebar -->
     <div class="user-profile-menu">
-        <div class="profile-avatar" style="background-image: url('https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80');"></div>
+        <div class="profile-avatar" id="sidebarProfileAvatar">U</div>
         <div class="profile-info">
             <div class="profile-name" id="profileDisplayName">User</div>
             <div class="profile-role" id="profileDisplayRole">Member</div>
         </div>
-        <button class="btn-logout" id="btnLogout" title="Log Out">Log Out</button>
+        <button class="btn-logout" id="btnLogout" title="Log Out" aria-label="Log Out">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+        </button>
     </div>
 </aside>
 
@@ -104,7 +110,7 @@
             <!-- Admin Executive Overview Section (Visible for Admin) -->
             <div id="adminExecutiveOverviewSection" style="display:none; margin-top:24px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
-                    <h3 class="section-title" style="color:var(--color-teal-primary); font-weight:800; margin:0;">
+                    <h3 class="section-title" style="margin:0;">
                         Admin Overview
                     </h3>
                     <button type="button" class="btn btn-danger" style="padding:6px 14px; font-weight:800; font-size:0.85rem;" onclick="clearAllDatabaseItems()">
@@ -112,11 +118,11 @@
                     </button>
                 </div>
                 <!-- Live Active Matches & Real-Time Controls -->
-                <div class="glass-panel" style="padding:20px; background:#FFFFFF; margin-bottom:24px;">
-                    <h4 style="color:var(--color-teal-primary); font-weight:800; margin-bottom:12px;">
+                <div class="glass-panel" style="padding:20px; background:#FFFFFF; border-radius:12px; border:1px solid var(--color-border); box-shadow:var(--shadow-card); margin-bottom:24px;">
+                    <h4 style="color:var(--color-heading-dark); font-weight:700; margin-bottom:12px; font-size:1.05rem;">
                         Live Active Matches &amp; Delivery Controls
                     </h4>
-                    <table class="table" style="width:100%; font-size:0.85rem;">
+                    <table class="table" style="width:100%;">
                         <thead>
                             <tr>
                                 <th>Item / Transaction</th>
@@ -131,11 +137,11 @@
                     </table>
                 </div>
                 <!-- 14-Day Monetary Evidence SLA Monitor -->
-                <div class="glass-panel" style="padding:20px; background:#FFFFFF; margin-bottom:24px;">
-                    <h4 style="color:var(--color-teal-primary); font-weight:800; margin-bottom:12px;">
+                <div class="glass-panel" style="padding:20px; background:#FFFFFF; border-radius:12px; border:1px solid var(--color-border); box-shadow:var(--shadow-card); margin-bottom:24px;">
+                    <h4 style="color:var(--color-heading-dark); font-weight:700; margin-bottom:12px; font-size:1.05rem;">
                         Monetary Transfers &amp; 14-Day SLA Monitor
                     </h4>
-                    <table class="table" style="width:100%; font-size:0.85rem;">
+                    <table class="table" style="width:100%;">
                         <thead>
                             <tr>
                                 <th>Request / Receiver</th>
@@ -604,7 +610,57 @@
         </div>
     </div>
 </div>
-<!-- History Panel --> <div class="dashboard-view-panel" id="history-panel" style="display:none;"> <h3 class="section-title" id="historyPanelHeading">Completed Donation History</h3> <div class="glass-panel" style="padding:20px; background:#FFFFFF;"> <table class="table" style="width:100%;"> <thead> <tr id="historyTableHeader"></tr> </thead> <tbody id="historyTableBody"></tbody> </table> </div> </div> <!-- System Directory Panel (Admin Only) --> <div class="dashboard-view-panel" id="system-directory-panel" style="display:none;"> <h3 class="section-title">System Directory</h3> <div style="margin-bottom: 24px;"> <h4 style="color:var(--color-teal-primary); font-weight:700; margin-bottom:10px;">Live Active Matches &amp; Controls</h4> <div class="glass-panel" style="padding:16px; background:#FFFFFF;"> <table class="table" style="width:100%; font-size:0.85rem;"> <thead> <tr> <th>Item / Transaction</th> <th>Donor</th> <th>Receiver</th> <th>Delivery Method</th> <th>Status</th> <th>Admin Controls</th> </tr> </thead> <tbody id="adminActiveMatchesTableBody"></tbody> </table> </div> </div> <div class="grid-cols-2"> <div class="glass-panel" style="padding:20px; background:#FFFFFF;"> <h4 style="color:var(--color-teal-primary); font-weight:700; margin-bottom:10px;">Available Surplus Donations</h4> <input class="form-control" type="text" id="searchAdminDonations" placeholder="Filter donations..." style="margin-bottom:12px;"> <div id="adminDonationsGrid" style="max-height:300px; overflow-y:auto;"></div> </div> <div class="glass-panel" style="padding:20px; background:#FFFFFF;"> <h4 style="color:var(--color-teal-primary); font-weight:700; margin-bottom:10px;">Published Material Requests</h4> <input class="form-control" type="text" id="searchAdminRequests" placeholder="Filter requests..." style="margin-bottom:12px;"> <div id="adminRequestsGrid" style="max-height:300px; overflow-y:auto;"></div> </div> </div> </div> <!-- Notifications Panel --> <div class="dashboard-view-panel" id="notifications-panel" style="display:none;"> <h3 class="section-title">System Alerts & Notifications</h3> <div id="notificationsContainer"></div> </div>  
+<!-- History Panel -->
+<div class="dashboard-view-panel" id="history-panel" style="display:none;">
+    <h3 class="section-title" id="historyPanelHeading">Completed Donation History</h3>
+    <div class="glass-panel" style="padding:20px; background:#FFFFFF; border-radius:12px; border:1px solid var(--color-border); box-shadow:var(--shadow-card);">
+        <table class="table" style="width:100%;">
+            <thead>
+                <tr id="historyTableHeader"></tr>
+            </thead>
+            <tbody id="historyTableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- System Directory Panel (Admin Only) -->
+<div class="dashboard-view-panel" id="system-directory-panel" style="display:none;">
+    <h3 class="section-title">System Directory</h3>
+    <div class="glass-panel" style="padding:20px; background:#FFFFFF; border-radius:12px; border:1px solid var(--color-border); box-shadow:var(--shadow-card); margin-bottom:24px;">
+        <h4 style="color:var(--color-heading-dark); font-weight:700; margin-bottom:12px; font-size:1.05rem;">Live Active Matches &amp; Controls</h4>
+        <table class="table" style="width:100%;">
+            <thead>
+                <tr>
+                    <th>Item / Transaction</th>
+                    <th>Donor</th>
+                    <th>Receiver</th>
+                    <th>Delivery Method</th>
+                    <th>Status</th>
+                    <th>Admin Controls</th>
+                </tr>
+            </thead>
+            <tbody id="adminActiveMatchesTableBody"></tbody>
+        </table>
+    </div>
+    <div class="grid-cols-2" style="gap:20px;">
+        <div class="glass-panel" style="padding:20px; background:#FFFFFF; border-radius:12px; border:1px solid var(--color-border); box-shadow:var(--shadow-card);">
+            <h4 style="color:var(--color-heading-dark); font-weight:700; margin-bottom:12px; font-size:1.05rem;">Available Surplus Donations</h4>
+            <input class="form-control" type="text" id="searchAdminDonations" placeholder="Filter donations..." style="margin-bottom:12px;">
+            <div id="adminDonationsGrid" style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+        <div class="glass-panel" style="padding:20px; background:#FFFFFF; border-radius:12px; border:1px solid var(--color-border); box-shadow:var(--shadow-card);">
+            <h4 style="color:var(--color-heading-dark); font-weight:700; margin-bottom:12px; font-size:1.05rem;">Published Material Requests</h4>
+            <input class="form-control" type="text" id="searchAdminRequests" placeholder="Filter requests..." style="margin-bottom:12px;">
+            <div id="adminRequestsGrid" style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Notifications Panel -->
+<div class="dashboard-view-panel" id="notifications-panel" style="display:none;">
+    <h3 class="section-title">System Alerts & Notifications</h3>
+    <div id="notificationsContainer"></div>
+</div>
 <!-- User Profile & Address Management Panel -->
 <div class="dashboard-view-panel" id="profile-panel" style="display:none;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
@@ -671,6 +727,15 @@
             <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.85rem; font-weight:800; cursor:pointer;" onclick="closeEditProfileModal()">Close</button>
         </div>
         <form id="formSubmitEditProfile" onsubmit="event.preventDefault(); submitEditProfileDirectly();">
+            <!-- Profile Photo Upload / Edit -->
+            <div style="display:flex; align-items:center; gap:16px; margin-bottom:18px; padding-bottom:16px; border-bottom:1px solid var(--color-border);">
+                <div id="editPrfAvatarPreview" style="width:64px; height:64px; border-radius:50%; background:var(--color-teal-primary); color:#FFFFFF; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.2rem; background-size:cover; background-position:center; flex-shrink:0; border:2px solid var(--color-border); overflow:hidden;">U</div>
+                <div>
+                    <input type="file" id="editPrfPhotoInput" accept="image/*" style="display:none;" onchange="handleEditProfilePhotoSelected(this)">
+                    <button type="button" class="btn btn-secondary" style="font-size:0.8rem; font-weight:700; padding:6px 12px; cursor:pointer;" onclick="document.getElementById('editPrfPhotoInput').click()">Upload New Photo</button>
+                    <small style="color:var(--color-text-muted); display:block; margin-top:4px; font-size:0.75rem;">JPG, PNG or WEBP (Max 5MB)</small>
+                </div>
+            </div>
             <div class="grid-cols-2" style="gap:14px; margin-bottom:14px;">
                 <div class="form-group">
                     <label class="form-label" style="font-weight:700; font-size:0.85rem;">Full Name / Organization Name</label>

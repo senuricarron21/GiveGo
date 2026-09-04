@@ -649,25 +649,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (window.clearToasts) window.clearToasts();
 
-                // Sign out after registration so user can sign in fresh through the login page once approved
-                try {
-                    await auth.signOut();
-                    localStorage.removeItem("givego_user");
-                    sessionStorage.clear();
-                } catch (soErr) {
-                    console.warn("Sign out after registration:", soErr);
-                }
-
                 if (submitBtn) {
                     submitBtn.innerHTML = `<span>✓ Registration Submitted!</span>`;
                     submitBtn.style.backgroundColor = "#27AE60";
                 }
 
-                showToast("✅ Account created successfully! Your registration is submitted and pending Administrator approval.", "success");
-                setTimeout(() => {
-                    const targetPage = window.location.pathname.endsWith(".php") ? "index.php?pending=true" : "index.html?pending=true";
-                    window.location.href = targetPage;
-                }, 2000);
+                showToast("✅ Account created successfully!", "success");
+
+                if (typeof window.showProfilePhotoStep === 'function') {
+                    window.showProfilePhotoStep(authUser.uid);
+                } else {
+                    try {
+                        await auth.signOut();
+                        localStorage.removeItem("givego_user");
+                        sessionStorage.clear();
+                    } catch (soErr) {
+                        console.warn("Sign out after registration:", soErr);
+                    }
+                    setTimeout(() => {
+                        const targetPage = window.location.pathname.endsWith(".php") ? "index.php?pending=true" : "index.html?pending=true";
+                        window.location.href = targetPage;
+                    }, 2000);
+                }
             } catch (error) {
                 if (submitBtn) {
                     submitBtn.disabled = false;

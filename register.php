@@ -314,13 +314,52 @@ if (isset($_SESSION['user'])) {
                     </div>
                 </div>
 
-                <button class="btn btn-primary" type="submit" style="width: 100%; font-size: 1rem; padding: 14px; font-weight: 800;">
-                    Complete Registration
-                </button>
-            </form>
+                    <button class="btn btn-primary" type="submit" style="width: 100%; font-size: 1rem; padding: 14px; font-weight: 800;">
+                        Complete Registration
+                    </button>
+                </form>
 
-            <div style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #64748B;">
-                Already registered? <a href="index.php" style="color: #0D7C7A; font-weight: 800; text-decoration: none;">Sign In</a>
+                <div style="text-align: center; margin-top: 20px; font-size: 0.9rem; color: #64748B;">
+                    Already registered? <a href="index.php" style="color: #0D7C7A; font-weight: 800; text-decoration: none;">Sign In</a>
+                </div>
+            </div>
+
+            <!-- Profile Picture Upload Step (Shown immediately after successful registration) -->
+            <div id="profilePhotoStepSection" style="display: none; text-align: center; padding: 16px 10px;">
+                <div style="display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background: #D1FAE5; color: #059669; font-size: 1.8rem; font-weight: 900; margin-bottom: 16px;">
+                    ✓
+                </div>
+                <h2 style="font-size: 1.8rem; color: var(--color-heading-dark); font-weight: 800; margin-bottom: 8px;">Account Created!</h2>
+                <p style="color: var(--color-text-muted); font-size: 0.95rem; max-width: 480px; margin: 0 auto 28px auto; line-height: 1.5;">
+                    Upload a profile photo so administrators and community members can recognize you in your navigation bar and messages.
+                </p>
+
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 16px; margin-bottom: 32px;">
+                    <div id="photoPreviewContainer" style="position: relative; width: 140px; height: 140px; border-radius: 50%; border: 3px dashed var(--color-teal-primary); background: #FAF7F0; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; transition: all 0.2s ease;" onclick="document.getElementById('regProfilePicInput').click()">
+                        <img id="regPhotoPreviewImg" src="" alt="Profile Preview" style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />
+                        <div id="regPhotoPlaceholder" style="display: flex; flex-direction: column; align-items: center; color: var(--color-teal-primary);">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                                <circle cx="12" cy="13" r="4"></circle>
+                            </svg>
+                            <span style="font-size: 0.78rem; font-weight: 800; margin-top: 6px;">Choose Photo</span>
+                        </div>
+                    </div>
+                    <input type="file" id="regProfilePicInput" accept="image/*" style="display: none;">
+                    <button type="button" class="btn btn-secondary" style="font-size: 0.85rem; font-weight: 700; padding: 6px 16px; cursor: pointer;" onclick="document.getElementById('regProfilePicInput').click()">
+                        Browse Photo
+                    </button>
+                    <small style="color: var(--color-text-muted); font-size: 0.78rem;">Supports JPG, PNG, WEBP</small>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 12px; max-width: 320px; margin: 0 auto;">
+                    <button type="button" id="btnSaveProfilePic" class="btn btn-primary" style="width: 100%; padding: 12px; font-weight: 800; font-size: 0.95rem;">
+                        Save Photo &amp; Continue
+                    </button>
+                    <button type="button" id="btnSkipProfilePic" class="btn btn-secondary" style="width: 100%; padding: 8px; font-weight: 700; font-size: 0.88rem; background: transparent; border: none; color: var(--color-text-muted); cursor: pointer;">
+                        Skip for now →
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -346,6 +385,84 @@ if (isset($_SESSION['user'])) {
                 if (window.showToast) window.showToast("✓ Document attached: " + file.name, "success");
             } catch (err) {
                 console.error("Error attaching document:", err);
+            }
+        };
+
+        // Profile Photo Step Manager
+        window.registeredNewUserId = null;
+        window.pendingProfilePhotoData = null;
+
+        window.showProfilePhotoStep = function(uid) {
+            window.registeredNewUserId = uid;
+            const formSec = document.getElementById("regFormSection");
+            const photoSec = document.getElementById("profilePhotoStepSection");
+            if (formSec) formSec.style.display = "none";
+            if (photoSec) {
+                photoSec.style.display = "block";
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+
+            const picInput = document.getElementById("regProfilePicInput");
+            const previewImg = document.getElementById("regPhotoPreviewImg");
+            const placeholder = document.getElementById("regPhotoPlaceholder");
+
+            if (picInput) {
+                picInput.onchange = async () => {
+                    const file = picInput.files && picInput.files[0];
+                    if (!file) return;
+                    try {
+                        const dataUrl = await window.compressAndReadFile(file, 400, 0.75);
+                        window.pendingProfilePhotoData = dataUrl;
+                        if (previewImg) {
+                            previewImg.src = dataUrl;
+                            previewImg.style.display = "block";
+                        }
+                        if (placeholder) placeholder.style.display = "none";
+                    } catch (e) {
+                        console.error("Error previewing image:", e);
+                    }
+                };
+            }
+
+            const btnSave = document.getElementById("btnSaveProfilePic");
+            const btnSkip = document.getElementById("btnSkipProfilePic");
+
+            if (btnSave) {
+                btnSave.onclick = async () => {
+                    btnSave.disabled = true;
+                    btnSave.textContent = "Saving...";
+                    try {
+                        if (window.pendingProfilePhotoData && window.registeredNewUserId) {
+                            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+                            const db = helper.db();
+                            await db.collection("users").doc(window.registeredNewUserId).update({
+                                photoURL: window.pendingProfilePhotoData
+                            });
+                            if (window.showToast) window.showToast("✓ Profile photo saved!", "success");
+                        }
+                    } catch (err) {
+                        console.warn("Could not save photo:", err);
+                    }
+                    try {
+                        const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+                        if (helper && helper.auth()) await helper.auth().signOut();
+                    } catch (e) {}
+                    setTimeout(() => {
+                        const targetPage = window.location.pathname.endsWith(".php") ? "index.php?pending=true" : "index.html?pending=true";
+                        window.location.href = targetPage;
+                    }, 500);
+                };
+            }
+
+            if (btnSkip) {
+                btnSkip.onclick = async () => {
+                    try {
+                        const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+                        if (helper && helper.auth()) await helper.auth().signOut();
+                    } catch (e) {}
+                    const targetPage = window.location.pathname.endsWith(".php") ? "index.php?pending=true" : "index.html?pending=true";
+                    window.location.href = targetPage;
+                };
             }
         };
 
