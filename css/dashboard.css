@@ -547,8 +547,11 @@ body {
     cursor: pointer;
 }
 
+.cascading-link:hover,
 .cascading-item:hover > .cascading-link,
-.cascading-item.active > .cascading-link {
+.cascading-item.active > .cascading-link,
+.cascading-submenu-level3 li:hover > .cascading-link,
+.cascading-submenu-level3 a:hover {
     background-color: #F5EFE0;
     color: var(--color-teal-primary);
 }
