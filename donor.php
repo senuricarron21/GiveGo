@@ -107,9 +107,9 @@
                     </div>
                 </div>
 
-                <!-- 7. Description & Notes -->
+                <!-- 7. Description -->
                 <div class="form-group">
-                    <label class="form-label">Description & Notes</label>
+                    <label class="form-label" for="donDescription">Description</label>
                     <textarea class="form-control" id="donDescription" rows="2" placeholder="Item description and pickup availability..."></textarea>
                 </div>
 
