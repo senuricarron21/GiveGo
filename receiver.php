@@ -280,44 +280,56 @@
     </div>
 </div>
 
-<!-- 5. CHAT/MESSAGES SECTION -->
+<!-- 5. CHAT/MESSAGES SECTION (Two-Panel ChatGPT Style) -->
 <div id="chat-panel" class="dashboard-view-panel" style="display: none;">
-    <div class="dashboard-grid" style="grid-template-columns: 1.1fr 1.4fr; gap: 20px;">
-        <div style="display: flex; flex-direction: column; gap: 20px;">
-            <div class="glass-panel" style="padding: 24px; background: #FFFFFF;">
-                <div class="card-header" style="margin-bottom: 16px; padding-bottom: 10px;">
-                    <h3 class="card-title">Your Conversations</h3>
-                </div>
-                <div id="chatMatchesList" style="max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
-                    <!-- Filled dynamically by app.js -->
-                </div>
+    <div class="chat-container-two-panel glass-panel">
+        <!-- Left Sidebar: Conversations List -->
+        <aside class="chat-sidebar-pane">
+            <div class="chat-sidebar-header">
+                <h3 class="chat-sidebar-title">Messages</h3>
+                <input type="text" id="chatSearchConversations" class="form-control chat-search-input" placeholder="Search conversations..." oninput="window.filterChatConversations && window.filterChatConversations(this.value)">
             </div>
-            <div class="glass-panel" style="padding: 24px; background: #FFFFFF;">
-                <div class="card-header" style="margin-bottom: 16px; padding-bottom: 10px;">
-                    <h3 class="card-title">Donation Tracking Status</h3>
-                </div>
-                <div id="trackingStatusTimeline">
-                    <div style="text-align: center; color: var(--color-text-muted); padding: 20px; font-size: 0.9rem;">Select a conversation to inspect donation tracking milestones.</div>
-                </div>
+            <div class="chat-conversations-list" id="chatMatchesList">
+                <!-- Populated dynamically by app.js -->
             </div>
-        </div>
+        </aside>
 
-        <div class="glass-panel chat-widget">
-            <div class="chat-header">
-                <div class="profile-avatar" style="width: 32px; height: 32px;"></div>
-                <div>
-                    <h4 style="font-size: 0.95rem;" id="chatPeerName">Select Donor</h4>
-                    <small style="color: var(--color-secondary); font-size: 0.75rem;">Verified Connection</small>
+        <!-- Right Main: Active Conversation -->
+        <section class="chat-main-pane">
+            <!-- Active Conversation Window (Shown when conversation is selected) -->
+            <div id="chatActiveWindow" class="chat-active-window" style="display: none;">
+                <div class="chat-active-header">
+                    <div class="chat-active-user-info">
+                        <div class="profile-avatar chat-active-avatar" id="chatPeerAvatar"></div>
+                        <div>
+                            <h4 class="chat-active-peer-name" id="chatPeerName">Select Conversation</h4>
+                            <div class="chat-active-meta" id="chatPeerMeta">Active Discussion</div>
+                        </div>
+                    </div>
                 </div>
+                <div class="chat-messages-area" id="chatMessagesContainer">
+                    <!-- Populated dynamically by app.js -->
+                </div>
+                <form class="chat-input-bar" id="formChatMessage" onsubmit="event.preventDefault(); window.sendActiveChatMessage && window.sendActiveChatMessage();">
+                    <input type="text" class="form-control chat-text-input" id="chatMessageInput" placeholder="Type a message..." autocomplete="off" required>
+                    <button type="submit" class="btn btn-primary chat-send-btn" id="btnSendChatMessage">
+                        <span>Send</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>
+                </form>
             </div>
-            <div class="chat-messages" id="chatMessagesContainer">
-                <!-- Filled dynamically by app.js -->
+
+            <!-- Empty Placeholder (Shown when NO conversation is selected) -->
+            <div id="chatEmptyPlaceholder" class="chat-empty-placeholder">
+                <div class="chat-empty-icon-wrap">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                </div>
+                <h3 class="chat-empty-title">Select a Conversation</h3>
+                <p class="chat-empty-text">Choose a donor from the list on the left to view messages and coordinate donation details.</p>
             </div>
-            <div class="chat-input-panel">
-                <input type="text" class="form-control" id="chatMessageInput" placeholder="Type a message to coordinate handover details..." style="flex-grow: 1;">
-                <button class="btn btn-primary" id="btnSendChatMessage">Send</button>
-            </div>
-        </div>
+        </section>
     </div>
 </div>
 
