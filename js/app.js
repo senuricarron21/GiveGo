@@ -958,6 +958,14 @@ document.addEventListener("DOMContentLoaded", () => {
             const base64Data = e.target.result;
             const hiddenInput = document.getElementById(targetHiddenId);
             if (hiddenInput) hiddenInput.value = base64Data;
+            if (targetHiddenId === 'donPhotoUrl') {
+                const errPhoto = document.getElementById("errDonPhoto");
+                if (errPhoto) {
+                    errPhoto.textContent = "";
+                    errPhoto.style.display = "none";
+                }
+                fileInput.classList.remove("is-invalid");
+            }
             showToast("Item image selected & ready for submission.", "info");
         };
         reader.readAsDataURL(file);
@@ -1083,9 +1091,17 @@ document.addEventListener("DOMContentLoaded", () => {
             const cat = donCategorySelect.value;
             const groupCond = document.getElementById("groupDonCondition");
             const condSelect = document.getElementById("donCondition");
+            const errCond = document.getElementById("errDonCondition");
             if (cat === 'Food & Nutrition') {
                 if (groupCond) groupCond.style.display = 'none';
-                if (condSelect) condSelect.required = false;
+                if (condSelect) {
+                    condSelect.required = false;
+                    condSelect.classList.remove("is-invalid");
+                }
+                if (errCond) {
+                    errCond.textContent = "";
+                    errCond.style.display = "none";
+                }
             } else {
                 if (groupCond) groupCond.style.display = 'block';
                 if (condSelect) condSelect.required = true;
@@ -1095,10 +1111,146 @@ document.addEventListener("DOMContentLoaded", () => {
         toggleDonConditionField();
     }
 
+    // Real-time error clearing for Donor Form fields
+    function clearDonorFieldError(inputElem, errorElemId) {
+        if (inputElem) inputElem.classList.remove("is-invalid");
+        const errDiv = document.getElementById(errorElemId);
+        if (errDiv) {
+            errDiv.textContent = "";
+            errDiv.style.display = "none";
+        }
+    }
+
+    function setupDonorFormValidationListeners() {
+        const fields = [
+            { id: "donCategory", errId: "errDonCategory", events: ["change"] },
+            { id: "donItemName", errId: "errDonItemName", events: ["input", "change"] },
+            { id: "donUnit", errId: "errDonUnit", events: ["change"] },
+            { id: "donQuantity", errId: "errDonQuantity", events: ["input", "change"] },
+            { id: "donCondition", errId: "errDonCondition", events: ["change"] },
+            { id: "donPhotoFile", errId: "errDonPhoto", events: ["change"] },
+            { id: "donDescription", errId: "errDonDescription", events: ["input", "change"] }
+        ];
+
+        fields.forEach(f => {
+            const elem = document.getElementById(f.id);
+            if (elem) {
+                f.events.forEach(evt => {
+                    elem.addEventListener(evt, () => {
+                        clearDonorFieldError(elem, f.errId);
+                    });
+                });
+            }
+        });
+    }
+    setupDonorFormValidationListeners();
+
+    function validateDonorPostForm() {
+        let isValid = true;
+        let firstErrorElem = null;
+
+        function setFieldError(inputElem, errorElemId, msg) {
+            isValid = false;
+            if (inputElem) inputElem.classList.add("is-invalid");
+            const errDiv = document.getElementById(errorElemId);
+            if (errDiv) {
+                errDiv.textContent = msg;
+                errDiv.style.display = "flex";
+            }
+            if (!firstErrorElem && inputElem) {
+                firstErrorElem = inputElem;
+            }
+        }
+
+        // 1. Category
+        const catElem = document.getElementById("donCategory");
+        const category = catElem?.value?.trim() || "";
+        if (!category) {
+            setFieldError(catElem, "errDonCategory", "Please select a category.");
+        } else {
+            clearDonorFieldError(catElem, "errDonCategory");
+        }
+
+        // 2. Item Name
+        const nameElem = document.getElementById("donItemName");
+        const itemName = nameElem?.value?.trim() || "";
+        if (!itemName) {
+            setFieldError(nameElem, "errDonItemName", "Item name is required.");
+        } else {
+            clearDonorFieldError(nameElem, "errDonItemName");
+        }
+
+        // 3. Unit of Measure
+        const unitElem = document.getElementById("donUnit");
+        const unit = unitElem?.value?.trim() || "";
+        if (!unit) {
+            setFieldError(unitElem, "errDonUnit", "Please select a unit of measure.");
+        } else {
+            clearDonorFieldError(unitElem, "errDonUnit");
+        }
+
+        // 4. Quantity
+        const qtyElem = document.getElementById("donQuantity");
+        const qtyVal = parseInt(qtyElem?.value) || 0;
+        if (!qtyElem?.value?.trim() || isNaN(qtyVal) || qtyVal < 1) {
+            setFieldError(qtyElem, "errDonQuantity", "Please enter a valid quantity.");
+        } else {
+            clearDonorFieldError(qtyElem, "errDonQuantity");
+        }
+
+        // 5. Condition (Exception: Food & Nutrition)
+        const condGroup = document.getElementById("groupDonCondition");
+        const condElem = document.getElementById("donCondition");
+        const isConditionApplicable = category !== 'Food & Nutrition' && (!condGroup || condGroup.style.display !== 'none');
+        if (isConditionApplicable) {
+            const condition = condElem?.value?.trim() || "";
+            if (!condition) {
+                setFieldError(condElem, "errDonCondition", "Please select the item condition.");
+            } else {
+                clearDonorFieldError(condElem, "errDonCondition");
+            }
+        } else {
+            clearDonorFieldError(condElem, "errDonCondition");
+        }
+
+        // 6. Item Photo / Spec Image
+        const fileElem = document.getElementById("donPhotoFile") || document.querySelector("#formPostDonation input[type='file']");
+        const photoUrl = document.getElementById("donPhotoUrl")?.value || "";
+        if (!photoUrl && (!fileElem?.files || fileElem.files.length === 0)) {
+            setFieldError(fileElem, "errDonPhoto", "Please upload an item photo.");
+        } else {
+            clearDonorFieldError(fileElem, "errDonPhoto");
+        }
+
+        // 7. Description
+        const descElem = document.getElementById("donDescription");
+        const description = descElem?.value?.trim() || "";
+        if (!description) {
+            setFieldError(descElem, "errDonDescription", "Description is required.");
+        } else {
+            clearDonorFieldError(descElem, "errDonDescription");
+        }
+
+        if (firstErrorElem) {
+            firstErrorElem.scrollIntoView({ behavior: "smooth", block: "center" });
+            firstErrorElem.focus();
+        }
+
+        return isValid;
+    }
+
     const formPostDonation = document.getElementById("formPostDonation");
     if (formPostDonation) {
         formPostDonation.addEventListener("submit", async (e) => {
             e.preventDefault();
+
+            // Run mandatory validations
+            const isValid = validateDonorPostForm();
+            if (!isValid) {
+                showToast("Please complete all required fields before submitting.", "warning");
+                return;
+            }
+
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
             const db = helper.db();
 
@@ -1138,15 +1290,25 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
                 showToast("Material listing submitted. Pending Admin approval before publication.", "success");
 
-                // Thorough form reset
+                // Thorough form reset & clear error highlights
                 formPostDonation.reset();
                 if (document.getElementById("donItemName")) document.getElementById("donItemName").value = "";
                 if (document.getElementById("donQuantity")) document.getElementById("donQuantity").value = "1";
                 if (document.getElementById("donPhotoUrl")) document.getElementById("donPhotoUrl").value = "";
                 if (document.getElementById("donPhotoUrlText")) document.getElementById("donPhotoUrlText").value = "";
                 if (document.getElementById("donDescription")) document.getElementById("donDescription").value = "";
-                const fileInput = formPostDonation.querySelector("input[type='file']");
+                const fileInput = document.getElementById("donPhotoFile") || formPostDonation.querySelector("input[type='file']");
                 if (fileInput) fileInput.value = "";
+
+                // Clear all error states
+                const allErrDivs = formPostDonation.querySelectorAll(".field-error-text");
+                allErrDivs.forEach(div => {
+                    div.textContent = "";
+                    div.style.display = "none";
+                });
+                const allInvalidControls = formPostDonation.querySelectorAll(".is-invalid");
+                allInvalidControls.forEach(ctrl => ctrl.classList.remove("is-invalid"));
+
                 if (donCategorySelect) {
                     donCategorySelect.dispatchEvent(new Event("change"));
                 }
