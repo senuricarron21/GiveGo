@@ -1846,20 +1846,44 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.toggleAvailableCascadingFilter = (e) => {
         if (e) e.stopPropagation();
-        const container = document.getElementById("availableCascadingFilterContainer");
-        if (container) container.classList.toggle("open");
-    };
+                    const container = document.getElementById("availableCascadingFilterContainer");
+                    if (container) container.classList.toggle("open");
+                };
 
-    document.addEventListener("click", (e) => {
-        const container = document.getElementById("cascadingFilterContainer");
-        if (container && !container.contains(e.target)) {
-            container.classList.remove("open");
-        }
-        const availContainer = document.getElementById("availableCascadingFilterContainer");
-        if (availContainer && !availContainer.contains(e.target)) {
-            availContainer.classList.remove("open");
-        }
-    });
+                window.toggleDonorSubmissionsCascadingFilter = (e) => {
+                    if (e) e.stopPropagation();
+                    const container = document.getElementById("donorSubmissionsCascadingFilterContainer");
+                    if (container) container.classList.toggle("open");
+                };
+
+                window.selectDonorSubmissionsCascadingOption = (status, category, displayLabel) => {
+                    const statusInput = document.getElementById("filterDonorStatus");
+                    const catInput = document.getElementById("filterDonorCategory");
+                    const labelSpan = document.getElementById("donorSubmissionsCascadingFilterLabel");
+                    const container = document.getElementById("donorSubmissionsCascadingFilterContainer");
+
+                    if (statusInput) statusInput.value = status || "all";
+                    if (catInput) catInput.value = category || "all";
+                    if (labelSpan) labelSpan.textContent = displayLabel || "All Statuses";
+
+                    if (container) container.classList.remove("open");
+                    renderDonorListings();
+                };
+
+                document.addEventListener("click", (e) => {
+                    const container = document.getElementById("cascadingFilterContainer");
+                    if (container && !container.contains(e.target)) {
+                        container.classList.remove("open");
+                    }
+                    const availContainer = document.getElementById("availableCascadingFilterContainer");
+                    if (availContainer && !availContainer.contains(e.target)) {
+                        availContainer.classList.remove("open");
+                    }
+                    const donorSubContainer = document.getElementById("donorSubmissionsCascadingFilterContainer");
+                    if (donorSubContainer && !donorSubContainer.contains(e.target)) {
+                        donorSubContainer.classList.remove("open");
+                    }
+                });
 
     // 1. Donor Offers Donation First to Receiver Need Request
     window.offerPhysicalDonation = (requestId) => {
