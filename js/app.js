@@ -1223,7 +1223,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const dateSubmitted = formatSubmittedDate(d.createdAt);
 
-            return ` <tr> <td><img src="${d.photoUrl || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=80&q=80'}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;"></td> <td><strong>${d.itemName}</strong></td> <td>${d.category}</td> <td>${d.quantity} ${d.unit || 'units'}</td> <td>${dateSubmitted}</td> <td>${statusBadge}</td> <td> <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="deleteDonation('${d.id}')">Delete</button> </td> </tr> `;
+            return ` <tr> <td>${dateSubmitted}</td> <td><img src="${d.photoUrl || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=80&q=80'}" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;"></td> <td><strong>${d.itemName}</strong></td> <td>${d.category}</td> <td>${d.quantity} ${d.unit || 'units'}</td> <td>${statusBadge}</td> <td> <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="deleteDonation('${d.id}')">Delete</button> </td> </tr> `;
         }).join("");
     }
 
@@ -1294,7 +1294,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const dateSubmitted = formatSubmittedDate(r.createdAt);
 
-            return ` <tr> <td>${typeBadge}</td> <td><strong>${r.itemName}</strong></td> <td>${r.category}</td> <td>${targetText}</td> <td>${fulfilledText}</td> <td>${dateSubmitted}</td> <td>${statusBadge}</td> <td> <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="deleteRequest('${r.id}')">Delete</button> </td> </tr> `;
+            return ` <tr> <td>${dateSubmitted}</td> <td>${typeBadge}</td> <td><strong>${r.itemName}</strong></td> <td>${r.category}</td> <td>${targetText}</td> <td>${fulfilledText}</td> <td>${statusBadge}</td> <td> <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="deleteRequest('${r.id}')">Delete</button> </td> </tr> `;
         }).join("");
     }
 
