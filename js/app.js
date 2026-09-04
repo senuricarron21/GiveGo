@@ -6319,88 +6319,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // DONOR & RECEIVER SUPPORT INQUIRY FUNCTIONS
     // ==========================================
 
-    window.openNewInquiryModal = () => {
-        const modal = document.getElementById("modalNewInquiry");
-        if (modal) modal.classList.add("active");
-    };
-
-    window.submitNewInquiryTicket = async () => {
-        if (window.isActionBlockedBySuspension && window.isActionBlockedBySuspension()) return;
-
-        const subjectEl = document.getElementById("newInquirySubject");
-        const msgEl = document.getElementById("newInquiryMessage");
-
-        if (!subjectEl || !msgEl || !msgEl.value.trim()) {
-            showToast("Please enter your inquiry details.", "warning");
-            return;
-        }
-
-        const subject = subjectEl.value.trim();
-        const message = msgEl.value.trim();
-
-        try {
-            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
-            const db = helper.db();
-
-            // Find if user already has an inquiry thread
-            let userInq = inquiriesList.find(i => (i.userId === currentUser.uid || i.userId === currentUser.id));
-            let inquiryId = userInq ? userInq.id : null;
-
-            if (!inquiryId) {
-                const docRef = await db.collection("inquiries").add({
-                    userId: currentUser.uid,
-                    userName: currentUser.name || "User",
-                    userEmail: currentUser.email || "",
-                    userRole: currentUser.role || currentUser.accountType || "donor",
-                    donorType: currentUser.donorType || "",
-                    receiverCategory: currentUser.receiverCategory || "",
-                    district: currentUser.district || "Colombo",
-                    phone: currentUser.phone || "",
-                    subject: subject,
-                    status: "open",
-                    lastMessage: message,
-                    lastMessageTime: new Date().toISOString(),
-                    unreadByAdmin: true,
-                    unreadByUser: false,
-                    createdAt: new Date().toISOString()
-                });
-                inquiryId = docRef.id;
-            } else {
-                await db.collection("inquiries").doc(inquiryId).update({
-                    subject: subject,
-                    lastMessage: message,
-                    lastMessageTime: new Date().toISOString(),
-                    unreadByAdmin: true,
-                    unreadByUser: false,
-                    status: "open"
-                });
-            }
-
-            // Add first message
-            await db.collection("inquiry_messages").add({
-                inquiryId: inquiryId,
-                senderId: currentUser.uid,
-                senderName: currentUser.name || "User",
-                senderRole: currentUser.role || currentUser.accountType || "donor",
-                message: message,
-                timestamp: new Date().toISOString(),
-                read: false
-            });
-
-            // Reset modal
-            const modal = document.getElementById("modalNewInquiry");
-            if (modal) modal.classList.remove("active");
-            msgEl.value = "";
-
-            showToast("✅ Inquiry submitted! GiveGo Administration will reply shortly.", "success");
-            window.location.hash = "#admin-chat";
-            renderUserAdminInquiryChat();
-        } catch (err) {
-            console.error("Submit inquiry ticket error:", err);
-            showToast("Failed to submit inquiry ticket.", "danger");
-        }
-    };
-
     function renderUserAdminInquiryChat() {
         if (!currentUser || checkIsAdmin()) return;
 
@@ -6421,59 +6339,46 @@ document.addEventListener("DOMContentLoaded", () => {
         if (statusBadge) {
             if (userInq) {
                 statusBadge.className = (userInq.status === 'resolved') ? "badge badge-secondary" : "badge badge-success";
-                statusBadge.textContent = (userInq.status === 'resolved') ? "RESOLVED" : "ACTIVE INQUIRY";
+                statusBadge.textContent = (userInq.status === 'resolved') ? "RESOLVED" : "ACTIVE SUPPORT";
             } else {
                 statusBadge.className = "badge badge-info";
-                statusBadge.textContent = "READY FOR INQUIRIES";
+                statusBadge.textContent = "ACTIVE SUPPORT";
             }
         }
 
-        if (!userInq) {
+        const msgs = userInq ? inquiryMessagesList.filter(m => m.inquiryId === userInq.id) : [];
+
+        if (!userInq || msgs.length === 0) {
             container.innerHTML = `
-                <div style="text-align:center; padding:50px 20px; color:#64748B;">
-                    <div style="font-size:3rem; margin-bottom:12px;">🛡️</div>
-                    <h4 style="font-weight:800; font-size:1.2rem; color:var(--color-teal-primary); margin:0 0 8px 0;">Welcome to GiveGo Administration Support</h4>
-                    <p style="font-size:0.9rem; max-width:460px; margin:0 auto 20px auto; line-height:1.5;">Have questions about listing surplus donations, submitting requests, verification, or dispatch schedules? You can message our Administration team directly here!</p>
-                    <button type="button" class="btn btn-primary" style="padding:10px 22px; font-weight:800;" onclick="window.openNewInquiryModal()">➕ Start an Inquiry Ticket</button>
+                <div style="text-align:center; padding:60px 20px; color:#64748B;">
+                    <div style="font-size:3.2rem; margin-bottom:12px;">🛡️</div>
+                    <h4 style="font-weight:800; font-size:1.25rem; color:var(--color-teal-primary); margin:0 0 8px 0;">Chat with GiveGo Administration</h4>
+                    <p style="font-size:0.92rem; max-width:480px; margin:0 auto; line-height:1.6; color:#475569;">
+                        Have questions about donations, receiver requests, delivery logistics, or account verification? Type your message below to start chatting directly with our Administration team.
+                    </p>
                 </div>
             `;
             return;
         }
 
-        const msgs = inquiryMessagesList.filter(m => m.inquiryId === userInq.id);
+        let html = msgs.map(m => {
+            const isAdmin = (m.senderRole === 'admin');
+            const isSelf = (!isAdmin);
+            const timeStr = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
-        let html = `
-            <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:10px; padding:12px 18px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                <div>
-                    <span style="font-size:0.75rem; font-weight:800; color:var(--color-teal-primary); text-transform:uppercase;">Topic:</span>
-                    <strong style="margin-left:4px; color:#0F172A; font-size:0.95rem;">${userInq.subject || 'Support Inquiry'}</strong>
-                </div>
-                <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem; font-weight:700;" onclick="window.openNewInquiryModal()">Update Subject</button>
-            </div>
-        `;
-
-        if (msgs.length === 0) {
-            html += `<div style="text-align:center; padding:30px; color:#64748B;">Type your message below to send directly to GiveGo Administration.</div>`;
-        } else {
-            html += msgs.map(m => {
-                const isAdmin = (m.senderRole === 'admin');
-                const isSelf = (!isAdmin);
-                const timeStr = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-
-                return `
-                    <div class="inquiry-msg-row ${isSelf ? 'admin-msg' : 'user-msg'}">
-                        <div class="inquiry-bubble" style="${isSelf ? 'background:var(--color-teal-primary); color:#FFFFFF;' : 'background:#FFFFFF; color:#1E293B;'}">
-                            ${m.message}
-                        </div>
-                        <div class="inquiry-msg-meta">
-                            <span>${isAdmin ? '🛡️ GiveGo Administration' : 'You'}</span>
-                            <span>•</span>
-                            <span>${timeStr}</span>
-                        </div>
+            return `
+                <div class="inquiry-msg-row ${isSelf ? 'admin-msg' : 'user-msg'}">
+                    <div class="inquiry-bubble" style="${isSelf ? 'background:var(--color-teal-primary); color:#FFFFFF;' : 'background:#FFFFFF; color:#1E293B;'}">
+                        ${m.message}
                     </div>
-                `;
-            }).join("");
-        }
+                    <div class="inquiry-msg-meta">
+                        <span>${isAdmin ? '🛡️ GiveGo Administration' : 'You'}</span>
+                        <span>•</span>
+                        <span>${timeStr}</span>
+                    </div>
+                </div>
+            `;
+        }).join("");
 
         container.innerHTML = html;
         container.scrollTop = container.scrollHeight;
@@ -6493,12 +6398,13 @@ document.addEventListener("DOMContentLoaded", () => {
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
             const db = helper.db();
 
-            let userInq = inquiriesList.find(i => (i.userId === currentUser.uid || i.userId === currentUser.id));
+            const currentUserId = currentUser.uid || currentUser.id;
+            let userInq = inquiriesList.find(i => (i.userId === currentUserId));
             let inqId = userInq ? userInq.id : null;
 
             if (!inqId) {
                 const docRef = await db.collection("inquiries").add({
-                    userId: currentUser.uid,
+                    userId: currentUserId,
                     userName: currentUser.name || "User",
                     userEmail: currentUser.email || "",
                     userRole: currentUser.role || currentUser.accountType || "donor",
@@ -6506,7 +6412,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     receiverCategory: currentUser.receiverCategory || "",
                     district: currentUser.district || "Colombo",
                     phone: currentUser.phone || "",
-                    subject: "Direct Helpdesk Inquiry",
+                    subject: "Direct Support Inquiry",
                     status: "open",
                     lastMessage: text,
                     lastMessageTime: new Date().toISOString(),
@@ -6527,7 +6433,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             await db.collection("inquiry_messages").add({
                 inquiryId: inqId,
-                senderId: currentUser.uid,
+                senderId: currentUserId,
                 senderName: currentUser.name || "User",
                 senderRole: currentUser.role || currentUser.accountType || "donor",
                 message: text,
