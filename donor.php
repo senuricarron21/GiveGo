@@ -31,9 +31,12 @@
     <div class="dashboard-grid">
         <!-- Post Available Physical Item Listing -->
         <div class="glass-panel" style="padding: 30px; background: #FFFFFF;">
-            <div class="card-header">
-                <h3 class="card-title">Offer Surplus Material / Items</h3>
-                <span style="font-size: 0.8rem; color: var(--color-primary); font-weight: 700;">PHYSICAL DONATION</span>
+            <div class="card-header" style="flex-direction: column; align-items: flex-start; gap: 4px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <h3 class="card-title">Donate an Item</h3>
+                    <span style="font-size: 0.8rem; color: var(--color-primary); font-weight: 700;">PHYSICAL DONATION</span>
+                </div>
+                <p style="font-size: 0.88rem; color: var(--color-text-muted); margin: 0;">Fill in the form below to submit an item you would like to donate.</p>
             </div>
             <form id="formPostDonation">
                 <input type="hidden" id="donItemId" value="">
@@ -114,7 +117,7 @@
                 </div>
 
                 <button class="btn btn-primary" type="submit" id="formSubmitBtn" style="width: 100%; font-size: 0.95rem; padding: 12px; font-weight: 800;">
-                    Submit Listing for Admin Approval
+                    Submit
                 </button>
             </form>
         </div>

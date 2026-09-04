@@ -1021,7 +1021,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } finally {
                 if (btnSubmit) {
                     btnSubmit.disabled = false;
-                    btnSubmit.textContent = "Submit Listing for Admin Approval";
+                    btnSubmit.textContent = "Submit";
                 }
             }
         });
