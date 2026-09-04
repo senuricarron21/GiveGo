@@ -8,6 +8,10 @@ document.addEventListener("DOMContentLoaded", () => {
     let notificationsList = [];
     let matchesList = [];
     let messagesList = [];
+    let inquiriesList = [];
+    let inquiryMessagesList = [];
+    let activeAdminInquiryId = null;
+    let currentInquiryTab = 'all';
     
     let activeChatMatchId = null;
     let activeChatPartnerId = null;
@@ -164,22 +168,30 @@ document.addEventListener("DOMContentLoaded", () => {
         const isDonor = roleStr.includes("donor");
         const isReceiver = roleStr.includes("receiver");
 
-        const unreadNotis = notificationsList.filter(n => !n.read).length;
+                const unreadNotis = notificationsList.filter(n => !n.read).length;
         const unreadBadgeHTML = unreadNotis > 0 ? `<span class="nav-badge-dot">${unreadNotis}</span>` : '';
+
+        // Calculate unread inquiries for Admin
+        const unreadAdminInquiries = inquiriesList.filter(i => i.unreadByAdmin === true || (i.status === 'open' && i.unreadByAdmin)).length;
+        const adminInqBadgeHTML = unreadAdminInquiries > 0 ? `<span class="nav-badge-dot">${unreadAdminInquiries}</span>` : '';
+
+        // Calculate unread inquiries for Donor / Receiver
+        const userInqDoc = inquiriesList.find(i => (i.userId === currentUser.uid || i.userId === currentUser.id));
+        const userInqBadgeHTML = (userInqDoc && userInqDoc.unreadByUser) ? `<span class="nav-badge-dot">!</span>` : '';
 
         let menuHTML = `<li class="menu-item active"><a href="#overview">Overview</a></li>`;
 
         if (isAdmin) {
-            menuHTML += ` <li class="menu-item"><a href="#users">Accounts</a></li> <li class="menu-item"><a href="#approvals">Approvals</a></li> <li class="menu-item"><a href="#system-directory">System Directory</a></li> `;
+            menuHTML += ` <li class="menu-item"><a href="#users">Accounts</a></li> <li class="menu-item"><a href="#approvals">Approvals</a></li> <li class="menu-item"><a href="#inquiries">Inquiries ${adminInqBadgeHTML}</a></li> <li class="menu-item"><a href="#system-directory">System Directory</a></li> `;
         } else if (isDonor) {
-            menuHTML += ` <li class="menu-item"><a href="#listings">My Donations</a></li> <li class="menu-item"><a href="#needs-catalogue">Requests Catalogue</a></li> <li class="menu-item"><a href="#matching">Donation Progress</a></li> <li class="menu-item"><a href="#chat">Messages</a></li> `;
+            menuHTML += ` <li class="menu-item"><a href="#listings">My Donations</a></li> <li class="menu-item"><a href="#needs-catalogue">Requests Catalogue</a></li> <li class="menu-item"><a href="#matching">Donation Progress</a></li> <li class="menu-item"><a href="#chat">Messages</a></li> <li class="menu-item"><a href="#admin-chat">Admin Inquiries ${userInqBadgeHTML}</a></li> `;
         } else if (isReceiver) {
-            menuHTML += ` <li class="menu-item"><a href="#requests">Material Requests</a></li> <li class="menu-item"><a href="#matching">Matches & Connections</a></li> <li class="menu-item"><a href="#chat">Messages</a></li> `;
+            menuHTML += ` <li class="menu-item"><a href="#requests">Material Requests</a></li> <li class="menu-item"><a href="#matching">Matches & Connections</a></li> <li class="menu-item"><a href="#chat">Messages</a></li> <li class="menu-item"><a href="#admin-chat">Admin Inquiries ${userInqBadgeHTML}</a></li> `;
         }
 
         const historyLabel = isDonor ? "Completed Donation History" : "History";
 
-        menuHTML += ` <li class="menu-item"><a href="#profile">My Profile</a></li> <li class="menu-item"><a href="#available-items">Available Items</a></li> <li class="menu-item"><a href="#history">${historyLabel}</a></li> <li class="menu-item"><a href="#notifications">Notifications ${unreadBadgeHTML}</a></li> <li class="menu-item"><a href="#contact">Contact Us</a></li> `;
+        menuHTML += ` <li class="menu-item"><a href="#profile">My Profile</a></li> <li class="menu-item"><a href="#available-items">Available Items</a></li> <li class="menu-item"><a href="#history">${historyLabel}</a></li> <li class="menu-item"><a href="#notifications">Notifications ${unreadBadgeHTML}</a></li> `;
 
         menuList.innerHTML = menuHTML;
 
@@ -691,26 +703,44 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (roleStr.includes('donor')) renderDonorMatches();
             else if (roleStr.includes('receiver')) renderReceiverMatches();
-            renderHistory();
+            if (roleStr.includes('admin') || currentUser.email.includes("admin")) {
+                renderAdminActiveMatchesTable();
+                renderAdminDirectory();
+            }
             renderChatMatchesList();
-            if (activeChatPartnerId) renderChatMessages();
-            checkMonetaryEvidenceSLAs();
             updateOverviewStats();
         });
         unsubscribes.push(unsubMatches);
 
-        const unsubMessages = db.collection("messages").onSnapshot(snapshot => {
-            messagesList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderChatMatchesList();
-            if (activeChatPartnerId) renderChatMessages();
+        const unsubInquiries = db.collection("inquiries").onSnapshot(snapshot => {
+            inquiriesList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            if (checkIsAdmin()) {
+                renderAdminInquiries();
+            } else {
+                renderUserAdminInquiryChat();
+            }
+            updateOverviewStats();
         });
-        unsubscribes.push(unsubMessages);
+        unsubscribes.push(unsubInquiries);
+
+        const unsubInqMsgs = db.collection("inquiry_messages").onSnapshot(snapshot => {
+            inquiryMessagesList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            inquiryMessagesList.sort((a, b) => new Date(a.timestamp || 0) - new Date(b.timestamp || 0));
+            if (checkIsAdmin()) {
+                if (activeAdminInquiryId) {
+                    renderAdminInquiryMessages(activeAdminInquiryId);
+                }
+            } else {
+                renderUserAdminInquiryChat();
+            }
+        });
+        unsubscribes.push(unsubInqMsgs);
     }
 
     function setupRouting() {
         const handleHashChange = () => {
             let hash = window.location.hash || '#overview';
-            if (hash === '#about') {
+            if (hash === '#about' || hash === '#contact') {
                 window.location.hash = '#overview';
                 return;
             }
@@ -746,7 +776,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 renderAdminEvidenceApprovals();
             }
 
-            if (hash === '#chat') {
+            if (hash === '#inquiries') {
+                if (checkIsAdmin()) {
+                    renderAdminInquiries();
+                } else {
+                    window.location.hash = '#admin-chat';
+                }
+            } else if (hash === '#admin-chat') {
+                if (checkIsAdmin()) {
+                    window.location.hash = '#inquiries';
+                } else {
+                    renderUserAdminInquiryChat();
+                }
+            } else if (hash === '#chat') {
                 renderChatMatchesList();
                 renderChatMessages();
             } else if (hash === '#needs-catalogue') {
@@ -5980,22 +6022,524 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.hash = "#overview";
     };
     window.closeAboutModal = () => {};
-    window.openContactModal = () => {
-        window.location.hash = "#contact";
-        const modal = document.getElementById("modalContactUs");
+    
+
+    
+    // =========================================================================
+    // DIRECT ADMIN INQUIRIES & SUPPORT ENGINE (DONOR, RECEIVER & ADMIN)
+    // =========================================================================
+
+    window.openInquiriesOrChat = () => {
+        if (checkIsAdmin()) {
+            window.location.hash = '#inquiries';
+        } else {
+            window.location.hash = '#admin-chat';
+        }
+    };
+
+    window.switchInquiryTab = (tab) => {
+        currentInquiryTab = tab;
+        document.querySelectorAll("#adminInquiryTabsNav .inquiry-tab-btn").forEach(btn => {
+            if (btn.getAttribute("data-tab") === tab) {
+                btn.classList.add("active");
+            } else {
+                btn.classList.remove("active");
+            }
+        });
+        renderAdminInquiries();
+    };
+
+    function renderAdminInquiries() {
+        if (!checkIsAdmin()) return;
+
+        // 1. Calculate & Update Metric Numbers
+        const total = inquiriesList.length;
+        const donorsCount = inquiriesList.filter(i => ((i.userRole || i.accountType || '').toLowerCase().includes('donor'))).length;
+        const receiversCount = inquiriesList.filter(i => ((i.userRole || i.accountType || '').toLowerCase().includes('receiver'))).length;
+        const pendingCount = inquiriesList.filter(i => i.status !== 'resolved' && (i.unreadByAdmin || i.status === 'open')).length;
+
+        const elTotal = document.getElementById("statInquiriesTotal");
+        const elDonors = document.getElementById("statInquiriesDonors");
+        const elReceivers = document.getElementById("statInquiriesReceivers");
+        const elPending = document.getElementById("statInquiriesUnresolved");
+        const elBadge = document.getElementById("adminInquiriesTotalBadge");
+
+        if (elTotal) elTotal.textContent = total;
+        if (elDonors) elDonors.textContent = donorsCount;
+        if (elReceivers) elReceivers.textContent = receiversCount;
+        if (elPending) elPending.textContent = pendingCount;
+        if (elBadge) elBadge.textContent = `${total} Total Inquiries`;
+
+        // 2. Filter list by selected Tab and Search input
+        const searchInput = document.getElementById("searchAdminInquiries");
+        const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
+
+        let filtered = [...inquiriesList];
+
+        if (currentInquiryTab === 'donor') {
+            filtered = filtered.filter(i => ((i.userRole || i.accountType || '').toLowerCase().includes('donor')));
+        } else if (currentInquiryTab === 'receiver') {
+            filtered = filtered.filter(i => ((i.userRole || i.accountType || '').toLowerCase().includes('receiver')));
+        } else if (currentInquiryTab === 'pending') {
+            filtered = filtered.filter(i => i.status !== 'resolved' && (i.unreadByAdmin || i.status === 'open'));
+        }
+
+        if (query) {
+            filtered = filtered.filter(i => 
+                (i.userName && i.userName.toLowerCase().includes(query)) ||
+                (i.userEmail && i.userEmail.toLowerCase().includes(query)) ||
+                (i.subject && i.subject.toLowerCase().includes(query)) ||
+                (i.lastMessage && i.lastMessage.toLowerCase().includes(query)) ||
+                (i.district && i.district.toLowerCase().includes(query))
+            );
+        }
+
+        // Sort by newest activity first
+        filtered.sort((a, b) => new Date(b.lastMessageTime || b.createdAt || 0) - new Date(a.lastMessageTime || a.createdAt || 0));
+
+        const container = document.getElementById("adminInquiriesListContainer");
+        if (!container) return;
+
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <div style="text-align:center; padding:30px 15px; color:var(--color-text-muted);">
+                    <div style="font-size:1.8rem; margin-bottom:6px;">📭</div>
+                    <div style="font-weight:700; font-size:0.9rem; color:#475569;">No Inquiries Found</div>
+                    <div style="font-size:0.78rem; margin-top:2px;">No inquiry threads match this filter.</div>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = filtered.map(inq => {
+            const isDonor = (inq.userRole || inq.accountType || '').toLowerCase().includes('donor');
+            const roleClass = isDonor ? 'donor' : 'receiver';
+            const roleLabel = isDonor ? 'DONOR' : 'RECEIVER';
+            const isActive = (inq.id === activeAdminInquiryId);
+            const isUnread = (inq.unreadByAdmin === true);
+            const statusLabel = (inq.status || 'open').toUpperCase();
+            const statusBadgeClass = inq.status === 'resolved' ? 'badge-secondary' : 'badge-success';
+
+            const timeStr = inq.lastMessageTime ? formatSubmittedDate(inq.lastMessageTime) : (inq.createdAt ? formatSubmittedDate(inq.createdAt) : '');
+
+            return `
+                <div class="inquiry-thread-card ${isActive ? 'active' : ''} ${isUnread ? 'unread' : ''}" onclick="window.selectAdminInquiry('${inq.id}')">
+                    <div class="inquiry-card-header">
+                        <span class="inquiry-sender-name">${inq.userName || inq.userEmail}</span>
+                        <span class="inquiry-card-time">${timeStr}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                        <span class="inquiry-role-pill ${roleClass}">${roleLabel}</span>
+                        <span class="badge ${statusBadgeClass}" style="font-size:0.62rem; padding:1px 5px;">${statusLabel}</span>
+                        ${isUnread ? '<span style="font-size:0.65rem; background:#DC2626; color:#FFF; font-weight:800; padding:1px 5px; border-radius:3px;">NEW</span>' : ''}
+                    </div>
+                    <div class="inquiry-subject-line">${inq.subject || 'General Support Inquiry'}</div>
+                    <div class="inquiry-snippet">${inq.lastMessage || 'No messages yet...'}</div>
+                </div>
+            `;
+        }).join("");
+    }
+    window.renderAdminInquiries = renderAdminInquiries;
+
+    window.selectAdminInquiry = async (inquiryId) => {
+        activeAdminInquiryId = inquiryId;
+
+        const inq = inquiriesList.find(i => i.id === inquiryId);
+        if (!inq) return;
+
+        // If unread by Admin, mark as read
+        if (inq.unreadByAdmin) {
+            try {
+                const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+                await helper.db().collection("inquiries").doc(inquiryId).update({ unreadByAdmin: false });
+            } catch (e) {}
+        }
+
+        // Render Active Header
+        const headerEl = document.getElementById("adminInquiryActiveHeader");
+        const msgContainer = document.getElementById("adminInquiryMessagesContainer");
+        const replyBar = document.getElementById("formAdminInquiryReply");
+        const placeholder = document.getElementById("adminInquiryEmptyPlaceholder");
+
+        if (headerEl) headerEl.style.display = "flex";
+        if (msgContainer) msgContainer.style.display = "flex";
+        if (replyBar) replyBar.style.display = "flex";
+        if (placeholder) placeholder.style.display = "none";
+
+        const nameEl = document.getElementById("inqActiveUserName");
+        const roleEl = document.getElementById("inqActiveRoleBadge");
+        const statusEl = document.getElementById("inqActiveStatusBadge");
+        const emailEl = document.getElementById("inqActiveUserEmail");
+        const districtEl = document.getElementById("inqActiveUserDistrict");
+        const phoneEl = document.getElementById("inqActiveUserPhone");
+        const toggleBtn = document.getElementById("btnToggleInquiryStatus");
+        const avatarEl = document.getElementById("inqActiveAvatar");
+
+        const isDonor = (inq.userRole || inq.accountType || '').toLowerCase().includes('donor');
+        if (nameEl) nameEl.textContent = inq.userName || "User";
+        if (roleEl) {
+            roleEl.className = `inquiry-role-pill ${isDonor ? 'donor' : 'receiver'}`;
+            roleEl.textContent = isDonor ? 'DONOR' : 'RECEIVER';
+        }
+        if (statusEl) {
+            statusEl.className = inq.status === 'resolved' ? 'badge badge-secondary' : 'badge badge-success';
+            statusEl.textContent = (inq.status || 'open').toUpperCase();
+        }
+        if (emailEl) emailEl.textContent = inq.userEmail || "No email";
+        if (districtEl) districtEl.textContent = inq.district || "Colombo";
+        if (phoneEl) phoneEl.textContent = inq.phone || "N/A";
+        if (avatarEl) avatarEl.textContent = (inq.userName || "U").charAt(0).toUpperCase();
+
+        if (toggleBtn) {
+            toggleBtn.textContent = (inq.status === 'resolved') ? "Reopen Inquiry" : "Mark as Resolved";
+            toggleBtn.className = (inq.status === 'resolved') ? "btn btn-primary" : "btn btn-secondary";
+        }
+
+        renderAdminInquiries();
+        renderAdminInquiryMessages(inquiryId);
+    };
+
+    function renderAdminInquiryMessages(inquiryId) {
+        const container = document.getElementById("adminInquiryMessagesContainer");
+        if (!container) return;
+
+        const inq = inquiriesList.find(i => i.id === inquiryId);
+        const msgs = inquiryMessagesList.filter(m => m.inquiryId === inquiryId);
+
+        let html = "";
+        if (inq) {
+            html += `
+                <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:10px; padding:14px 18px; margin-bottom:14px; box-shadow:0 1px 4px rgba(0,0,0,0.03);">
+                    <div style="font-size:0.75rem; font-weight:800; color:var(--color-teal-primary); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:2px;">Inquiry Topic</div>
+                    <div style="font-weight:800; font-size:1.05rem; color:#0F172A; margin-bottom:4px;">${inq.subject || 'General Support Inquiry'}</div>
+                    <div style="font-size:0.8rem; color:#64748B;">Started on ${inq.createdAt ? new Date(inq.createdAt).toLocaleString() : 'N/A'} by <strong>${inq.userName}</strong> (${(inq.userRole || 'user').toUpperCase()})</div>
+                </div>
+            `;
+        }
+
+        if (msgs.length === 0) {
+            html += `
+                <div style="text-align:center; padding:30px; color:#64748B;">
+                    <p style="font-size:0.88rem;">No messages exchanged yet in this thread.</p>
+                </div>
+            `;
+        } else {
+            html += msgs.map(m => {
+                const isAdmin = (m.senderRole === 'admin');
+                const timeStr = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                return `
+                    <div class="inquiry-msg-row ${isAdmin ? 'admin-msg' : 'user-msg'}">
+                        <div class="inquiry-bubble">
+                            ${m.message}
+                        </div>
+                        <div class="inquiry-msg-meta">
+                            <span>${isAdmin ? '🛡️ GiveGo Administration' : (m.senderName || 'User')}</span>
+                            <span>•</span>
+                            <span>${timeStr}</span>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        container.innerHTML = html;
+        container.scrollTop = container.scrollHeight;
+    }
+
+    window.submitAdminInquiryReply = async () => {
+        if (!activeAdminInquiryId) return;
+        const input = document.getElementById("inputAdminInquiryReply");
+        if (!input || !input.value.trim()) return;
+
+        const text = input.value.trim();
+        input.value = "";
+
+        try {
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            const db = helper.db();
+
+            const targetInq = inquiriesList.find(i => i.id === activeAdminInquiryId);
+
+            // 1. Add message to inquiry_messages
+            await db.collection("inquiry_messages").add({
+                inquiryId: activeAdminInquiryId,
+                senderId: currentUser.uid,
+                senderName: "GiveGo Administration",
+                senderRole: "admin",
+                message: text,
+                timestamp: new Date().toISOString(),
+                read: false
+            });
+
+            // 2. Update inquiries thread doc
+            await db.collection("inquiries").doc(activeAdminInquiryId).update({
+                lastMessage: text,
+                lastMessageTime: new Date().toISOString(),
+                unreadByUser: true,
+                unreadByAdmin: false,
+                status: 'open'
+            });
+
+            // 3. Send notification to user
+            if (targetInq && targetInq.userId) {
+                await db.collection("notifications").add({
+                    userId: targetInq.userId,
+                    message: `💬 Admin replied to your inquiry "${targetInq.subject || 'Support'}": "${text.substring(0, 70)}..."`,
+                    read: false,
+                    createdAt: new Date().toISOString()
+                });
+            }
+
+            showToast("Official reply sent to user.", "success");
+        } catch (err) {
+            console.error("Admin inquiry reply error:", err);
+            showToast("Failed to send reply.", "danger");
+        }
+    };
+
+    window.toggleAdminInquiryStatus = async () => {
+        if (!activeAdminInquiryId) return;
+        const inq = inquiriesList.find(i => i.id === activeAdminInquiryId);
+        if (!inq) return;
+
+        const newStatus = (inq.status === 'resolved') ? 'open' : 'resolved';
+        try {
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            await helper.db().collection("inquiries").doc(activeAdminInquiryId).update({
+                status: newStatus
+            });
+            showToast(`Inquiry marked as ${newStatus.toUpperCase()}.`, "success");
+            window.selectAdminInquiry(activeAdminInquiryId);
+        } catch (err) {
+            showToast("Failed to update status.", "danger");
+        }
+    };
+
+    // ==========================================
+    // DONOR & RECEIVER SUPPORT INQUIRY FUNCTIONS
+    // ==========================================
+
+    window.openNewInquiryModal = () => {
+        const modal = document.getElementById("modalNewInquiry");
         if (modal) modal.classList.add("active");
     };
-    window.closeContactModal = () => {
-        const modal = document.getElementById("modalContactUs");
-        if (modal) modal.classList.remove("active");
+
+    window.submitNewInquiryTicket = async () => {
+        if (window.isActionBlockedBySuspension && window.isActionBlockedBySuspension()) return;
+
+        const subjectEl = document.getElementById("newInquirySubject");
+        const msgEl = document.getElementById("newInquiryMessage");
+
+        if (!subjectEl || !msgEl || !msgEl.value.trim()) {
+            showToast("Please enter your inquiry details.", "warning");
+            return;
+        }
+
+        const subject = subjectEl.value.trim();
+        const message = msgEl.value.trim();
+
+        try {
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            const db = helper.db();
+
+            // Find if user already has an inquiry thread
+            let userInq = inquiriesList.find(i => (i.userId === currentUser.uid || i.userId === currentUser.id));
+            let inquiryId = userInq ? userInq.id : null;
+
+            if (!inquiryId) {
+                const docRef = await db.collection("inquiries").add({
+                    userId: currentUser.uid,
+                    userName: currentUser.name || "User",
+                    userEmail: currentUser.email || "",
+                    userRole: currentUser.role || currentUser.accountType || "donor",
+                    donorType: currentUser.donorType || "",
+                    receiverCategory: currentUser.receiverCategory || "",
+                    district: currentUser.district || "Colombo",
+                    phone: currentUser.phone || "",
+                    subject: subject,
+                    status: "open",
+                    lastMessage: message,
+                    lastMessageTime: new Date().toISOString(),
+                    unreadByAdmin: true,
+                    unreadByUser: false,
+                    createdAt: new Date().toISOString()
+                });
+                inquiryId = docRef.id;
+            } else {
+                await db.collection("inquiries").doc(inquiryId).update({
+                    subject: subject,
+                    lastMessage: message,
+                    lastMessageTime: new Date().toISOString(),
+                    unreadByAdmin: true,
+                    unreadByUser: false,
+                    status: "open"
+                });
+            }
+
+            // Add first message
+            await db.collection("inquiry_messages").add({
+                inquiryId: inquiryId,
+                senderId: currentUser.uid,
+                senderName: currentUser.name || "User",
+                senderRole: currentUser.role || currentUser.accountType || "donor",
+                message: message,
+                timestamp: new Date().toISOString(),
+                read: false
+            });
+
+            // Reset modal
+            const modal = document.getElementById("modalNewInquiry");
+            if (modal) modal.classList.remove("active");
+            msgEl.value = "";
+
+            showToast("✅ Inquiry submitted! GiveGo Administration will reply shortly.", "success");
+            window.location.hash = "#admin-chat";
+            renderUserAdminInquiryChat();
+        } catch (err) {
+            console.error("Submit inquiry ticket error:", err);
+            showToast("Failed to submit inquiry ticket.", "danger");
+        }
     };
-    window.handleContactSubmit = (e) => {
-        if (e) e.preventDefault();
-        showToast("Thank you for reaching out! Our GiveGo support team will get back to you shortly.", "success");
-        window.closeContactModal();
-        const form = document.getElementById("formContactUs");
-        if (form) form.reset();
-        return false;
+
+    function renderUserAdminInquiryChat() {
+        if (!currentUser || checkIsAdmin()) return;
+
+        const userInq = inquiriesList.find(i => (i.userId === currentUser.uid || i.userId === currentUser.id));
+        const container = document.getElementById("userInquiryMessagesContainer");
+        const statusBadge = document.getElementById("userInquiryStatusBadge");
+
+        if (!container) return;
+
+        if (userInq && userInq.unreadByUser) {
+            // Mark read by user
+            try {
+                const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+                helper.db().collection("inquiries").doc(userInq.id).update({ unreadByUser: false });
+            } catch (e) {}
+        }
+
+        if (statusBadge) {
+            if (userInq) {
+                statusBadge.className = (userInq.status === 'resolved') ? "badge badge-secondary" : "badge badge-success";
+                statusBadge.textContent = (userInq.status === 'resolved') ? "RESOLVED" : "ACTIVE INQUIRY";
+            } else {
+                statusBadge.className = "badge badge-info";
+                statusBadge.textContent = "READY FOR INQUIRIES";
+            }
+        }
+
+        if (!userInq) {
+            container.innerHTML = `
+                <div style="text-align:center; padding:50px 20px; color:#64748B;">
+                    <div style="font-size:3rem; margin-bottom:12px;">🛡️</div>
+                    <h4 style="font-weight:800; font-size:1.2rem; color:var(--color-teal-primary); margin:0 0 8px 0;">Welcome to GiveGo Administration Support</h4>
+                    <p style="font-size:0.9rem; max-width:460px; margin:0 auto 20px auto; line-height:1.5;">Have questions about listing surplus donations, submitting requests, verification, or dispatch schedules? You can message our Administration team directly here!</p>
+                    <button type="button" class="btn btn-primary" style="padding:10px 22px; font-weight:800;" onclick="window.openNewInquiryModal()">➕ Start an Inquiry Ticket</button>
+                </div>
+            `;
+            return;
+        }
+
+        const msgs = inquiryMessagesList.filter(m => m.inquiryId === userInq.id);
+
+        let html = `
+            <div style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:10px; padding:12px 18px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                    <span style="font-size:0.75rem; font-weight:800; color:var(--color-teal-primary); text-transform:uppercase;">Topic:</span>
+                    <strong style="margin-left:4px; color:#0F172A; font-size:0.95rem;">${userInq.subject || 'Support Inquiry'}</strong>
+                </div>
+                <button type="button" class="btn btn-secondary" style="padding:4px 10px; font-size:0.75rem; font-weight:700;" onclick="window.openNewInquiryModal()">Update Subject</button>
+            </div>
+        `;
+
+        if (msgs.length === 0) {
+            html += `<div style="text-align:center; padding:30px; color:#64748B;">Type your message below to send directly to GiveGo Administration.</div>`;
+        } else {
+            html += msgs.map(m => {
+                const isAdmin = (m.senderRole === 'admin');
+                const isSelf = (!isAdmin);
+                const timeStr = m.timestamp ? new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+                return `
+                    <div class="inquiry-msg-row ${isSelf ? 'admin-msg' : 'user-msg'}">
+                        <div class="inquiry-bubble" style="${isSelf ? 'background:var(--color-teal-primary); color:#FFFFFF;' : 'background:#FFFFFF; color:#1E293B;'}">
+                            ${m.message}
+                        </div>
+                        <div class="inquiry-msg-meta">
+                            <span>${isAdmin ? '🛡️ GiveGo Administration' : 'You'}</span>
+                            <span>•</span>
+                            <span>${timeStr}</span>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        container.innerHTML = html;
+        container.scrollTop = container.scrollHeight;
+    }
+    window.renderUserAdminInquiryChat = renderUserAdminInquiryChat;
+
+    window.submitUserInquiryReply = async () => {
+        if (window.isActionBlockedBySuspension && window.isActionBlockedBySuspension()) return;
+
+        const input = document.getElementById("inputUserInquiryReply");
+        if (!input || !input.value.trim()) return;
+
+        const text = input.value.trim();
+        input.value = "";
+
+        try {
+            const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
+            const db = helper.db();
+
+            let userInq = inquiriesList.find(i => (i.userId === currentUser.uid || i.userId === currentUser.id));
+            let inqId = userInq ? userInq.id : null;
+
+            if (!inqId) {
+                const docRef = await db.collection("inquiries").add({
+                    userId: currentUser.uid,
+                    userName: currentUser.name || "User",
+                    userEmail: currentUser.email || "",
+                    userRole: currentUser.role || currentUser.accountType || "donor",
+                    donorType: currentUser.donorType || "",
+                    receiverCategory: currentUser.receiverCategory || "",
+                    district: currentUser.district || "Colombo",
+                    phone: currentUser.phone || "",
+                    subject: "Direct Helpdesk Inquiry",
+                    status: "open",
+                    lastMessage: text,
+                    lastMessageTime: new Date().toISOString(),
+                    unreadByAdmin: true,
+                    unreadByUser: false,
+                    createdAt: new Date().toISOString()
+                });
+                inqId = docRef.id;
+            } else {
+                await db.collection("inquiries").doc(inqId).update({
+                    lastMessage: text,
+                    lastMessageTime: new Date().toISOString(),
+                    unreadByAdmin: true,
+                    unreadByUser: false,
+                    status: "open"
+                });
+            }
+
+            await db.collection("inquiry_messages").add({
+                inquiryId: inqId,
+                senderId: currentUser.uid,
+                senderName: currentUser.name || "User",
+                senderRole: currentUser.role || currentUser.accountType || "donor",
+                message: text,
+                timestamp: new Date().toISOString(),
+                read: false
+            });
+
+            showToast("Message sent to GiveGo Administration.", "success");
+        } catch (err) {
+            console.error("User inquiry message error:", err);
+            showToast("Failed to send message.", "danger");
+        }
     };
 
     init();
