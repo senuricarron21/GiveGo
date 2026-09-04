@@ -2642,6 +2642,34 @@ document.addEventListener("DOMContentLoaded", () => {
             bankBox.innerHTML = `<div>Bank information verified by Admin. Contact representative via messages.</div>`;
         }
 
+        const receiptInput = document.getElementById("monReceiptUploadInput");
+        const receiptUrlInput = document.getElementById("mdlMonReceiptUrl");
+        const previewBox = document.getElementById("mdlMonReceiptPreviewBox");
+        const previewImg = document.getElementById("mdlMonReceiptPreviewImg");
+        if (receiptInput) receiptInput.value = "";
+        if (receiptUrlInput) receiptUrlInput.value = "";
+        if (previewBox) previewBox.style.display = "none";
+        if (previewImg) previewImg.src = "";
+
+        if (receiptInput) {
+            receiptInput.onchange = (evt) => {
+                const file = evt.target.files && evt.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        if (receiptUrlInput) receiptUrlInput.value = e.target.result;
+                        if (file.type.startsWith('image/')) {
+                            if (previewImg) previewImg.src = e.target.result;
+                            if (previewBox) previewBox.style.display = "block";
+                        } else {
+                            if (previewBox) previewBox.style.display = "none";
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+        }
+
         const modal = document.getElementById("modalMonetaryDonation");
         if (modal) modal.classList.add("active");
     };
@@ -3727,6 +3755,123 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    // Universal Transaction Receipt Lightbox Viewer
+    window.openReceiptViewer = (matchIdOrUrl, title) => {
+        let match = matchesList.find(m => m.id === matchIdOrUrl || String(m.id) === String(matchIdOrUrl) || m.deliverySessionId === matchIdOrUrl);
+        const rawUrl = match ? (match.receiptUrl || match.evidenceUrl || match.handoverEvidenceUrl) : matchIdOrUrl;
+        const itemName = match ? (match.requestName || match.itemName || 'Monetary Donation') : (title || 'Transaction Receipt');
+        const amount = match && match.amount ? parseFloat(match.amount).toLocaleString() : null;
+        const ref = match ? match.referenceNumber : null;
+        const date = match ? (match.transferDate ? formatSubmittedDate(match.transferDate) : (match.createdAt ? formatSubmittedDate(match.createdAt) : null)) : null;
+
+        if (!rawUrl || rawUrl === '-' || rawUrl === 'undefined' || rawUrl === 'null' || !String(rawUrl).trim()) {
+            showToast("Receipt is not available for this transaction.", "warning");
+            return;
+        }
+
+        let resolvedUrl = String(rawUrl).trim();
+        let modal = document.getElementById("modalReceiptViewer");
+        if (!modal) {
+            modal = document.createElement("div");
+            modal.className = "modal";
+            modal.id = "modalReceiptViewer";
+            modal.style.zIndex = "99999999";
+            modal.style.background = "rgba(0,0,0,0.75)";
+            modal.innerHTML = `
+                <div class="modal-content glass-panel" style="padding:24px; background:#FFFFFF; max-width:680px; width:95%; border-radius:12px; box-shadow:0 12px 35px rgba(0,0,0,0.4); max-height:90vh; display:flex; flex-direction:column;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid var(--color-border); padding-bottom:10px;">
+                        <h3 id="mdlReceiptViewerTitle" style="color:var(--color-teal-primary); font-weight:800; font-size:1.1rem; margin:0;">Transaction Receipt</h3>
+                        <button type="button" class="btn btn-secondary" style="padding:4px 12px; font-size:0.9rem; font-weight:800; cursor:pointer;" onclick="closeReceiptViewer()">Close</button>
+                    </div>
+                    <div id="mdlReceiptDetailsBox" style="background:#F5EFE0; padding:10px 14px; border-radius:6px; margin-bottom:12px; font-size:0.85rem; color:var(--color-text-dark); display:none;"></div>
+                    <div style="flex:1; overflow-y:auto; text-align:center; padding:10px 0;" id="mdlReceiptViewerBody">
+                        <img id="mdlReceiptViewerImg" src="" alt="Transaction Receipt" style="max-width:100%; max-height:55vh; border-radius:8px; border:2px solid var(--color-teal-primary); object-fit:contain; box-shadow:0 4px 15px rgba(0,0,0,0.15);" />
+                        <iframe id="mdlReceiptViewerPdf" src="" style="width:100%; height:50vh; border:1px solid var(--color-border); border-radius:8px; display:none;"></iframe>
+                        <div id="mdlReceiptFallbackNotice" style="display:none; padding:30px 20px; text-align:center; background:#FFF5F5; border:1px solid #FEB2B2; border-radius:8px; color:#C53030; font-weight:700;">
+                            Receipt is not available for this transaction.
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:14px; padding-top:10px; border-top:1px solid var(--color-border);">
+                        <a id="mdlReceiptViewerFullBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="padding:6px 14px; font-size:0.82rem; font-weight:800; background:#0D7C7A; color:#FFF; text-decoration:none; border-radius:6px;">Open Full Size</a>
+                        <button type="button" class="btn btn-secondary" style="padding:6px 14px; font-size:0.82rem; font-weight:700;" onclick="closeReceiptViewer()">Close</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        } else if (modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
+        }
+
+        const titleEl = document.getElementById("mdlReceiptViewerTitle");
+        if (titleEl) titleEl.textContent = `Transaction Receipt: ${itemName}`;
+
+        const detailsBox = document.getElementById("mdlReceiptDetailsBox");
+        if (detailsBox) {
+            let metaHtml = [];
+            if (amount) metaHtml.push(`<strong>Amount:</strong> LKR ${amount}`);
+            if (ref) metaHtml.push(`<strong>Ref Number:</strong> ${ref}`);
+            if (date) metaHtml.push(`<strong>Date:</strong> ${date}`);
+            if (metaHtml.length > 0) {
+                detailsBox.innerHTML = metaHtml.join(' &nbsp;|&nbsp; ');
+                detailsBox.style.display = "block";
+            } else {
+                detailsBox.style.display = "none";
+            }
+        }
+
+        const imgEl = document.getElementById("mdlReceiptViewerImg");
+        const pdfEl = document.getElementById("mdlReceiptViewerPdf");
+        const fallbackEl = document.getElementById("mdlReceiptFallbackNotice");
+        const fullBtn = document.getElementById("mdlReceiptViewerFullBtn");
+
+        if (fallbackEl) fallbackEl.style.display = "none";
+
+        const isPdf = resolvedUrl.toLowerCase().includes(".pdf") || resolvedUrl.startsWith("data:application/pdf");
+
+        if (isPdf) {
+            if (imgEl) imgEl.style.display = "none";
+            if (pdfEl) {
+                pdfEl.src = resolvedUrl;
+                pdfEl.style.display = "block";
+            }
+        } else {
+            if (pdfEl) {
+                pdfEl.src = "";
+                pdfEl.style.display = "none";
+            }
+            if (imgEl) {
+                imgEl.style.display = "inline-block";
+                imgEl.onerror = () => {
+                    imgEl.style.display = "none";
+                    if (fallbackEl) fallbackEl.style.display = "block";
+                };
+                imgEl.src = resolvedUrl;
+            }
+        }
+
+        if (fullBtn) {
+            fullBtn.href = resolvedUrl;
+        }
+
+        modal.style.setProperty("display", "flex", "important");
+        modal.style.setProperty("visibility", "visible", "important");
+        modal.style.setProperty("opacity", "1", "important");
+        modal.style.setProperty("z-index", "99999999", "important");
+        modal.classList.add("active");
+    };
+
+    window.closeReceiptViewer = () => {
+        const modal = document.getElementById("modalReceiptViewer");
+        if (modal) {
+            modal.classList.remove("active");
+            modal.style.setProperty("display", "none", "important");
+            modal.style.setProperty("visibility", "hidden", "important");
+            modal.style.setProperty("opacity", "0", "important");
+        }
+    };
+
+
+
     // Delegated click handler for view-evidence
     document.addEventListener('click', (e) => {
         const btn = e.target.closest('[data-action="view-evidence"]');
@@ -4437,8 +4582,21 @@ document.addEventListener("DOMContentLoaded", () => {
             const partner = currentUser.uid === m.donorId ? `Receiver: ${m.receiverName}` : `Donor: ${m.donorName}`;
             let docs = '-';
             if (m.type === 'monetary') {
-                docs = ` <div style="display:flex; gap:6px;"> ${m.receiptUrl ? `<a href="${m.receiptUrl}" target="_blank" style="color:var(--color-teal-primary); font-weight:700; font-size:0.75rem;">Receipt</a>` : ''}
-                        ${m.evidenceUrl ? `<a href="${m.evidenceUrl}" target="_blank" style="color:var(--color-teal-muted); font-weight:700; font-size:0.75rem;">Evidence</a>` : ''} </div> `;
+                const hasReceipt = !!(m.receiptUrl && m.receiptUrl !== '-' && m.receiptUrl !== 'null');
+                const hasEvidence = !!(m.evidenceUrl && m.evidenceUrl !== '-' && m.evidenceUrl !== 'null');
+                
+                let btns = [];
+                if (hasReceipt) {
+                    btns.push(`<button type="button" class="btn btn-secondary" style="padding:3px 10px; font-size:0.75rem; font-weight:800; color:var(--color-teal-primary); cursor:pointer; border:1px solid var(--color-teal-primary);" onclick="window.openReceiptViewer('${m.id}')">Receipt</button>`);
+                }
+                if (hasEvidence) {
+                    btns.push(`<button type="button" class="btn btn-secondary" style="padding:3px 10px; font-size:0.75rem; font-weight:800; color:var(--color-teal-muted); cursor:pointer; border:1px solid var(--color-border);" onclick="window.openReceiptViewer('${m.id}')">Evidence</button>`);
+                }
+                if (btns.length > 0) {
+                    docs = `<div style="display:flex; gap:6px; flex-wrap:wrap;">${btns.join('')}</div>`;
+                } else {
+                    docs = `<span style="font-size:0.75rem; color:var(--color-text-muted);">-</span>`;
+                }
             } else if (m.handoverEvidenceUrl) {
                 docs = ` <button type="button" class="btn btn-secondary" style="padding:3px 10px; font-size:0.75rem; font-weight:800; color:#15803D; cursor:pointer; border:1px solid #86EFAC;" onclick="openEvidenceImageViewer('${m.id}')"> View Photo</button> `;
             }
