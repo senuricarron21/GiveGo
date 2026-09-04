@@ -227,7 +227,7 @@
                         <th>Category</th>
                         <th>Target</th>
                         <th>Fulfilled</th>
-                        <th>Date Submitted</th>
+                        <th>Date</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
