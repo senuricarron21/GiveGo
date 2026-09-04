@@ -223,11 +223,12 @@
                 <thead>
                     <tr>
                         <th>Type</th>
-                        <th>Title</th>
+                        <th>Item</th>
                         <th>Category</th>
-                        <th>Required Target</th>
+                        <th>Target</th>
                         <th>Fulfilled</th>
-                        <th>Approval State</th>
+                        <th>Date Submitted</th>
+                        <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
