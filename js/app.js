@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (isAdmin) {
             menuHTML += ` <li class="menu-item"><a href="#users">Accounts</a></li> <li class="menu-item"><a href="#approvals">Approvals</a></li> <li class="menu-item"><a href="#system-directory">System Directory</a></li> `;
         } else if (isDonor) {
-            menuHTML += ` <li class="menu-item"><a href="#listings">My Donations</a></li> <li class="menu-item"><a href="#needs-catalogue">Requests Catalogue</a></li> <li class="menu-item"><a href="#matching">Matches & Connections</a></li> <li class="menu-item"><a href="#chat">Messages</a></li> `;
+            menuHTML += ` <li class="menu-item"><a href="#listings">My Donations</a></li> <li class="menu-item"><a href="#needs-catalogue">Requests Catalogue</a></li> <li class="menu-item"><a href="#matching">Donation Progress</a></li> <li class="menu-item"><a href="#chat">Messages</a></li> `;
         } else if (isReceiver) {
             menuHTML += ` <li class="menu-item"><a href="#requests">Material Requests</a></li> <li class="menu-item"><a href="#matching">Matches & Connections</a></li> <li class="menu-item"><a href="#chat">Messages</a></li> `;
         }
