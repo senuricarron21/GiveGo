@@ -39,7 +39,7 @@
             <!-- Center Navigation Links -->
             <nav>
                 <ul class="nav-menu" id="navMenu">
-                    <li class="nav-menu-item"><a href="#home" class="active">Home</a></li>
+                    <li class="nav-menu-item"><a href="#home">Home</a></li>
                     <li class="nav-menu-item"><a href="#about">About Us</a></li>
                     <li class="nav-menu-item"><a href="#pillars">Ways to Give</a></li>
                     <li class="nav-menu-item"><a href="#gallery">Gallery</a></li>
@@ -496,6 +496,36 @@
                 if (nav) nav.classList.remove("open");
             });
         });
+
+        // Scroll-spy: move active indicator to whichever section is in view
+        (function initScrollSpy() {
+            // Map each nav href to a section id
+            const navLinks = document.querySelectorAll(".nav-menu-item a");
+            const sectionIds = Array.from(navLinks).map(a => a.getAttribute("href").replace("#", ""));
+
+            function onScroll() {
+                const scrollY = window.scrollY + 120; // offset for fixed header height
+                let current = sectionIds[0];
+
+                sectionIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el && el.offsetTop <= scrollY) {
+                        current = id;
+                    }
+                });
+
+                navLinks.forEach(a => {
+                    if (a.getAttribute("href") === "#" + current) {
+                        a.classList.add("active");
+                    } else {
+                        a.classList.remove("active");
+                    }
+                });
+            }
+
+            window.addEventListener("scroll", onScroll, { passive: true });
+            onScroll(); // run once on load
+        })();
 
         // Real-time live material listings from Firestore
         function initLiveLandingItems() {
