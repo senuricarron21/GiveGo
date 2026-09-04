@@ -917,6 +917,45 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Donor Dashboard Quantity Stepper & Category Condition Handler
+    window.adjustDonQuantity = (delta) => {
+        const qtyInput = document.getElementById("donQuantity");
+        if (!qtyInput) return;
+        let val = parseInt(qtyInput.value) || 1;
+        val += delta;
+        if (val < 1) val = 1;
+        qtyInput.value = val;
+        qtyInput.dispatchEvent(new Event("change"));
+    };
+
+    const donQtyInput = document.getElementById("donQuantity");
+    if (donQtyInput) {
+        donQtyInput.addEventListener("blur", () => {
+            let val = parseInt(donQtyInput.value);
+            if (isNaN(val) || val < 1) {
+                donQtyInput.value = "1";
+            }
+        });
+    }
+
+    const donCategorySelect = document.getElementById("donCategory");
+    if (donCategorySelect) {
+        const toggleDonConditionField = () => {
+            const cat = donCategorySelect.value;
+            const groupCond = document.getElementById("groupDonCondition");
+            const condSelect = document.getElementById("donCondition");
+            if (cat === 'Food & Nutrition') {
+                if (groupCond) groupCond.style.display = 'none';
+                if (condSelect) condSelect.required = false;
+            } else {
+                if (groupCond) groupCond.style.display = 'block';
+                if (condSelect) condSelect.required = true;
+            }
+        };
+        donCategorySelect.addEventListener("change", toggleDonConditionField);
+        toggleDonConditionField();
+    }
+
     const formPostDonation = document.getElementById("formPostDonation");
     if (formPostDonation) {
         formPostDonation.addEventListener("submit", async (e) => {
@@ -926,9 +965,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const itemName = document.getElementById("donItemName").value.trim();
             const category = document.getElementById("donCategory").value;
-            const quantity = parseInt(document.getElementById("donQuantity").value) || 1;
+            let quantity = parseInt(document.getElementById("donQuantity").value) || 1;
+            if (quantity < 1) quantity = 1;
             const unit = document.getElementById("donUnit")?.value || "Units";
-            const condition = document.getElementById("donCondition").value;
+            const condition = category === 'Food & Nutrition' ? "Fresh / Non-Perishable" : (document.getElementById("donCondition")?.value || "Brand New");
             const photoUrl = document.getElementById("donPhotoUrl")?.value || "";
             const description = document.getElementById("donDescription").value.trim();
 
@@ -968,6 +1008,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (document.getElementById("donDescription")) document.getElementById("donDescription").value = "";
                 const fileInput = formPostDonation.querySelector("input[type='file']");
                 if (fileInput) fileInput.value = "";
+                if (donCategorySelect) {
+                    donCategorySelect.dispatchEvent(new Event("change"));
+                }
 
                 if (typeof renderDonorListings === "function") renderDonorListings();
                 if (typeof renderAdminRequestApprovals === "function") renderAdminRequestApprovals();
