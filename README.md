@@ -81,7 +81,7 @@ goooooo/
   1. `📡 Connecting to GPS Satellite...`
   2. `🧭 Route & Traffic Telemetry Calculated` (Live speed: `24 km/h`, Distance: `3.2 km`, ETA: `~14 Mins`)
   3. `🚚 Delivery Session DEL-XXXXX Dispatched & Live!`
-- Real-time GPS coordinates stream via `navigator.geolocation.watchPosition` into Firestore and display on interactive **Leaflet JS** map markers.
+- Real-time GPS coordinates stream via `navigator.geolocation.watchPosition` into Firestore and display on interactive **Google Maps JavaScript API** markers.
 
 ---
 
@@ -94,7 +94,7 @@ goooooo/
 
 ## 🛠️ Technology Stack
 - **Frontend**: HTML5, Vanilla JavaScript (ES6+ Modules), Vanilla CSS (Custom Design System & Glassmorphism Tokens)
-- **Map & Telemetry**: Leaflet.js, HTML5 Geolocation API
+- **Map & Telemetry**: Google Maps JavaScript API (v3), HTML5 Geolocation API
 - **Backend & Database**: Firebase Authentication, Firebase Firestore (Real-Time Document Listeners)
 - **Deployment**: Git, GitHub (`main`), Vercel Production Auto-Alias (`goooooo-five.vercel.app`)
 

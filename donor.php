@@ -1,6 +1,5 @@
-<!-- Leaflet Map Assets -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<!-- Google Maps JavaScript API Assets -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBy8_Ic4K9OEPV6P6aKdm0w95A3qvLFudE&libraries=places,geometry&callback=onGoogleMapsLoaded" async defer></script>
 
 <!-- Donor Dashboard Panel -->
 <!-- 1. OVERVIEW SECTION -->

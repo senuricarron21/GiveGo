@@ -17,7 +17,42 @@ document.addEventListener("DOMContentLoaded", () => {
     let activeChatPartnerId = null;
     let chatSearchQuery = "";
     let unsubscribes = [];
-    let leafletMap = null;
+    let googleMap = null;
+
+    // Dynamic Google Maps Script Loader
+    function loadGoogleMapsScript(callback) {
+        if (window.google && window.google.maps) {
+            if (callback) callback();
+            return;
+        }
+        const apiKey = (window.GOOGLE_MAPS_API_KEY) || 
+                       (typeof firebaseConfig !== 'undefined' && firebaseConfig.apiKey) || 
+                       "AIzaSyBy8_Ic4K9OEPV6P6aKdm0w95A3qvLFudE";
+
+        if (!document.getElementById("google-maps-sdk-dyn")) {
+            const script = document.createElement("script");
+            script.id = "google-maps-sdk-dyn";
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,geometry&callback=onGoogleMapsLoaded`;
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        }
+        if (callback) {
+            let attempts = 0;
+            const checkInterval = setInterval(() => {
+                attempts++;
+                if (window.google && window.google.maps) {
+                    clearInterval(checkInterval);
+                    callback();
+                } else if (attempts > 60) {
+                    clearInterval(checkInterval);
+                }
+            }, 100);
+        }
+    }
+    window.onGoogleMapsLoaded = function() {
+        if (window.initGoogleMap) window.initGoogleMap();
+    };
 
     async function init() {
         const getHelper = () => window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
@@ -820,7 +855,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const roleStr = ((currentUser.role) || (currentUser.accountType) || "").toLowerCase();
                 if (roleStr.includes('donor')) renderDonorMatches();
                 else if (roleStr.includes('receiver')) renderReceiverMatches();
-                initLeafletMap();
+                initGoogleMap();
             }
             updateOverviewStats();
         };
@@ -4542,49 +4577,43 @@ document.addEventListener("DOMContentLoaded", () => {
             const canvas = document.getElementById(`inlineCanvas_${matchId}`);
             if (!canvas) return;
 
-            if (typeof L === 'undefined') {
-                if (!document.getElementById("leaflet-css-dyn")) {
-                    const lcss = document.createElement("link");
-                    lcss.id = "leaflet-css-dyn";
-                    lcss.rel = "stylesheet";
-                    lcss.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-                    document.head.appendChild(lcss);
-                }
-                if (!document.getElementById("leaflet-js-dyn")) {
-                    const ljs = document.createElement("script");
-                    ljs.id = "leaflet-js-dyn";
-                    ljs.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-                    ljs.onload = () => { renderInlineMap(); };
-                    document.head.appendChild(ljs);
-                }
+            if (!window.google || !window.google.maps) {
+                loadGoogleMapsScript(() => renderInlineMap());
                 return;
             }
 
             try {
-                if (canvas._leaflet_id) canvas._leaflet_id = null;
-                canvas.innerHTML = `<div id="inlineLeafletInner_${matchId}" style="width:100%; height:340px;"></div>`;
+                canvas.innerHTML = `<div id="inlineGoogleMapInner_${matchId}" style="width:100%; height:340px; border-radius:6px;"></div>`;
+                const mapEl = document.getElementById(`inlineGoogleMapInner_${matchId}`);
 
-                const map = L.map(`inlineLeafletInner_${matchId}`).setView([targetLat, targetLng], 14);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; OpenStreetMap contributors'
-                }).addTo(map);
-
-                setTimeout(() => map.invalidateSize(true), 150);
-                setTimeout(() => map.invalidateSize(true), 400);
-
-                const customMarkerHtml = `<div style="background:var(--color-teal-primary); color:#FFFFFF; padding:6px 12px; border-radius:20px; font-weight:800; font-size:0.85rem; box-shadow:0 4px 12px rgba(13,124,122,0.4); display:flex; align-items:center; gap:6px; border:2px solid #FFFFFF;">${iconEmoji} ${partnerName}</div>`;
-                const vehicleIcon = L.divIcon({
-                    className: 'live-gps-marker',
-                    html: customMarkerHtml,
-                    iconSize: [140, 36],
-                    iconAnchor: [70, 18]
+                const map = new google.maps.Map(mapEl, {
+                    center: { lat: targetLat, lng: targetLng },
+                    zoom: 14,
+                    mapTypeId: 'roadmap',
+                    disableDefaultUI: false,
+                    zoomControl: true,
+                    mapTypeControl: false,
+                    streetViewControl: false,
+                    fullscreenControl: true
                 });
 
-                const marker = L.marker([targetLat, targetLng], { icon: vehicleIcon }).addTo(map)
-                    .bindPopup(`<b>${iconEmoji} ${partnerName} (${partnerRole})</b><br>Dispatch: ${itemName}<br>Status: IN TRANSIT`)
-                    .openPopup();
+                const marker = new google.maps.Marker({
+                    position: { lat: targetLat, lng: targetLng },
+                    map: map,
+                    title: `${partnerName} (${partnerRole})`
+                });
 
-                inlineMapInstances[matchId] = { map, marker };
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `<div style="color:#1E293B; font-family:'Plus Jakarta Sans',sans-serif; padding:4px;"><b>${iconEmoji} ${partnerName} (${partnerRole})</b><br>Dispatch: ${itemName}<br>Status: IN TRANSIT</div>`
+                });
+                infoWindow.open(map, marker);
+                marker.infoWindow = infoWindow;
+
+                marker.addListener('click', () => {
+                    infoWindow.open(map, marker);
+                });
+
+                inlineMapInstances[matchId] = { map, marker, infoWindow };
 
                 // Firestore Listener
                 resolveFirestoreMatchDocId(matchId).then(targetDocId => {
@@ -4597,9 +4626,12 @@ document.addEventListener("DOMContentLoaded", () => {
                                 const liveLng = parseFloat(data.liveLocation.lng);
                                 const sharingUser = data.liveLocation.sharingBy || partnerName;
                                 const updateTime = new Date(data.liveLocation.updatedAt || Date.now()).toLocaleTimeString();
-                                marker.setLatLng([liveLat, liveLng]);
-                                marker.setPopupContent(`<b>${iconEmoji} ${sharingUser} (${partnerRole} REAL GPS ACTIVE)</b><br>Coordinates: ${liveLat.toFixed(5)}, ${liveLng.toFixed(5)}<br>Updated: ${updateTime}`);
-                                map.panTo([liveLat, liveLng]);
+                                const newPos = { lat: liveLat, lng: liveLng };
+                                marker.setPosition(newPos);
+                                if (marker.infoWindow) {
+                                    marker.infoWindow.setContent(`<div style="color:#1E293B; font-family:'Plus Jakarta Sans',sans-serif; padding:4px;"><b>${iconEmoji} ${sharingUser} (${partnerRole} REAL GPS ACTIVE)</b><br>Coordinates: ${liveLat.toFixed(5)}, ${liveLng.toFixed(5)}<br>Updated: ${updateTime}</div>`);
+                                }
+                                map.panTo(newPos);
                                 const statusEl = document.getElementById(`inlineStatus_${matchId}`);
                                 if (statusEl) {
                                     statusEl.innerHTML = ` <strong>Live GPS Stream Active</strong> — ${sharingUser} (Lat: ${liveLat.toFixed(4)}, Lng: ${liveLng.toFixed(4)}) | Updated: ${updateTime}`;
@@ -4616,11 +4648,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     simStep++;
                     const simLat = targetLat + (Math.sin(simStep * 0.25) * 0.0012);
                     const simLng = targetLng + (Math.cos(simStep * 0.25) * 0.0012);
-                    if (marker) marker.setLatLng([simLat, simLng]);
+                    if (marker) marker.setPosition({ lat: simLat, lng: simLng });
                 }, 2500);
                 inlineMapInstances[matchId].interval = interval;
             } catch (err) {
-                console.warn("Inline map init notice:", err);
+                console.warn("Inline Google map init notice:", err);
             }
         };
 
@@ -4691,63 +4723,43 @@ document.addEventListener("DOMContentLoaded", () => {
             const container = document.getElementById("liveTrackerMapContainer");
             if (!container) return;
 
-            if (typeof L === 'undefined') {
-                if (!document.getElementById("leaflet-css-dyn")) {
-                    const lcss = document.createElement("link");
-                    lcss.id = "leaflet-css-dyn";
-                    lcss.rel = "stylesheet";
-                    lcss.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-                    document.head.appendChild(lcss);
-                }
-                if (!document.getElementById("leaflet-js-dyn")) {
-                    const ljs = document.createElement("script");
-                    ljs.id = "leaflet-js-dyn";
-                    ljs.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-                    ljs.onload = () => { renderMap(); };
-                    document.head.appendChild(ljs);
-                }
-                container.innerHTML = ` <div style="width:100%; height:380px; background:linear-gradient(135deg, #0d7c7a 0%, #064e4b 100%); border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#FFFFFF; position:relative; overflow:hidden;"> <div style="position:absolute; width:280px; height:280px; border:2px dashed rgba(255,255,255,0.25); border-radius:50%;"></div> <div style="position:absolute; width:180px; height:180px; border:2px solid rgba(255,255,255,0.4); border-radius:50%;"></div> <div style="font-size:3rem; margin-bottom:8px; z-index:2;">${iconEmoji}</div> <div style="font-size:1.1rem; font-weight:800; z-index:2; margin-bottom:4px;">${partnerName} (${partnerRole} Live Stream)</div> <div style="font-size:0.85rem; font-weight:700; color:#E0F2F1; z-index:2; background:rgba(0,0,0,0.3); padding:4px 12px; border-radius:12px;"> Coordinates: ${targetLat.toFixed(4)}°N, ${targetLng.toFixed(4)}°E</div> </div> `;
-                const statusDiv = document.getElementById("trackerStatusDetails");
-                if (statusDiv) statusDiv.innerHTML = ` <strong>Live ${partnerRole} Location Stream Active</strong> — ${partnerName} (${targetLat.toFixed(4)}, ${targetLng.toFixed(4)})`;
+            if (!window.google || !window.google.maps) {
+                loadGoogleMapsScript(() => renderMap());
                 return;
             }
 
             try {
-                if (container._leaflet_id) {
-                    container._leaflet_id = null;
-                }
-                container.innerHTML = `<div id="liveMapInner" style="width:100%; height:380px;"></div>`;
+                container.innerHTML = `<div id="liveMapInner" style="width:100%; height:380px; border-radius:8px;"></div>`;
+                const mapEl = document.getElementById('liveMapInner');
 
-                if (liveTrackerMap) {
-                    try { liveTrackerMap.remove(); } catch (e) {}
-                    liveTrackerMap = null;
-                }
-
-                liveTrackerMap = L.map('liveMapInner').setView([targetLat, targetLng], 14);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; OpenStreetMap contributors'
-                }).addTo(liveTrackerMap);
-
-                const triggerInvalidate = () => { if (liveTrackerMap) liveTrackerMap.invalidateSize(true); };
-                triggerInvalidate();
-                setTimeout(triggerInvalidate, 100);
-                setTimeout(triggerInvalidate, 300);
-                setTimeout(triggerInvalidate, 600);
-                setTimeout(triggerInvalidate, 1200);
-
-                const customMarkerHtml = `<div style="background:var(--color-teal-primary); color:#FFFFFF; padding:6px 12px; border-radius:20px; font-weight:800; font-size:0.85rem; box-shadow:0 4px 12px rgba(13,124,122,0.4); display:flex; align-items:center; gap:6px; border:2px solid #FFFFFF;">${iconEmoji} ${partnerName}</div>`;
-                const vehicleIcon = L.divIcon({
-                    className: 'live-gps-marker',
-                    html: customMarkerHtml,
-                    iconSize: [140, 36],
-                    iconAnchor: [70, 18]
+                liveTrackerMap = new google.maps.Map(mapEl, {
+                    center: { lat: targetLat, lng: targetLng },
+                    zoom: 14,
+                    mapTypeId: 'roadmap',
+                    disableDefaultUI: false,
+                    zoomControl: true,
+                    mapTypeControl: false,
+                    streetViewControl: false,
+                    fullscreenControl: true
                 });
 
-                liveTrackerMarker = L.marker([targetLat, targetLng], { icon: vehicleIcon }).addTo(liveTrackerMap)
-                    .bindPopup(`<b>${iconEmoji} ${partnerName} (${partnerRole})</b><br>Dispatch: ${itemName}<br>Status: IN TRANSIT`)
-                    .openPopup();
+                liveTrackerMarker = new google.maps.Marker({
+                    position: { lat: targetLat, lng: targetLng },
+                    map: liveTrackerMap,
+                    title: `${partnerName} (${partnerRole})`
+                });
+
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `<div style="color:#1E293B; font-family:'Plus Jakarta Sans',sans-serif; padding:4px;"><b>${iconEmoji} ${partnerName} (${partnerRole})</b><br>Dispatch: ${itemName}<br>Status: IN TRANSIT</div>`
+                });
+                infoWindow.open(liveTrackerMap, liveTrackerMarker);
+                liveTrackerMarker.infoWindow = infoWindow;
+
+                liveTrackerMarker.addListener('click', () => {
+                    infoWindow.open(liveTrackerMap, liveTrackerMarker);
+                });
             } catch (mapErr) {
-                console.warn("Leaflet init fallback:", mapErr);
+                console.warn("Google Maps init fallback:", mapErr);
             }
         };
 
@@ -4776,14 +4788,15 @@ document.addEventListener("DOMContentLoaded", () => {
                         const sharingUser = data.liveLocation.sharingBy || partnerName;
                         const updateTime = new Date(data.liveLocation.updatedAt || Date.now()).toLocaleTimeString();
 
-                        const newLatLng = [liveLat, liveLng];
+                        const newLatLng = { lat: liveLat, lng: liveLng };
                         if (liveTrackerMarker) {
-                            liveTrackerMarker.setLatLng(newLatLng);
-                            liveTrackerMarker.setPopupContent(`<b>${iconEmoji} ${sharingUser} (${partnerRole} REAL GPS ACTIVE)</b><br>Dispatch: ${itemName}<br>Coordinates: ${liveLat.toFixed(5)}, ${liveLng.toFixed(5)}<br>Updated: ${updateTime}`);
+                            liveTrackerMarker.setPosition(newLatLng);
+                            if (liveTrackerMarker.infoWindow) {
+                                liveTrackerMarker.infoWindow.setContent(`<div style="color:#1E293B; font-family:'Plus Jakarta Sans',sans-serif; padding:4px;"><b>${iconEmoji} ${sharingUser} (${partnerRole} REAL GPS ACTIVE)</b><br>Dispatch: ${itemName}<br>Coordinates: ${liveLat.toFixed(5)}, ${liveLng.toFixed(5)}<br>Updated: ${updateTime}</div>`);
+                            }
                         }
                         if (liveTrackerMap) {
                             liveTrackerMap.panTo(newLatLng);
-                            liveTrackerMap.invalidateSize(true);
                         }
                         if (statusDiv) {
                             statusDiv.innerHTML = ` <strong>Live ${partnerRole} GPS Stream Active</strong> — <strong>${sharingUser}</strong> is sharing real GPS location (Lat: ${liveLat.toFixed(4)}, Lng: ${liveLng.toFixed(4)}) | Updated: ${updateTime}`;
@@ -4801,7 +4814,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const simLat = targetLat + (Math.sin(simStep * 0.25) * 0.0012);
             const simLng = targetLng + (Math.cos(simStep * 0.25) * 0.0012);
             if (liveTrackerMarker) {
-                liveTrackerMarker.setLatLng([simLat, simLng]);
+                liveTrackerMarker.setPosition({ lat: simLat, lng: simLng });
                 if (statusDiv) {
                     statusDiv.innerHTML = ` <strong>Live GPS Telemetry (Radar Stream)</strong> — ${partnerName} moving in transit (${simLat.toFixed(4)}, ${simLng.toFixed(4)})`;
                 }
@@ -5714,38 +5727,18 @@ document.addEventListener("DOMContentLoaded", () => {
         return (R * c).toFixed(1);
     }
 
-    window.initLeafletMap = function() {
+    window.initGoogleMap = function() {
         const container = document.getElementById("liveSimulatedMap");
         if (!container) return;
 
-        if (typeof L === 'undefined') {
-            if (!document.getElementById("leaflet-css-dyn")) {
-                const lcss = document.createElement("link");
-                lcss.id = "leaflet-css-dyn";
-                lcss.rel = "stylesheet";
-                lcss.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-                document.head.appendChild(lcss);
-            }
-            if (!document.getElementById("leaflet-js-dyn")) {
-                const ljs = document.createElement("script");
-                ljs.id = "leaflet-js-dyn";
-                ljs.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-                ljs.onload = () => { window.initLeafletMap(); };
-                document.head.appendChild(ljs);
-            }
+        if (!window.google || !window.google.maps) {
+            loadGoogleMapsScript(() => window.initGoogleMap());
             return;
         }
 
         try {
-            if (leafletMap) {
-                try { leafletMap.remove(); } catch (e) {}
-                leafletMap = null;
-            }
-
-            if (container._leaflet_id) {
-                container._leaflet_id = null;
-            }
             container.innerHTML = `<div id="simulatedMapInner" style="width:100%; height:380px; border-radius:8px;"></div>`;
+            const mapEl = document.getElementById("simulatedMapInner");
 
             let userLat = 6.9271;
             let userLng = 79.8612;
@@ -5757,27 +5750,37 @@ document.addEventListener("DOMContentLoaded", () => {
                 userLng = SRI_LANKA_DISTRICT_COORDS[currentUser.district.toLowerCase()].lng;
             }
 
-            leafletMap = L.map('simulatedMapInner').setView([userLat, userLng], 11);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(leafletMap);
-
-            setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 100);
-            setTimeout(() => { if (leafletMap) leafletMap.invalidateSize(); }, 400);
+            googleMap = new google.maps.Map(mapEl, {
+                center: { lat: userLat, lng: userLng },
+                zoom: 11,
+                mapTypeId: 'roadmap',
+                disableDefaultUI: false,
+                zoomControl: true,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: true
+            });
 
             const isDonor = (currentUser && currentUser.role === 'donor') || (currentUser && currentUser.accountType === 'donor');
-            const myTitle = isDonor ? ` Depot: ${currentUser ? currentUser.name : 'Your Depot'}` : ` Facility: ${currentUser ? currentUser.name : 'Your Facility'}`;
+            const myTitle = isDonor ? `Depot: ${currentUser ? currentUser.name : 'Your Depot'}` : `Facility: ${currentUser ? currentUser.name : 'Your Facility'}`;
 
-            const userIconHtml = `<div style="background:#0D7C7A; color:#FFF; padding:6px 12px; border-radius:18px; font-weight:800; font-size:0.8rem; box-shadow:0 3px 8px rgba(0,0,0,0.3); border:2px solid #FFF;">${isDonor ? '' : ''} ${currentUser ? currentUser.name : 'My Facility'}</div>`;
-            const userIcon = L.divIcon({ className: 'user-map-pin', html: userIconHtml, iconSize: [140, 32], iconAnchor: [70, 16] });
+            const bounds = new google.maps.LatLngBounds();
+            const userPos = new google.maps.LatLng(userLat, userLng);
+            bounds.extend(userPos);
 
-            const boundsGroup = [L.latLng(userLat, userLng)];
-            L.marker([userLat, userLng], { icon: userIcon }).addTo(leafletMap)
-                .bindPopup(`<b>${myTitle}</b><br>Coordinates: ${userLat.toFixed(4)}, ${userLng.toFixed(4)}`)
-                .openPopup();
+            const userMarker = new google.maps.Marker({
+                position: userPos,
+                map: googleMap,
+                title: myTitle
+            });
 
-            const activeMatches = matchesList.filter(m => (isDonor ? m.donorId === currentUser.uid : m.receiverId === currentUser.uid)
-            );
+            const userInfoWindow = new google.maps.InfoWindow({
+                content: `<div style="color:#1E293B; font-family:'Plus Jakarta Sans',sans-serif; padding:4px;"><b>${myTitle}</b><br>Coordinates: ${userLat.toFixed(4)}, ${userLng.toFixed(4)}</div>`
+            });
+            userInfoWindow.open(googleMap, userMarker);
+            userMarker.addListener('click', () => userInfoWindow.open(googleMap, userMarker));
+
+            const activeMatches = matchesList.filter(m => (isDonor ? m.donorId === currentUser.uid : m.receiverId === currentUser.uid));
 
             activeMatches.forEach((m, idx) => {
                 let partnerLat = userLat + (Math.sin(idx + 1) * 0.04);
@@ -5790,26 +5793,32 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 const distanceKm = calculateHaversineKm(userLat, userLng, partnerLat, partnerLng);
-                const partnerLatLng = [partnerLat, partnerLng];
-                boundsGroup.push(L.latLng(partnerLat, partnerLng));
+                const partnerPos = new google.maps.LatLng(partnerLat, partnerLng);
+                bounds.extend(partnerPos);
 
-                const partnerIconHtml = `<div style="background:#E67E22; color:#FFF; padding:5px 10px; border-radius:16px; font-weight:800; font-size:0.75rem; box-shadow:0 3px 8px rgba(0,0,0,0.3); border:2px solid #FFF;">${isDonor ? '' : ''} ${partnerName} (${distanceKm} km)</div>`;
-                const partnerIcon = L.divIcon({ className: 'partner-map-pin', html: partnerIconHtml, iconSize: [150, 30], iconAnchor: [75, 15] });
+                const partnerMarker = new google.maps.Marker({
+                    position: partnerPos,
+                    map: googleMap,
+                    title: `${partnerName} (${distanceKm} km)`
+                });
 
-                L.marker(partnerLatLng, { icon: partnerIcon }).addTo(leafletMap)
-                    .bindPopup(`<b>${isDonor ? ' Receiver Facility' : ' Donor'}: ${partnerName}</b><br>Dispatch: ${m.requestName || 'Donation Item'}<br>Geographic Distance: <strong>${distanceKm} km away</strong>`);
+                const partnerInfoWindow = new google.maps.InfoWindow({
+                    content: `<div style="color:#1E293B; font-family:'Plus Jakarta Sans',sans-serif; padding:4px;"><b>${isDonor ? 'Receiver Facility' : 'Donor'}: ${partnerName}</b><br>Dispatch: ${m.requestName || 'Donation Item'}<br>Geographic Distance: <strong>${distanceKm} km away</strong></div>`
+                });
+                partnerMarker.addListener('click', () => partnerInfoWindow.open(googleMap, partnerMarker));
 
-                L.polyline([[userLat, userLng], partnerLatLng], {
-                    color: '#0D7C7A',
-                    weight: 3,
-                    opacity: 0.8,
-                    dashArray: '8, 8'
-                }).addTo(leafletMap);
+                const line = new google.maps.Polyline({
+                    path: [userPos, partnerPos],
+                    geodesic: true,
+                    strokeColor: '#0D7C7A',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 3
+                });
+                line.setMap(googleMap);
             });
 
-            if (boundsGroup.length > 1) {
-                const bounds = L.latLngBounds(boundsGroup);
-                leafletMap.fitBounds(bounds, { padding: [40, 40] });
+            if (activeMatches.length > 0) {
+                googleMap.fitBounds(bounds);
             }
         } catch (err) {
             console.error("Real-Time Distance Map init error:", err);
