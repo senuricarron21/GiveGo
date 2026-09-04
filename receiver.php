@@ -79,6 +79,17 @@
                 <div id="secReqPhysical">
                     <div class="grid-cols-3">
                         <div class="form-group">
+                            <label class="form-label">Unit of Measure</label>
+                            <select class="form-control form-select" id="reqUnit">
+                                <option value="Units">Units / Pieces</option>
+                                <option value="kg">Kilograms (kg)</option>
+                                <option value="g">Grams (g)</option>
+                                <option value="L">Liters (L)</option>
+                                <option value="Packs">Packs / Bags</option>
+                                <option value="Boxes">Boxes / Crates</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">Required Quantity</label>
                             <input type="number" class="form-control" id="reqQuantity" min="1" value="10">
                         </div>
@@ -88,14 +99,6 @@
                                 <option value="Brand New">Brand New Only</option>
                                 <option value="Gently Used">Gently Used / Good</option>
                                 <option value="Any Condition">Any Usable Condition</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Urgency Level</label>
-                            <select class="form-control form-select" id="reqUrgency">
-                                <option value="Low">Low Priority</option>
-                                <option value="Medium">Medium Priority</option>
-                                <option value="High">Emergency / High Priority</option>
                             </select>
                         </div>
                     </div>
