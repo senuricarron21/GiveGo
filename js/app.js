@@ -1505,7 +1505,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (filterReqPriority) filterReqPriority.addEventListener("change", renderDonorNeeds);
     if (sortCatalogueOrder) sortCatalogueOrder.addEventListener("change", renderDonorNeeds);
 
-    // Cascading Hierarchical Filter Selection Handler
+    // Cascading Hierarchical Filter Selection Handler (Needs Catalogue)
     window.selectCascadingOption = (receiverType, reqType, category, displayLabel) => {
         const recInput = document.getElementById("filterReceiverCategory");
         const typeInput = document.getElementById("filterReqType");
@@ -1528,10 +1528,35 @@ document.addEventListener("DOMContentLoaded", () => {
         if (container) container.classList.toggle("open");
     };
 
+    // Cascading Filter Selection Handler (Approved Available Material Donations)
+    window.selectAvailableCascadingOption = (district, category, displayLabel) => {
+        const distInput = document.getElementById("filterAvailableDistrict");
+        const catInput = document.getElementById("filterAvailableCategory");
+        const labelSpan = document.getElementById("availableCascadingFilterLabel");
+        const container = document.getElementById("availableCascadingFilterContainer");
+
+        if (distInput) distInput.value = district || "all";
+        if (catInput) catInput.value = category || "all";
+        if (labelSpan) labelSpan.textContent = displayLabel || "All Districts (25)";
+
+        if (container) container.classList.remove("open");
+        renderAllAvailableItems();
+    };
+
+    window.toggleAvailableCascadingFilter = (e) => {
+        if (e) e.stopPropagation();
+        const container = document.getElementById("availableCascadingFilterContainer");
+        if (container) container.classList.toggle("open");
+    };
+
     document.addEventListener("click", (e) => {
         const container = document.getElementById("cascadingFilterContainer");
         if (container && !container.contains(e.target)) {
             container.classList.remove("open");
+        }
+        const availContainer = document.getElementById("availableCascadingFilterContainer");
+        if (availContainer && !availContainer.contains(e.target)) {
+            availContainer.classList.remove("open");
         }
     });
 
