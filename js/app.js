@@ -52,7 +52,89 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    
+    // ==========================================
+    // Real-Time Account Suspension Guard & Logic
+    // ==========================================
+    let _hasAlertedSuspension = false;
+
+    function applyAccountSuspensionState() {
+        if (!currentUser) return;
+        const isSuspended = (currentUser.status === 'suspended' || currentUser.status === 'rejected');
+        const banner = document.getElementById("accountSuspendedBanner");
+        const noticeModal = document.getElementById("modalAccountSuspendedNotice");
+        const roleBadge = document.getElementById("profileDisplayRole");
+
+        if (isSuspended) {
+            if (banner) banner.style.display = "block";
+            if (roleBadge) {
+                const roleName = (currentUser.role || currentUser.accountType || "Member").toUpperCase();
+                roleBadge.innerHTML = `${roleName} <span class="badge badge-danger" style="margin-left:4px; font-size:0.65rem; background:#DC2626; color:#FFF; font-weight:800; padding:2px 6px; border-radius:4px;">SUSPENDED</span>`;
+            }
+            if (!_hasAlertedSuspension && noticeModal) {
+                noticeModal.classList.add("active");
+                _hasAlertedSuspension = true;
+            }
+            const actionButtons = document.querySelectorAll(`
+                #formPostDonation button[type="submit"],
+                #formRequestMaterials button[type="submit"],
+                #formSubmitMonetaryDonation button[type="submit"],
+                #formSubmitOfferDonation button[type="submit"],
+                #formSubmitItemRequest button[type="submit"],
+                #formSubmitVolunteerSignup button[type="submit"],
+                #formSubmitHandoverEvidence button[type="submit"],
+                #formSubmitEditProfile button[type="submit"],
+                #btnSendMessage,
+                .chat-send-btn
+            `);
+            actionButtons.forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = "0.5";
+                btn.style.cursor = "not-allowed";
+                btn.title = "Action blocked: Account is suspended by Administrator.";
+            });
+        } else {
+            if (banner) banner.style.display = "none";
+            if (noticeModal) noticeModal.classList.remove("active");
+            _hasAlertedSuspension = false;
+            const actionButtons = document.querySelectorAll(`
+                #formPostDonation button[type="submit"],
+                #formRequestMaterials button[type="submit"],
+                #formSubmitMonetaryDonation button[type="submit"],
+                #formSubmitOfferDonation button[type="submit"],
+                #formSubmitItemRequest button[type="submit"],
+                #formSubmitVolunteerSignup button[type="submit"],
+                #formSubmitHandoverEvidence button[type="submit"],
+                #formSubmitEditProfile button[type="submit"],
+                #btnSendMessage,
+                .chat-send-btn
+            `);
+            actionButtons.forEach(btn => {
+                btn.disabled = false;
+                btn.style.opacity = "";
+                btn.style.cursor = "";
+                btn.title = "";
+            });
+        }
+    }
+
+    window.applyAccountSuspensionState = applyAccountSuspensionState;
+
+    window.isActionBlockedBySuspension = () => {
+        if (!currentUser) return false;
+        if (currentUser.status === 'suspended' || currentUser.status === 'rejected') {
+            const noticeModal = document.getElementById("modalAccountSuspendedNotice");
+            if (noticeModal) noticeModal.classList.add("active");
+            if (window.showToast) {
+                window.showToast("Action blocked: Your account has been suspended by an Administrator.", "danger");
+            }
+            return true;
+        }
+        return false;
+    };
+
     function updateUIProfileAndMenu() {
+        applyAccountSuspensionState();
         if (!currentUser) return;
         const nameEl = document.getElementById("profileDisplayName");
         const roleEl = document.getElementById("profileDisplayRole");
@@ -503,7 +585,17 @@ document.addEventListener("DOMContentLoaded", () => {
         const unsubUsers = db.collection("users").onSnapshot(snapshot => {
             usersList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             const fullProfile = usersList.find(u => u.uid === currentUser.uid || u.id === currentUser.uid);
-            if (fullProfile) currentUser = { ...currentUser, ...fullProfile };
+            if (fullProfile) {
+                const prevStatus = currentUser.status;
+                currentUser = { ...currentUser, ...fullProfile };
+                try { localStorage.setItem("givego_user", JSON.stringify(currentUser)); } catch (e) {}
+                if (prevStatus && prevStatus !== 'suspended' && currentUser.status === 'suspended') {
+                    showToast("Your account has been suspended by an Administrator.", "danger");
+                } else if (prevStatus === 'suspended' && currentUser.status === 'verified') {
+                    showToast("Your account has been reactivated by the Administrator.", "success");
+                }
+            }
+            applyAccountSuspensionState();
 
             const roleStr = (currentUser.role || "").toLowerCase();
             if (roleStr.includes('admin') || currentUser.email.includes("admin")) {
@@ -756,6 +848,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     window.openEditProfileModal = () => {
+        if (window.isActionBlockedBySuspension && window.isActionBlockedBySuspension()) return;
         if (!currentUser) return;
         let modal = document.getElementById("modalEditProfile");
         if (modal && modal.parentElement !== document.body) {
@@ -813,6 +906,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     window.submitEditProfileDirectly = async () => {
+        if (window.isActionBlockedBySuspension && window.isActionBlockedBySuspension()) return;
         if (!currentUser) return;
         const name = document.getElementById("editPrfName")?.value.trim();
         const phone = document.getElementById("editPrfPhone")?.value.trim();
@@ -981,6 +1075,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const formRequestMaterials = document.getElementById("formRequestMaterials");
     if (formRequestMaterials) {
         formRequestMaterials.addEventListener("submit", async (e) => {
+            if (window.isActionBlockedBySuspension && window.isActionBlockedBySuspension()) { e.preventDefault(); return; }
             e.preventDefault();
             const helper = window.getFirebaseHelper ? window.getFirebaseHelper() : window.firebaseHelper;
             const db = helper.db();
@@ -1249,6 +1344,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const formPostDonation = document.getElementById("formPostDonation");
     if (formPostDonation) {
         formPostDonation.addEventListener("submit", async (e) => {
+            if (window.isActionBlockedBySuspension && window.isActionBlockedBySuspension()) { e.preventDefault(); return; }
             e.preventDefault();
 
             // Run mandatory validations
@@ -1890,6 +1986,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // 1. Donor Offers Donation First to Receiver Need Request
     window.offerPhysicalDonation = (requestId) => {
+        if (window.isActionBlockedBySuspension && window.isActionBlockedBySuspension()) return;
         const req = requestsList.find(r => r.id === requestId);
         if (!req) return;
 
@@ -2248,6 +2345,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     window.submitReceiverItemRequestDirectly = async () => {
+        if (window.isActionBlockedBySuspension && window.isActionBlockedBySuspension()) return;
         const donId = document.getElementById("mdlReqDonationId")?.value;
         const dItem = donationsList.find(d => d.id === donId || String(d.id) === String(donId));
         if (!dItem) {
@@ -2324,6 +2422,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     window.openRequestAvailableItemModal = (donationId) => {
+        if (window.isActionBlockedBySuspension && window.isActionBlockedBySuspension()) return;
         const item = donationsList.find(d => d.id === donationId || String(d.id) === String(donationId));
         if (!item) return;
 
@@ -2628,6 +2727,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     window.openMonetaryModal = (requestId) => {
+        if (window.isActionBlockedBySuspension && window.isActionBlockedBySuspension()) return;
         const req = requestsList.find(r => r.id === requestId);
         if (!req) return;
 
@@ -2677,6 +2777,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const formSubmitMonetaryDonation = document.getElementById("formSubmitMonetaryDonation");
     if (formSubmitMonetaryDonation) {
         formSubmitMonetaryDonation.addEventListener("submit", async (e) => {
+            if (window.isActionBlockedBySuspension && window.isActionBlockedBySuspension()) { e.preventDefault(); return; }
             e.preventDefault();
             const reqId = document.getElementById("mdlMonRequestId").value;
             const req = requestsList.find(r => r.id === reqId);
@@ -2722,6 +2823,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     window.openVolunteerModal = (requestId) => {
+        if (window.isActionBlockedBySuspension && window.isActionBlockedBySuspension()) return;
         const req = requestsList.find(r => r.id === requestId);
         if (!req) return;
 
@@ -2786,6 +2888,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     window.submitVolunteerShiftDirectly = async () => {
+        if (window.isActionBlockedBySuspension && window.isActionBlockedBySuspension()) return;
         const reqId = document.getElementById("mdlVolunteerRequestId")?.value;
         const req = requestsList.find(r => r.id === reqId);
         if (!req) {
@@ -3086,7 +3189,17 @@ document.addEventListener("DOMContentLoaded", () => {
         const unsubUsers = db.collection("users").onSnapshot(snapshot => {
             usersList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             const fullProfile = usersList.find(u => u.uid === currentUser.uid || u.id === currentUser.uid);
-            if (fullProfile) currentUser = { ...currentUser, ...fullProfile };
+            if (fullProfile) {
+                const prevStatus = currentUser.status;
+                currentUser = { ...currentUser, ...fullProfile };
+                try { localStorage.setItem("givego_user", JSON.stringify(currentUser)); } catch (e) {}
+                if (prevStatus && prevStatus !== 'suspended' && currentUser.status === 'suspended') {
+                    showToast("Your account has been suspended by an Administrator.", "danger");
+                } else if (prevStatus === 'suspended' && currentUser.status === 'verified') {
+                    showToast("Your account has been reactivated by the Administrator.", "success");
+                }
+            }
+            applyAccountSuspensionState();
 
             if (checkIsAdmin()) {
                 renderAdminUsers();
@@ -3884,6 +3997,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     window.openHandoverEvidenceModal = (matchId) => {
+        if (window.isActionBlockedBySuspension && window.isActionBlockedBySuspension()) return;
         let match = matchesList.find(m => m.id === matchId || String(m.id) === String(matchId) || m.deliverySessionId === matchId || m.requestId === matchId || m.donationId === matchId);
         const targetId = match ? match.id : matchId;
 
@@ -3949,6 +4063,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     window.submitHandoverEvidenceDirectly = async () => {
+        if (window.isActionBlockedBySuspension && window.isActionBlockedBySuspension()) return;
         const matchId = document.getElementById("mdlEvidenceMatchId")?.value;
         const urlInput = document.getElementById("mdlEvidenceUrl")?.value.trim();
         const notes = document.getElementById("mdlEvidenceNotes")?.value.trim() || "";
@@ -5308,6 +5423,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     window.openDirectChatWithUser = async (targetUserId, targetUserName, itemTitle) => {
+        if (window.isActionBlockedBySuspension && window.isActionBlockedBySuspension()) return;
         if (!targetUserId) {
             showToast("Cannot message partner: user ID is missing.", "warning");
             return;
