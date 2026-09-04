@@ -1737,7 +1737,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const reqTypeFilter = document.getElementById("filterReqType")?.value || "all";
         const catFilter = document.getElementById("filterReqCategory")?.value || "all";
         const receiverCatFilter = document.getElementById("filterReceiverCategory")?.value || "all";
-        const priorityFilter = document.getElementById("filterReqPriority")?.value || "all";
         const districtFilter = document.getElementById("filterReqDistrict")?.value || "all";
 
         let filtered = requestsList.filter(r => r.status === 'published' || r.status === 'partially_fulfilled');
@@ -1753,7 +1752,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (reqTypeFilter !== 'all') filtered = filtered.filter(r => (r.reqType || 'physical') === reqTypeFilter);
         if (catFilter !== 'all') filtered = filtered.filter(r => isCategoryMatch(r.category, catFilter));
         if (receiverCatFilter !== 'all') filtered = filtered.filter(r => isCategoryMatch(r.receiverCategory, receiverCatFilter));
-        if (priorityFilter !== 'all') filtered = filtered.filter(r => (r.priorityLevel || 'Medium') === priorityFilter);
         if (districtFilter !== 'all') filtered = filtered.filter(r => isDistrictMatch(r.district, districtFilter));
 
         // Sort: Donor's local district first, then by date order
@@ -1798,12 +1796,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const searchDonorNeeds = document.getElementById("searchDonorNeeds");
     const filterReqType = document.getElementById("filterReqType");
     const filterReqCategory = document.getElementById("filterReqCategory");
-    const filterReqPriority = document.getElementById("filterReqPriority");
     const sortCatalogueOrder = document.getElementById("sortCatalogueOrder");
     if (searchDonorNeeds) searchDonorNeeds.addEventListener("input", renderDonorNeeds);
     if (filterReqType) filterReqType.addEventListener("change", renderDonorNeeds);
     if (filterReqCategory) filterReqCategory.addEventListener("change", renderDonorNeeds);
-    if (filterReqPriority) filterReqPriority.addEventListener("change", renderDonorNeeds);
     if (sortCatalogueOrder) sortCatalogueOrder.addEventListener("change", renderDonorNeeds);
 
     // Cascading Hierarchical Filter Selection Handler (Needs Catalogue)
