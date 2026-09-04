@@ -590,12 +590,11 @@ input[type="file"].form-control {
 }
 
 .editorial-hero-title {
-    font-family: 'Playfair Display', Georgia, serif;
     font-size: 3.4rem;
     font-weight: 900;
     color: #1E293B;
     line-height: 1.12;
-    letter-spacing: -0.5px;
+    letter-spacing: -1px;
     text-transform: uppercase;
     margin-bottom: 22px;
 }
