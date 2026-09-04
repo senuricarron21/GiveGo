@@ -2,29 +2,192 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<!-- CSS styles --> <link rel="stylesheet" href="css/styles.css?v=31.0"> <link rel="stylesheet" href="css/dashboard.css?v=31.0"> <!-- Leaflet.js CSS for Real Map --> <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/> <!-- Firebase Compat SDKs (CDN) --> <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script> <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script> <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script> <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script> <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script> </head> <body> <!-- Mobile Sidebar Overlay --> <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div> <div class="dashboard-container"> <!-- SIDEBAR NAVIGATION --> <aside class="sidebar"> <div> <!-- Brand logo area --> <div class="brand-section" style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; margin-bottom: 20px; border-bottom: 1px solid var(--color-border); padding-bottom: 16px;"> <img src="uploads/logo.png" alt="GiveGo Logo" class="brand-logo-img-sidebar" style="height: 64px; max-height: 72px; width: auto; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(13,124,122,0.25));" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=150&q=80';"> <div style="font-size: 1.3rem; font-weight: 900; color: var(--color-teal-primary); letter-spacing: -0.02em;">GiveGo</div> </div> <!-- Dynamic Navigation List --> <nav> <ul class="menu-list" id="sidebarMenuList"> <li class="menu-item active"> <a href="#overview">Overview</a> </li> <li class="menu-item"> <a href="#available-items">Available Items</a> </li> <li class="menu-item"> <a href="#history">History</a> </li> <li class="menu-item"> <a href="#notifications">Notifications</a> </li> </ul> </nav> </div> <!-- User profile footer info inside Sidebar --> <div class="user-profile-menu"> <div class="profile-avatar" style="background-image: url('https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80');"></div> <div class="profile-info"> <div class="profile-name" id="profileDisplayName">User</div> <div class="profile-role" id="profileDisplayRole">Member</div> </div> <button class="btn-logout" id="btnLogout" title="Log Out">Log Out</button> </div> </aside> <!-- MAIN DASHBOARD CONTENT AREA --> <main class="main-content"> <!-- Header Panel --> <header class="header-panel"> <div class="welcome-section" style="display:flex; flex-direction:column; gap:6px;"> <button class="mobile-toggle-btn" id="btnMobileToggleSidebar" onclick="toggleMobileSidebar()" style="display:none; background:var(--color-teal-primary); color:#FFFFFF; border:none; padding:8px 14px; border-radius:6px; font-weight:800; font-size:0.9rem; cursor:pointer; max-width:fit-content; margin-bottom:8px;"> Navigation Menu </button> <h1 class="gradient-text" id="welcomeHeading">Hello</h1> <p>Welcome to your GiveGo dashboard. Manage records and activities below.</p> </div> <div class="actions-section" style="display:flex; gap:10px; align-items:center;"> <button class="btn btn-primary" id="btnHeaderActionSupport" style="font-size:0.8rem; padding:8px 14px; font-weight:700;" onclick="window.openInquiriesOrChat && window.openInquiriesOrChat()">💬 Support Inquiries</button> <div class="notification-bell glass-panel" style="padding: 8px 16px; border-radius: var(--radius-sm); cursor: pointer;" id="btnNotificationsToggle" onclick="window.location.hash='#notifications'"> <span style="font-size: 0.85rem; font-weight:700; color: var(--color-teal-primary);">Alerts</span> <span class="notification-dot" id="notiDot" style="display: none;"></span> </div> </div> </header> <!-- Dynamic Role-Based Views --> 
-        <!-- Dynamic Account Suspension Warning Banner -->
-        <div id="accountSuspendedBanner" style="display:none; margin-bottom:20px; background:#FFF5F5; border:2px solid #E53E3E; border-radius:10px; padding:18px 22px; box-shadow:0 4px 15px rgba(229,62,62,0.15);">
-            <div style="display:flex; align-items:flex-start; gap:14px;">
-                <span style="font-size:2rem; line-height:1;">⚠️</span>
-                <div style="flex:1;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; flex-wrap:wrap; gap:8px;">
-                        <h4 style="margin:0; color:#9B2C2C; font-weight:800; font-size:1.1rem;">ACCOUNT SUSPENDED BY ADMINISTRATOR</h4>
-                        <span class="badge badge-danger" style="font-size:0.75rem; padding:4px 10px; font-weight:800;">LOCKED ACCOUNT</span>
-                    </div>
-                    <p style="margin:0 0 10px 0; color:#742A2A; font-size:0.88rem; line-height:1.5;">
-                        Your GiveGo account is currently <strong>suspended</strong>. You can view existing records, but all active submissions, requests, offers, and messaging features are locked.
-                    </p>
-                    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; font-size:0.82rem; color:#9B2C2C;">
-                        <span><strong>Support Email:</strong> <a href="mailto:support@givego.lk" style="color:#9B2C2C; font-weight:700; text-decoration:underline;">support@givego.lk</a></span>
-                        <span>|</span>
-                        <span><strong>Hotline:</strong> +94 11 234 5678</span>
-                    </div>
+<!-- CSS styles -->
+<link rel="stylesheet" href="css/styles.css?v=32.0">
+<link rel="stylesheet" href="css/dashboard.css?v=32.0">
+<!-- Leaflet.js CSS for Real Map -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<!-- Firebase Compat SDKs (CDN) -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
+</head>
+<body>
+<!-- Mobile Sidebar Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
+<div class="dashboard-container">
+<!-- SIDEBAR NAVIGATION -->
+<aside class="sidebar">
+    <div>
+        <!-- Brand logo area -->
+        <div class="brand-section" style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; margin-bottom: 20px; border-bottom: 1px solid var(--color-border); padding-bottom: 16px;">
+            <img src="uploads/logo.png" alt="GiveGo Logo" class="brand-logo-img-sidebar" style="height: 64px; max-height: 72px; width: auto; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(13,124,122,0.25));" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=150&q=80';">
+            <div style="font-size: 1.3rem; font-weight: 900; color: var(--color-teal-primary); letter-spacing: -0.02em;">GiveGo</div>
+        </div>
+        <!-- Dynamic Navigation List -->
+        <nav>
+            <ul class="menu-list" id="sidebarMenuList">
+                <li class="menu-item active">
+                    <a href="#overview">Overview</a>
+                </li>
+                <li class="menu-item">
+                    <a href="#available-items">Available Items</a>
+                </li>
+                <li class="menu-item">
+                    <a href="#history">History</a>
+                </li>
+                <li class="menu-item">
+                    <a href="#notifications">Notifications</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    <!-- User profile footer info inside Sidebar -->
+    <div class="user-profile-menu">
+        <div class="profile-avatar" style="background-image: url('https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80');"></div>
+        <div class="profile-info">
+            <div class="profile-name" id="profileDisplayName">User</div>
+            <div class="profile-role" id="profileDisplayRole">Member</div>
+        </div>
+        <button class="btn-logout" id="btnLogout" title="Log Out">Log Out</button>
+    </div>
+</aside>
+
+<!-- MAIN DASHBOARD CONTENT AREA -->
+<main class="main-content">
+    <!-- Header Panel -->
+    <header class="header-panel">
+        <div class="welcome-section" style="display:flex; flex-direction:column; gap:6px;">
+            <button class="mobile-toggle-btn" id="btnMobileToggleSidebar" onclick="toggleMobileSidebar()" style="display:none; background:var(--color-teal-primary); color:#FFFFFF; border:none; padding:8px 14px; border-radius:6px; font-weight:800; font-size:0.9rem; cursor:pointer; max-width:fit-content; margin-bottom:8px;">
+                Navigation Menu
+            </button>
+            <h1 class="gradient-text" id="welcomeHeading">Hello</h1>
+            <p>Welcome to your GiveGo dashboard. Manage records and activities below.</p>
+        </div>
+        <div class="actions-section" style="display:flex; gap:10px; align-items:center;">
+            <button class="btn btn-primary" id="btnHeaderActionSupport" style="font-size:0.8rem; padding:8px 14px; font-weight:700;" onclick="window.openInquiriesOrChat && window.openInquiriesOrChat()">Support Inquiries</button>
+            <div class="notification-bell glass-panel" style="padding: 8px 16px; border-radius: var(--radius-sm); cursor: pointer;" id="btnNotificationsToggle" onclick="window.location.hash='#notifications'">
+                <span style="font-size: 0.85rem; font-weight:700; color: var(--color-teal-primary);">Alerts</span>
+                <span class="notification-dot" id="notiDot" style="display: none;"></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Dynamic Account Suspension Warning Banner -->
+    <div id="accountSuspendedBanner" style="display:none; margin-bottom:20px; background:#FFF5F5; border:2px solid #E53E3E; border-radius:10px; padding:18px 22px; box-shadow:0 4px 15px rgba(229,62,62,0.15);">
+        <div style="display:flex; align-items:flex-start; gap:14px;">
+            <div style="flex:1;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; flex-wrap:wrap; gap:8px;">
+                    <h4 style="margin:0; color:#9B2C2C; font-weight:800; font-size:1.1rem;">ACCOUNT SUSPENDED BY ADMINISTRATOR</h4>
+                    <span class="badge badge-danger" style="font-size:0.75rem; padding:4px 10px; font-weight:800;">LOCKED ACCOUNT</span>
+                </div>
+                <p style="margin:0 0 10px 0; color:#742A2A; font-size:0.88rem; line-height:1.5;">
+                    Your GiveGo account is currently <strong>suspended</strong>. You can view existing records, but all active submissions, requests, offers, and messaging features are locked.
+                </p>
+                <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; font-size:0.82rem; color:#9B2C2C;">
+                    <span><strong>Support Email:</strong> <a href="mailto:support@givego.lk" style="color:#9B2C2C; font-weight:700; text-decoration:underline;">support@givego.lk</a></span>
+                    <span>|</span>
+                    <span><strong>Hotline:</strong> +94 11 234 5678</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboardViewContainer">
+        <!-- Overview Panel -->
+        <div class="dashboard-view-panel active" id="overview-panel">
+            <div class="stats-grid" id="overviewStatsGrid">
+                <!-- Stat Cards rendered dynamically -->
+            </div>
+            <!-- Admin Executive Overview Section (Visible for Admin) -->
+            <div id="adminExecutiveOverviewSection" style="display:none; margin-top:24px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+                    <h3 class="section-title" style="color:var(--color-teal-primary); font-weight:800; margin:0;">
+                        Admin Overview
+                    </h3>
+                    <button type="button" class="btn btn-danger" style="padding:6px 14px; font-weight:800; font-size:0.85rem;" onclick="clearAllDatabaseItems()">
+                        Clear All Records
+                    </button>
+                </div>
+                <!-- Live Active Matches & Real-Time Controls -->
+                <div class="glass-panel" style="padding:20px; background:#FFFFFF; margin-bottom:24px;">
+                    <h4 style="color:var(--color-teal-primary); font-weight:800; margin-bottom:12px;">
+                        Live Active Matches &amp; Delivery Controls
+                    </h4>
+                    <table class="table" style="width:100%; font-size:0.85rem;">
+                        <thead>
+                            <tr>
+                                <th>Item / Transaction</th>
+                                <th>Donor</th>
+                                <th>Receiver</th>
+                                <th>Delivery Method</th>
+                                <th>Status</th>
+                                <th>Admin Controls</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminOverviewMatchesBody"></tbody>
+                    </table>
+                </div>
+                <!-- 14-Day Monetary Evidence SLA Monitor -->
+                <div class="glass-panel" style="padding:20px; background:#FFFFFF; margin-bottom:24px;">
+                    <h4 style="color:var(--color-teal-primary); font-weight:800; margin-bottom:12px;">
+                        Monetary Transfers &amp; 14-Day SLA Monitor
+                    </h4>
+                    <table class="table" style="width:100%; font-size:0.85rem;">
+                        <thead>
+                            <tr>
+                                <th>Request / Receiver</th>
+                                <th>Donor</th>
+                                <th>Amount</th>
+                                <th>Transfer Date</th>
+                                <th>Receipt</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminMonetarySLABody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Smart Matches Panel -->
+            <div style="margin-top: 24px;">
+                <h3 class="section-title" style="display:flex; align-items:center; gap:8px;">
+                    <span>Smart Matches</span>
+                    <span style="font-size:0.75rem; font-weight:700; color:var(--color-teal-primary); background:#F5EFE0; padding:2px 8px; border-radius:12px;">Automatic Item &amp; Category Matching</span>
+                </h3>
+                <div id="smartMatchesContainer">
+                    <!-- Populated dynamically by app.js -->
                 </div>
             </div>
         </div>
 
-        <div id="dashboardViewContainer"> <!-- Overview Panel --> <div class="dashboard-view-panel active" id="overview-panel"> <div class="stats-grid" id="overviewStatsGrid"> <!-- Stat Cards rendered dynamically --> </div> <!-- Admin Executive Overview Section (Visible for Admin) --> <div id="adminExecutiveOverviewSection" style="display:none; margin-top:24px;"> <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;"> <h3 class="section-title" style="color:var(--color-teal-primary); font-weight:800; margin:0;"> Executive Admin Command Center Overview</h3> <button type="button" class="btn btn-danger" style="padding:6px 14px; font-weight:800; font-size:0.85rem;" onclick="clearAllDatabaseItems()"> Purge All Database Items</button> </div> <!-- Live Active Matches & Real-Time Controls --> <div class="glass-panel" style="padding:20px; background:#FFFFFF; margin-bottom:24px;"> <h4 style="color:var(--color-teal-primary); font-weight:800; margin-bottom:12px;"> Live Active Matches & GPS Telemetry Oversight</h4> <table class="table" style="width:100%; font-size:0.85rem;"> <thead> <tr> <th>Item / Session</th> <th>Donor</th> <th>Receiver</th> <th>Delivery Method</th> <th>Status</th> <th>Admin Real-Time Controls</th> </tr> </thead> <tbody id="adminOverviewMatchesBody"></tbody> </table> </div> <!-- 14-Day Monetary Evidence SLA Monitor --> <div class="glass-panel" style="padding:20px; background:#FFFFFF; margin-bottom:24px;"> <h4 style="color:var(--color-teal-primary); font-weight:800; margin-bottom:12px;"> Monetary Transfers & 14-Day Utilisation SLA Monitor</h4> <table class="table" style="width:100%; font-size:0.85rem;"> <thead> <tr> <th>Request / Receiver</th> <th>Donor</th> <th>Amount</th> <th>Transfer Date</th> <th>Receipt Proof</th> <th>14-Day Evidence SLA</th> </tr> </thead> <tbody id="adminMonetarySLABody"></tbody> </table> </div> </div> <!-- Smart Matches Panel --> <div style="margin-top: 24px;"> <h3 class="section-title" style="display:flex; align-items:center; gap:8px;"> <span>Smart Matches</span> <span style="font-size:0.75rem; font-weight:700; color:var(--color-teal-primary); background:#F5EFE0; padding:2px 8px; border-radius:12px;">Automatic Item &amp; Category Matching</span> </h3> <div id="smartMatchesContainer"> <!-- Populated dynamically by app.js --> </div> </div> </div> <!-- Admin Views --> <div class="dashboard-view-panel" id="users-panel" style="display:none;"> <h3 class="section-title">System Account Directory</h3> <div class="glass-panel" style="padding:20px; background:#FFFFFF;"> <input class="form-control" type="text" id="searchAdminUsers" placeholder="Search user accounts by name or email..." style="margin-bottom:15px;"> <table class="table"> <thead> <tr> <th>Name</th> <th>Email</th> <th>Role & Category</th> <th>District</th> <th>Status</th> <th>Actions</th> </tr> </thead> <tbody id="adminUsersBody"></tbody> </table> </div> </div> <div class="dashboard-view-panel" id="approvals-panel" style="display:none;"> <h3 class="section-title">Pending Account Verifications</h3> <div class="grid-cols-2" id="adminApprovalsGrid" style="margin-bottom:30px;"></div> <h3 class="section-title">Pre-Publication Review Queue</h3> <div class="grid-cols-2" id="adminRequestApprovalsGrid"></div> </div> <!-- Donor Views --> <div class="dashboard-view-panel" id="listings-panel" style="display:none;"> <h3 class="section-title" style="margin-bottom: 4px;">Donate an Item</h3> <p style="font-size: 0.88rem; color: var(--color-text-muted); margin-bottom: 20px;">Fill in the form below to submit an item you would like to donate.</p> <div class="glass-panel" style="padding:20px; background:#FFFFFF; margin-bottom:30px;"> <form id="formPostDonation" novalidate>
+        <!-- Admin Views -->
+        <div class="dashboard-view-panel" id="users-panel" style="display:none;">
+            <h3 class="section-title">Users</h3>
+            <div class="glass-panel" style="padding:20px; background:#FFFFFF;">
+                <input class="form-control" type="text" id="searchAdminUsers" placeholder="Search users by name or email..." style="margin-bottom:15px;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role &amp; Category</th>
+                            <th>District</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminUsersBody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="dashboard-view-panel" id="approvals-panel" style="display:none;">
+            <h3 class="section-title">Pending Account Verifications</h3>
+            <div class="grid-cols-2" id="adminApprovalsGrid" style="margin-bottom:30px;"></div>
+            <h3 class="section-title">Pre-Publication Review Queue</h3>
+            <div class="grid-cols-2" id="adminRequestApprovalsGrid"></div>
+        </div> <!-- Donor Views --> <div class="dashboard-view-panel" id="listings-panel" style="display:none;"> <h3 class="section-title" style="margin-bottom: 4px;">Donate an Item</h3> <p style="font-size: 0.88rem; color: var(--color-text-muted); margin-bottom: 20px;">Fill in the form below to submit an item you would like to donate.</p> <div class="glass-panel" style="padding:20px; background:#FFFFFF; margin-bottom:30px;"> <form id="formPostDonation" novalidate>
     <div class="form-group" id="groupDonCategory">
         <label class="form-label" for="donCategory">Category</label>
         <select class="form-control form-select" id="donCategory" required>
@@ -235,8 +398,7 @@
                 </form>
             </div>
             <div class="chat-empty-window" id="chatEmptyPlaceholder">
-                <div style="font-size: 2.5rem; margin-bottom: 8px;">💬</div>
-                <h4 style="margin: 0 0 6px 0; color: var(--color-teal-primary); font-weight: 800;">Donation Conversation History</h4>
+                <h4 style="margin: 0 0 6px 0; color: var(--color-teal-primary); font-weight: 700;">Donation Conversation History</h4>
                 <p style="font-size: 0.88rem; color: var(--color-text-muted); max-width: 360px; margin: 0 auto; line-height: 1.5;">Select an organisation and a specific donation item from the history to view or continue the conversation.</p>
             </div>
         </div>
@@ -247,16 +409,16 @@
 <div class="dashboard-view-panel" id="inquiries-panel" style="display:none;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
         <div>
-            <h3 class="section-title" style="color:var(--color-teal-primary); font-weight:900; margin:0; font-size:1.4rem; letter-spacing:-0.02em;">
-                Support &amp; Inquiries Command Center
+            <h3 class="section-title" style="color:var(--color-teal-primary); font-weight:800; margin:0; font-size:1.3rem; letter-spacing:-0.02em;">
+                Inquiries
             </h3>
             <p style="color:var(--color-text-muted); font-size:0.88rem; margin-top:4px;">
                 Direct inquiries and assistance desk for registered Donors and Receivers.
             </p>
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
-            <span class="badge badge-info" id="adminInquiriesTotalBadge" style="padding:6px 12px; font-weight:800; font-size:0.8rem;">0 Inquiries</span>
-            <button type="button" class="btn btn-secondary" style="padding:6px 12px; font-weight:700; font-size:0.8rem;" onclick="window.renderAdminInquiries && window.renderAdminInquiries()">🔄 Refresh Inquiries</button>
+            <span class="badge badge-info" id="adminInquiriesTotalBadge" style="padding:6px 12px; font-weight:700; font-size:0.8rem;">0 Inquiries</span>
+            <button type="button" class="btn btn-secondary" style="padding:6px 12px; font-weight:700; font-size:0.8rem;" onclick="window.renderAdminInquiries && window.renderAdminInquiries()">Refresh Inquiries</button>
         </div>
     </div>
 
@@ -265,7 +427,7 @@
         <div class="admin-kpi-card info">
             <div class="admin-kpi-label">Total Inquiries</div>
             <div class="admin-kpi-val" id="statInquiriesTotal">0</div>
-            <div class="admin-kpi-sub">All time communications</div>
+            <div class="admin-kpi-sub">All correspondence</div>
         </div>
         <div class="admin-kpi-card success">
             <div class="admin-kpi-label">Donor Inquiries</div>
@@ -275,12 +437,12 @@
         <div class="admin-kpi-card warning">
             <div class="admin-kpi-label">Receiver Inquiries</div>
             <div class="admin-kpi-val" id="statInquiriesReceivers">0</div>
-            <div class="admin-kpi-sub">From schools, hospitals &amp; NGOs</div>
+            <div class="admin-kpi-sub">From verified receivers</div>
         </div>
         <div class="admin-kpi-card danger">
             <div class="admin-kpi-label">Pending Review</div>
             <div class="admin-kpi-val" id="statInquiriesUnresolved">0</div>
-            <div class="admin-kpi-sub">Awaiting admin reply</div>
+            <div class="admin-kpi-sub">Awaiting reply</div>
         </div>
     </div>
 
@@ -292,9 +454,9 @@
                 <!-- Segmented Filter Tabs -->
                 <div class="inquiry-tabs-nav" id="adminInquiryTabsNav">
                     <button type="button" class="inquiry-tab-btn active" data-tab="all" onclick="window.switchInquiryTab('all')">All</button>
-                    <button type="button" class="inquiry-tab-btn" data-tab="donor" onclick="window.switchInquiryTab('donor')">📦 Donors</button>
-                    <button type="button" class="inquiry-tab-btn" data-tab="receiver" onclick="window.switchInquiryTab('receiver')">🏢 Receivers</button>
-                    <button type="button" class="inquiry-tab-btn" data-tab="pending" onclick="window.switchInquiryTab('pending')">⏳ Unread</button>
+                    <button type="button" class="inquiry-tab-btn" data-tab="donor" onclick="window.switchInquiryTab('donor')">Donors</button>
+                    <button type="button" class="inquiry-tab-btn" data-tab="receiver" onclick="window.switchInquiryTab('receiver')">Receivers</button>
+                    <button type="button" class="inquiry-tab-btn" data-tab="pending" onclick="window.switchInquiryTab('pending')">Unread</button>
                 </div>
                 <div>
                     <input type="text" class="form-control form-control-sm" id="searchAdminInquiries" placeholder="Search sender, email, topic..." style="font-size:0.82rem; padding:7px 12px; border-radius:6px;" oninput="window.renderAdminInquiries && window.renderAdminInquiries()">
@@ -310,7 +472,7 @@
             <!-- Active Header -->
             <div class="inquiries-active-header" id="adminInquiryActiveHeader" style="display:none;">
                 <div class="inquiries-user-meta-box">
-                    <div class="inquiry-avatar" id="inqActiveAvatar">👤</div>
+                    <div class="inquiry-avatar" id="inqActiveAvatar">U</div>
                     <div>
                         <div style="display:flex; align-items:center; gap:8px;">
                             <h4 style="margin:0; font-weight:800; font-size:1.05rem; color:#0F172A;" id="inqActiveUserName">User Name</h4>
@@ -334,13 +496,12 @@
 
             <!-- Reply Bar -->
             <form class="inquiry-reply-bar" id="formAdminInquiryReply" style="display:none;" onsubmit="event.preventDefault(); window.submitAdminInquiryReply && window.submitAdminInquiryReply();">
-                <input type="text" class="form-control" id="inputAdminInquiryReply" placeholder="Type official response to user..." autocomplete="off" style="font-size:0.88rem; padding:10px 14px;" required>
-                <button type="submit" class="btn btn-primary" style="padding:10px 20px; font-weight:800; font-size:0.88rem;">Send Official Reply</button>
+                <input type="text" class="form-control" id="inputAdminInquiryReply" placeholder="Type response to user..." autocomplete="off" style="font-size:0.88rem; padding:10px 14px;" required>
+                <button type="submit" class="btn btn-primary" style="padding:10px 20px; font-weight:800; font-size:0.88rem;">Send Reply</button>
             </form>
 
             <!-- Empty State Placeholder -->
             <div class="inquiry-empty-state" id="adminInquiryEmptyPlaceholder">
-                <div style="font-size:3rem; margin-bottom:10px;">📋</div>
                 <h4 style="margin:0 0 6px 0; color:var(--color-teal-primary); font-weight:800; font-size:1.15rem;">Select an Inquiry Thread</h4>
                 <p style="font-size:0.88rem; color:var(--color-text-muted); max-width:380px; margin:0 auto; line-height:1.5;">Choose a donor or receiver inquiry from the left pane to review messages and provide official administrative support.</p>
             </div>
@@ -351,8 +512,8 @@
 <!-- Donor / Receiver Inquiries with Admin Panel -->
 <div class="dashboard-view-panel" id="admin-chat-panel" style="display:none;">
     <div style="margin-bottom:16px;">
-        <h3 class="section-title" style="color:var(--color-teal-primary); font-weight:900; margin:0; font-size:1.35rem; letter-spacing:-0.02em;">
-            💬 GiveGo Administration Support &amp; Inquiries
+        <h3 class="section-title" style="color:var(--color-teal-primary); font-weight:800; margin:0; font-size:1.35rem; letter-spacing:-0.02em;">
+            Administrative Support &amp; Inquiries
         </h3>
         <p style="color:var(--color-text-muted); font-size:0.88rem; margin-top:4px;">
             Direct live communication with GiveGo Administrators for verification, delivery support, and inquiries.
@@ -363,7 +524,7 @@
     <div class="glass-panel" style="padding:0; background:#FFFFFF; border-radius:12px; overflow:hidden; border:1px solid var(--color-border); box-shadow:0 4px 15px rgba(0,0,0,0.04); height:calc(100vh - 220px); min-height:560px; display:flex; flex-direction:column;">
         <div style="padding:14px 20px; background:#FAF8F5; border-bottom:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
             <div style="display:flex; align-items:center; gap:12px;">
-                <div class="inquiry-avatar" style="background:#0D7C7A;">🛡️</div>
+                <div class="inquiry-avatar" style="background:#0D7C7A; font-size:0.85rem; font-weight:800;">GG</div>
                 <div>
                     <h4 style="margin:0; font-weight:800; font-size:1.05rem; color:#0F172A;">GiveGo Administrative Helpdesk</h4>
                     <p style="margin:2px 0 0 0; font-size:0.8rem; color:#64748B;">Official Support &amp; Verification Team • Active Real-Time</p>
@@ -443,7 +604,7 @@
         </div>
     </div>
 </div>
-<!-- History Panel --> <div class="dashboard-view-panel" id="history-panel" style="display:none;"> <h3 class="section-title" id="historyPanelHeading">Completed Donation History</h3> <div class="glass-panel" style="padding:20px; background:#FFFFFF;"> <table class="table" style="width:100%;"> <thead> <tr id="historyTableHeader"></tr> </thead> <tbody id="historyTableBody"></tbody> </table> </div> </div> <!-- System Directory Panel (Admin Only) --> <div class="dashboard-view-panel" id="system-directory-panel" style="display:none;"> <h3 class="section-title"> Admin Directory & Live System Oversight</h3> <div style="margin-bottom: 24px;"> <h4 style="color:var(--color-teal-primary); font-weight:800; margin-bottom:10px;"> Live Active Matches & Real-Time Telemetry Oversight</h4> <div class="glass-panel" style="padding:16px; background:#FFFFFF;"> <table class="table" style="width:100%; font-size:0.85rem;"> <thead> <tr> <th>Item / Session</th> <th>Donor</th> <th>Receiver</th> <th>Delivery Method</th> <th>Status</th> <th>Admin Real-Time Controls</th> </tr> </thead> <tbody id="adminActiveMatchesTableBody"></tbody> </table> </div> </div> <div class="grid-cols-2"> <div class="glass-panel" style="padding:20px; background:#FFFFFF;"> <h4 style="color:var(--color-teal-primary); font-weight:800; margin-bottom:10px;">Available Surplus Donations</h4> <input class="form-control" type="text" id="searchAdminDonations" placeholder="Filter donations..." style="margin-bottom:12px;"> <div id="adminDonationsGrid" style="max-height:300px; overflow-y:auto;"></div> </div> <div class="glass-panel" style="padding:20px; background:#FFFFFF;"> <h4 style="color:var(--color-teal-primary); font-weight:800; margin-bottom:10px;">Published Material Requests</h4> <input class="form-control" type="text" id="searchAdminRequests" placeholder="Filter requests..." style="margin-bottom:12px;"> <div id="adminRequestsGrid" style="max-height:300px; overflow-y:auto;"></div> </div> </div> </div> <!-- Notifications Panel --> <div class="dashboard-view-panel" id="notifications-panel" style="display:none;"> <h3 class="section-title">System Alerts & Notifications</h3> <div id="notificationsContainer"></div> </div>  
+<!-- History Panel --> <div class="dashboard-view-panel" id="history-panel" style="display:none;"> <h3 class="section-title" id="historyPanelHeading">Completed Donation History</h3> <div class="glass-panel" style="padding:20px; background:#FFFFFF;"> <table class="table" style="width:100%;"> <thead> <tr id="historyTableHeader"></tr> </thead> <tbody id="historyTableBody"></tbody> </table> </div> </div> <!-- System Directory Panel (Admin Only) --> <div class="dashboard-view-panel" id="system-directory-panel" style="display:none;"> <h3 class="section-title">System Directory</h3> <div style="margin-bottom: 24px;"> <h4 style="color:var(--color-teal-primary); font-weight:700; margin-bottom:10px;">Live Active Matches &amp; Controls</h4> <div class="glass-panel" style="padding:16px; background:#FFFFFF;"> <table class="table" style="width:100%; font-size:0.85rem;"> <thead> <tr> <th>Item / Transaction</th> <th>Donor</th> <th>Receiver</th> <th>Delivery Method</th> <th>Status</th> <th>Admin Controls</th> </tr> </thead> <tbody id="adminActiveMatchesTableBody"></tbody> </table> </div> </div> <div class="grid-cols-2"> <div class="glass-panel" style="padding:20px; background:#FFFFFF;"> <h4 style="color:var(--color-teal-primary); font-weight:700; margin-bottom:10px;">Available Surplus Donations</h4> <input class="form-control" type="text" id="searchAdminDonations" placeholder="Filter donations..." style="margin-bottom:12px;"> <div id="adminDonationsGrid" style="max-height:300px; overflow-y:auto;"></div> </div> <div class="glass-panel" style="padding:20px; background:#FFFFFF;"> <h4 style="color:var(--color-teal-primary); font-weight:700; margin-bottom:10px;">Published Material Requests</h4> <input class="form-control" type="text" id="searchAdminRequests" placeholder="Filter requests..." style="margin-bottom:12px;"> <div id="adminRequestsGrid" style="max-height:300px; overflow-y:auto;"></div> </div> </div> </div> <!-- Notifications Panel --> <div class="dashboard-view-panel" id="notifications-panel" style="display:none;"> <h3 class="section-title">System Alerts & Notifications</h3> <div id="notificationsContainer"></div> </div>  
 <!-- User Profile & Address Management Panel -->
 <div class="dashboard-view-panel" id="profile-panel" style="display:none;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
