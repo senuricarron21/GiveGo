@@ -83,9 +83,16 @@ document.addEventListener("DOMContentLoaded", () => {
             menuHTML += ` <li class="menu-item"><a href="#requests">Material Requests</a></li> <li class="menu-item"><a href="#matching">Matches & Connections</a></li> <li class="menu-item"><a href="#chat">Messages</a></li> `;
         }
 
-        menuHTML += ` <li class="menu-item"><a href="#profile">My Profile</a></li> <li class="menu-item"><a href="#available-items">Available Items</a></li> <li class="menu-item"><a href="#history">History</a></li> <li class="menu-item"><a href="#notifications">Notifications ${unreadBadgeHTML}</a></li> <li class="menu-item"><a href="#contact">Contact Us</a></li> `;
+        const historyLabel = isDonor ? "Completed Donation History" : "History";
+
+        menuHTML += ` <li class="menu-item"><a href="#profile">My Profile</a></li> <li class="menu-item"><a href="#available-items">Available Items</a></li> <li class="menu-item"><a href="#history">${historyLabel}</a></li> <li class="menu-item"><a href="#notifications">Notifications ${unreadBadgeHTML}</a></li> <li class="menu-item"><a href="#contact">Contact Us</a></li> `;
 
         menuList.innerHTML = menuHTML;
+
+        const headingEl = document.getElementById("historyPanelHeading");
+        if (headingEl) {
+            headingEl.textContent = isDonor ? "Completed Donation History" : "Transaction History Archive";
+        }
 
         const upMenu = document.querySelector(".user-profile-menu");
         if (upMenu) {
@@ -4407,6 +4414,12 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderHistory() {
         const header = document.getElementById("historyTableHeader");
         const body = document.getElementById("historyTableBody");
+        const headingEl = document.getElementById("historyPanelHeading");
+        if (headingEl && currentUser) {
+            const roleStr = (currentUser.role || currentUser.accountType || "").toLowerCase();
+            const isDonor = roleStr.includes("donor");
+            headingEl.textContent = isDonor ? "Completed Donation History" : "Transaction History Archive";
+        }
         if (!header || !body) return;
 
         header.innerHTML = ` <th>Date</th> <th>Item / Request</th> <th>Type</th> <th>Donor / Receiver</th> <th>Status</th> <th>Receipt / Evidence</th> `;
