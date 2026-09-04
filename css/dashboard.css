@@ -400,8 +400,9 @@ body {
 .btn-action {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 5px 12px;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 13px;
     background: var(--color-teal-primary);
     color: #FFFFFF;
     border: none;
@@ -410,11 +411,22 @@ body {
     font-weight: 700;
     cursor: pointer;
     white-space: nowrap;
+    flex-shrink: 0;
+    line-height: 1.2;
     transition: background 0.15s ease, box-shadow 0.15s ease;
 }
 .btn-action:hover {
     background: var(--color-teal-dark);
     box-shadow: 0 2px 8px rgba(13, 124, 122, 0.25);
+}
+
+/* Table action button row container */
+.table-actions-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
 }
 
 /* ── Danger button — delete / purge ── */
