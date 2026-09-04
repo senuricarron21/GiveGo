@@ -191,7 +191,7 @@ if (isset($_SESSION['user'])) {
                 </div>
 
                 <!-- 3A. Individual Donor Specific Fields (NIC Identification) -->
-                <div id="sectionIndividualDonor" style="background: #F5EFE0; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--color-border); margin-bottom: 20px;">
+                <div id="sectionIndividualDonor" style="background: var(--color-bg-base); padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--color-border); margin-bottom: 20px;">
                     <h4 style="color: var(--color-teal-primary); margin-bottom: 12px; font-size: 0.95rem; font-weight: 800;">Personal Identity Verification (NIC)</h4>
                     <div class="grid-cols-2">
                         <div class="form-group">
@@ -208,7 +208,7 @@ if (isset($_SESSION['user'])) {
                 </div>
 
                 <!-- 3B. Organisational Donor Specific Fields -->
-                <div id="sectionOrgDonor" style="display: none; background: #F5EFE0; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--color-border); margin-bottom: 20px;">
+                <div id="sectionOrgDonor" style="display: none; background: var(--color-bg-base); padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--color-border); margin-bottom: 20px;">
                     <h4 style="color: var(--color-teal-primary); margin-bottom: 12px; font-size: 0.95rem; font-weight: 800;">Organisational Details & Business Registration (BR)</h4>
                     <div class="grid-cols-2">
                         <div class="form-group">
@@ -244,7 +244,7 @@ if (isset($_SESSION['user'])) {
                 </div>
 
                 <!-- 4. Receiver Specific Fields & Official Bank Details -->
-                <div id="sectionReceiver" style="display: none; background: #F5EFE0; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--color-border); margin-bottom: 20px;">
+                <div id="sectionReceiver" style="display: none; background: var(--color-bg-base); padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--color-border); margin-bottom: 20px;">
                     <h4 style="color: var(--color-teal-primary); margin-bottom: 12px; font-size: 0.95rem; font-weight: 800;">Receiver Organisation Details & Official Bank Account</h4>
                     <div class="grid-cols-2">
                         <div class="form-group">
@@ -295,7 +295,7 @@ if (isset($_SESSION['user'])) {
                 </div>
 
                 <!-- 5. Operating Address & Location -->
-                <div class="glass-panel" style="padding: 20px; border-radius: var(--radius-md); margin-bottom: 24px; background: #F5EFE0;">
+                <div class="glass-panel" style="padding: 20px; border-radius: var(--radius-md); margin-bottom: 24px; background: var(--color-bg-base);">
                     <h4 style="color: var(--color-teal-primary); margin-bottom: 12px; font-size: 0.95rem; font-weight: 800;">Operating Address & Premise Location</h4>
                     <div class="form-group" style="margin-bottom: 12px;">
                         <label class="form-label" for="regAddress">Street Address / Premise Details <span style="color:#E53E3E;">*</span></label>
