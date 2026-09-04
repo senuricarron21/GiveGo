@@ -287,64 +287,203 @@ document.addEventListener("DOMContentLoaded", () => {
         const container = document.getElementById("smartMatchesContainer");
         if (!container) return;
 
-        const publishedReqs = requestsList.filter(r => r.status === 'published' || r.status === 'pending_admin');
-        const availDonations = donationsList.filter(d => d.status === 'available' || d.status === 'pending_admin');
+        const publishedReqs = requestsList.filter(r => 
+            (r.status === 'published' || r.status === 'pending_admin') && 
+            (r.requestType === 'physical' || !r.requestType || r.type === 'physical')
+        );
+        const availDonations = donationsList.filter(d => 
+            (d.status === 'available' || d.status === 'pending_admin')
+        );
 
         const smartMatches = [];
+        const seenPairs = new Set();
+
+        const roleStr = (currentUser.role || '').toLowerCase();
+        const isUserAdmin = roleStr.includes('admin') || (currentUser.email || '').includes('admin');
+        const isUserDonor = currentUser.role === 'donor';
+        const isUserReceiver = currentUser.role === 'receiver';
 
         for (let req of publishedReqs) {
             const reqTitle = (req.itemName || "").toLowerCase().trim();
-            if (!reqTitle) continue;
-            const reqWords = reqTitle.split(/\s+/).filter(w => w.length > 2);
+            const reqCategory = (req.category || "").toLowerCase().trim();
+            if (!reqTitle && !reqCategory) continue;
+            const reqWords = reqTitle.split(/[\s,/-]+/).filter(w => w.length > 2);
 
             for (let don of availDonations) {
+                const pairKey = `${req.id}_${don.id}`;
+                if (seenPairs.has(pairKey)) continue;
+
                 const donTitle = (don.itemName || "").toLowerCase().trim();
-                if (!donTitle) continue;
-                const donWords = donTitle.split(/\s+/).filter(w => w.length > 2);
+                const donCategory = (don.category || "").toLowerCase().trim();
+                if (!donTitle && !donCategory) continue;
+                const donWords = donTitle.split(/[\s,/-]+/).filter(w => w.length > 2);
 
-                // Match strictly by Item Name / Title words (e.g., umbrella === umbrella)
-                const matchedWord = reqWords.find(rw => donWords.some(dw => dw.includes(rw) || rw.includes(dw)));
-                const hasItemNameMatch = !!matchedWord || (reqTitle.length > 2 && donTitle.length > 2 && (reqTitle.includes(donTitle) || donTitle.includes(reqTitle)));
+                // 1. Check Item Name Match
+                let matchedWord = reqWords.find(rw => donWords.some(dw => dw.includes(rw) || rw.includes(dw)));
+                let isItemNameMatch = !!matchedWord || (reqTitle.length > 2 && donTitle.length > 2 && (reqTitle.includes(donTitle) || donTitle.includes(reqTitle)));
 
-                if (hasItemNameMatch) {
+                // 2. Check Category Match
+                let isCategoryMatch = !!(reqCategory && donCategory && reqCategory === donCategory);
+
+                if (isItemNameMatch || isCategoryMatch) {
+                    let matchType = '';
+                    let matchScore = 0;
+
+                    if (isItemNameMatch && isCategoryMatch) {
+                        matchType = 'Item Name & Category Match';
+                        matchScore = 100;
+                    } else if (isItemNameMatch) {
+                        matchType = 'Item Name Match';
+                        matchScore = 80;
+                    } else {
+                        matchType = 'Category Match';
+                        matchScore = 50;
+                    }
+
+                    seenPairs.add(pairKey);
                     smartMatches.push({
                         requestId: req.id,
-                        requestName: req.itemName,
-                        receiverId: req.receiverId,
-                        receiverName: req.receiverName,
+                        requestName: req.itemName || 'Material Need',
+                        receiverId: req.receiverId || req.userId || '',
+                        receiverName: req.receiverName || req.userName || req.organizationName || 'Receiver Organisation',
+                        reqQuantity: req.quantityRequired || req.quantity || 1,
+                        reqUnit: req.unit || don.unit || 'Units',
                         donationId: don.id,
-                        donationName: don.itemName,
-                        donorId: don.donorId,
-                        donorName: don.donorName,
-                        category: don.category,
-                        matchedWord: matchedWord || req.itemName,
-                        matchType: 'Item Name Match: ' + (matchedWord || req.itemName)
+                        donationName: don.itemName || 'Available Surplus',
+                        donorId: don.donorId || don.userId || '',
+                        donorName: don.donorName || don.userName || 'Verified Donor',
+                        donQuantity: don.quantity || 1,
+                        donUnit: don.unit || req.unit || 'Units',
+                        category: req.category || don.category || 'General Supplies',
+                        district: req.district || don.district || 'Colombo',
+                        priority: req.urgency || req.priority || 'Normal',
+                        matchType: matchType,
+                        matchScore: matchScore
                     });
                 }
             }
         }
 
+        // Sort higher relevance first
+        smartMatches.sort((a, b) => b.matchScore - a.matchScore);
+
         if (smartMatches.length === 0) {
-            container.innerHTML = `<div style="text-align: center; color: var(--color-text-muted); padding: 20px; font-size: 0.85rem;">No active item name matches detected yet. When a receiver requests an item (e.g. "Umbrella") and a donor posts an item with the same name, it will automatically match here!</div>`;
+            container.innerHTML = `
+                <div class="glass-panel" style="text-align: center; color: var(--color-text-muted); padding: 32px 20px; background: #FFFFFF; border-radius: 12px;">
+                    <div style="font-size: 2rem; margin-bottom: 8px;">🔍</div>
+                    <div style="font-weight: 700; font-size: 1rem; color: var(--color-text-dark); margin-bottom: 4px;">No Active Smart Matches Yet</div>
+                    <div style="font-size: 0.85rem; max-width: 480px; margin: 0 auto; line-height: 1.5;">When receivers publish needs (e.g., "Exercise Books", "Rice Rations") and donors post surplus items matching the name or category, automatic matches will appear here as clear action cards!</div>
+                </div>
+            `;
             return;
         }
 
-        container.innerHTML = smartMatches.map(m => {
-            const isUserAdmin = currentUser.role === 'admin';
-            const isUserDonor = currentUser.uid === m.donorId;
-            const isUserReceiver = currentUser.uid === m.receiverId;
+        // Context-aware display slice
+        let displayMatches = smartMatches;
+        if (isUserDonor) {
+            const userMatches = smartMatches.filter(m => m.donorId === currentUser.uid || m.donorId === currentUser.id);
+            displayMatches = userMatches.length > 0 ? userMatches : smartMatches.slice(0, 12);
+        } else if (isUserReceiver) {
+            const userMatches = smartMatches.filter(m => m.receiverId === currentUser.uid || m.receiverId === currentUser.id);
+            displayMatches = userMatches.length > 0 ? userMatches : smartMatches.slice(0, 12);
+        }
+
+        const cardsHtml = displayMatches.map(m => {
+            const isSelfDonor = currentUser.uid === m.donorId || currentUser.id === m.donorId;
+            const isSelfReceiver = currentUser.uid === m.receiverId || currentUser.id === m.receiverId;
+
+            let priorityBg = '#E0F2FE';
+            let priorityColor = '#0369A1';
+            const pUpper = (m.priority || '').toUpperCase();
+            if (pUpper.includes('HIGH') || pUpper.includes('URGENT')) {
+                priorityBg = '#FEE2E2';
+                priorityColor = '#991B1B';
+            } else if (pUpper.includes('MED')) {
+                priorityBg = '#FEF3C7';
+                priorityColor = '#92400E';
+            }
+
+            let matchBadgeIcon = '🎯';
+            let matchBadgeBg = '#E0F2F1';
+            let matchBadgeColor = '#0D7C7A';
+            if (m.matchType === 'Category Match') {
+                matchBadgeIcon = '📂';
+                matchBadgeBg = '#FEF3C7';
+                matchBadgeColor = '#92400E';
+            } else if (m.matchType.includes('&')) {
+                matchBadgeIcon = '✨';
+                matchBadgeBg = '#E0F2F1';
+                matchBadgeColor = '#0D7C7A';
+            }
 
             let actionBtn = '';
             if (isUserAdmin) {
-                actionBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="autoConnectSmartMatch('${m.requestId}', '${m.donationId}')"> Auto Connect Pair</button>`;
-            } else if (isUserDonor) {
-                actionBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="offerPhysicalDonation('${m.requestId}')">Offer Item to Receiver</button>`;
-            } else if (isUserReceiver) {
-                actionBtn = `<button class="btn btn-primary" style="padding:4px 10px; font-size:0.75rem; font-weight:800;" onclick="openRequestAvailableItemModal('${m.donationId}')">Request This Surplus Item</button>`;
+                actionBtn = `<button type="button" class="btn btn-primary" style="width: 100%; padding: 10px 12px; font-size: 0.85rem; font-weight: 800; border-radius: 8px;" onclick="autoConnectSmartMatch('${m.requestId}', '${m.donationId}')">⚡ Auto Connect Pair</button>`;
+            } else if (isUserReceiver || isSelfReceiver) {
+                actionBtn = `<button type="button" class="btn btn-primary" style="width: 100%; padding: 10px 12px; font-size: 0.85rem; font-weight: 800; border-radius: 8px;" onclick="openRequestAvailableItemModal('${m.donationId}')">📦 Request Surplus Item</button>`;
+            } else {
+                actionBtn = `<button type="button" class="btn btn-primary" style="width: 100%; padding: 10px 12px; font-size: 0.85rem; font-weight: 800; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 6px;" onclick="offerPhysicalDonation('${m.requestId}')"><span>🤝 Offer Item to Receiver</span></button>`;
             }
 
-            return ` <div style="background:#FBF5DD; border-left:4px solid var(--color-teal-primary); padding:14px; border-radius:6px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;"> <div> <div style="display:flex; gap:8px; align-items:center; margin-bottom:4px;"> <span class="badge badge-success" style="font-size:0.7rem; font-weight:800;"> MATCHES & CONNECTIONS</span> <span style="font-size:0.75rem; font-weight:700; color:var(--color-teal-primary);">${m.matchType}</span> </div> <div style="font-weight:800; color:var(--color-text-dark); font-size:0.9rem;"> Need: <strong>"${m.requestName}"</strong> (${m.receiverName})  Surplus: <strong>"${m.donationName}"</strong> (${m.donorName}) </div> </div> <div>${actionBtn}</div> </div> `;
+            return `
+                <div class="smart-match-card">
+                    <div>
+                        <!-- Header Badges -->
+                        <div class="smart-match-badge-row">
+                            <span class="smart-match-tag-match" style="background:${matchBadgeBg}; color:${matchBadgeColor};">
+                                <span>${matchBadgeIcon}</span> ${m.matchType}
+                            </span>
+                            <span class="smart-match-tag-priority" style="background:${priorityBg}; color:${priorityColor};">
+                                ● ${m.priority || 'Normal Priority'}
+                            </span>
+                        </div>
+
+                        <!-- Receiver Need Box -->
+                        <div class="smart-match-receiver-box">
+                            <div class="smart-match-box-label" style="color: #475569;">
+                                🏢 Receiver: <strong>${m.receiverName}</strong>
+                            </div>
+                            <div class="smart-match-item-title" style="color: #0F172A;">
+                                Need: "${m.requestName}"
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+                                <span class="smart-match-qty-badge req-qty">
+                                    Requested: <strong>${m.reqQuantity} ${m.reqUnit}</strong>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Donor Surplus Box -->
+                        <div class="smart-match-donor-box">
+                            <div class="smart-match-box-label" style="color: #15803D;">
+                                📦 Surplus Item (${m.donorName})
+                            </div>
+                            <div class="smart-match-item-title" style="color: #14532D;">
+                                Available: "${m.donationName}"
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+                                <span class="smart-match-qty-badge don-qty">
+                                    Surplus: <strong>${m.donQuantity} ${m.donUnit}</strong>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Metadata (Category & District) -->
+                        <div class="smart-match-meta">
+                            <span class="smart-match-meta-pill">🏷️ ${m.category}</span>
+                            <span class="smart-match-meta-pill">📍 ${m.district}</span>
+                        </div>
+                    </div>
+
+                    <!-- Footer Action Button -->
+                    <div style="margin-top: 10px;">
+                        ${actionBtn}
+                    </div>
+                </div>
+            `;
         }).join("");
+
+        container.innerHTML = `<div class="smart-match-grid">${cardsHtml}</div>`;
     }
 
     function setupDataSubscriptions() {
