@@ -1482,11 +1482,43 @@ document.addEventListener("DOMContentLoaded", () => {
     const searchDonorNeeds = document.getElementById("searchDonorNeeds");
     const filterReqType = document.getElementById("filterReqType");
     const filterReqCategory = document.getElementById("filterReqCategory");
+    const filterReqPriority = document.getElementById("filterReqPriority");
     const sortCatalogueOrder = document.getElementById("sortCatalogueOrder");
     if (searchDonorNeeds) searchDonorNeeds.addEventListener("input", renderDonorNeeds);
     if (filterReqType) filterReqType.addEventListener("change", renderDonorNeeds);
     if (filterReqCategory) filterReqCategory.addEventListener("change", renderDonorNeeds);
+    if (filterReqPriority) filterReqPriority.addEventListener("change", renderDonorNeeds);
     if (sortCatalogueOrder) sortCatalogueOrder.addEventListener("change", renderDonorNeeds);
+
+    // Cascading Hierarchical Filter Selection Handler
+    window.selectCascadingOption = (receiverType, reqType, category, displayLabel) => {
+        const recInput = document.getElementById("filterReceiverCategory");
+        const typeInput = document.getElementById("filterReqType");
+        const catInput = document.getElementById("filterReqCategory");
+        const labelSpan = document.getElementById("cascadingFilterLabel");
+        const container = document.getElementById("cascadingFilterContainer");
+
+        if (recInput) recInput.value = receiverType || "all";
+        if (typeInput) typeInput.value = reqType || "all";
+        if (catInput) catInput.value = category || "all";
+        if (labelSpan) labelSpan.textContent = displayLabel || "All Receiver Types";
+
+        if (container) container.classList.remove("open");
+        renderDonorNeeds();
+    };
+
+    window.toggleCascadingFilter = (e) => {
+        if (e) e.stopPropagation();
+        const container = document.getElementById("cascadingFilterContainer");
+        if (container) container.classList.toggle("open");
+    };
+
+    document.addEventListener("click", (e) => {
+        const container = document.getElementById("cascadingFilterContainer");
+        if (container && !container.contains(e.target)) {
+            container.classList.remove("open");
+        }
+    });
 
     // 1. Donor Offers Donation First to Receiver Need Request
     window.offerPhysicalDonation = (requestId) => {

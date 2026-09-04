@@ -472,3 +472,140 @@ body {
         padding: 6px 10px !important;
     }
 }
+
+/* Cascading Hierarchical Filter Menu */
+.cascading-filter-container {
+    position: relative;
+    display: inline-block;
+}
+
+.cascading-filter-btn {
+    min-width: 210px;
+    max-width: 320px;
+    height: 42px;
+    text-align: left;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 700;
+    background-color: #FFFFFF;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    color: var(--color-teal-primary);
+    transition: all 0.2s ease;
+}
+
+.cascading-filter-btn:hover,
+.cascading-filter-container.open .cascading-filter-btn {
+    border-color: var(--color-teal-primary);
+    box-shadow: 0 0 0 3px rgba(13, 124, 122, 0.15);
+}
+
+.cascading-menu-popup {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 1050;
+    background: #FFFFFF;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+    min-width: 210px;
+    padding: 6px 0;
+}
+
+.cascading-filter-container:hover .cascading-menu-popup,
+.cascading-filter-container.open .cascading-menu-popup {
+    display: block;
+}
+
+.cascading-menu-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.cascading-item {
+    position: relative;
+}
+
+.cascading-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 16px;
+    color: var(--color-text-dark);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+    cursor: pointer;
+}
+
+.cascading-item:hover > .cascading-link,
+.cascading-item.active > .cascading-link {
+    background-color: #F5EFE0;
+    color: var(--color-teal-primary);
+}
+
+.cascading-arrow {
+    margin-left: 14px;
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+}
+
+.cascading-divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: 4px 0;
+}
+
+/* Level 2 Submenu (Donation / Support Type) */
+.cascading-submenu-level2 {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 100%;
+    margin-left: 2px;
+    background: #FFFFFF;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+    min-width: 190px;
+    padding: 6px 0;
+    z-index: 1060;
+    list-style: none;
+}
+
+.cascading-item.has-submenu:hover > .cascading-submenu-level2,
+.cascading-item.has-submenu.open > .cascading-submenu-level2 {
+    display: block;
+}
+
+/* Level 3 Submenu (Item Category - only for Physical Items) */
+.cascading-submenu-level3 {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 100%;
+    margin-left: 2px;
+    background: #FFFFFF;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+    min-width: 220px;
+    padding: 6px 0;
+    z-index: 1070;
+    list-style: none;
+}
+
+.cascading-item.has-cat-submenu:hover > .cascading-submenu-level3,
+.cascading-item.has-cat-submenu.open > .cascading-submenu-level3 {
+    display: block;
+}
+
