@@ -1079,6 +1079,13 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        const phoneClean = phone.trim();
+        if (/[^0-9]/.test(phoneClean) || phoneClean.length !== 10) {
+            showToast("Contact phone number must have exactly 10 digits (e.g. 0771234567).", "warning");
+            document.getElementById("editPrfPhone")?.focus();
+            return;
+        }
+
         try {
             if (btnSave) {
                 btnSave.disabled = true;
@@ -3075,6 +3082,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!volName || !volPhone) {
             showToast("Please provide your name and contact phone number.", "warning");
+            return;
+        }
+
+        const volPhoneClean = volPhone.trim();
+        if (/[^0-9]/.test(volPhoneClean) || volPhoneClean.length !== 10) {
+            showToast("Contact phone number must have exactly 10 digits (e.g. 0771234567).", "warning");
+            document.getElementById("mdlVolunteerPhone")?.focus();
             return;
         }
 

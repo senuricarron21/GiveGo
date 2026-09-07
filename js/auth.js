@@ -228,23 +228,43 @@ window.validateConfirmPassword = function(password, confirmPassword) {
     return { isValid: true, message: "" };
 };
 
-// Strict Exactly 10-Character NIC Validation (9 digits + V/X or 10 digits)
-window.validateNicDetailed = function(nic) {
-    if (!nic || typeof nic !== 'string' || !nic.trim()) {
-        return { isValid: false, message: "National Identity Card (NIC) number is required." };
+// Strict Exactly 10-Digit Phone Number Validation for All Users
+window.validatePhoneDetailed = function(phone, fieldLabel = "Contact phone number") {
+    if (!phone || typeof phone !== 'string' || !phone.trim()) {
+        return { isValid: false, message: `${fieldLabel} is required.` };
     }
-    const cleanNic = nic.trim().toUpperCase();
-    if (cleanNic.length !== 10) {
+    const cleanPhone = phone.trim();
+    if (/[^0-9]/.test(cleanPhone)) {
         return { 
             isValid: false, 
-            message: `NIC Number must contain exactly 10 characters (currently ${cleanNic.length} characters). E.g. 951234567V.` 
+            message: `${fieldLabel} must contain numbers only (no letters, spaces, or symbols). E.g. 0771234567.` 
         };
     }
-    const nicRegex = /^([0-9]{9}[VX]|[0-9]{10})$/;
-    if (!nicRegex.test(cleanNic)) {
+    if (cleanPhone.length !== 10) {
         return { 
             isValid: false, 
-            message: "Invalid NIC format. 10-character NIC must be 9 digits followed by 'V' or 'X' (e.g. 951234567V)." 
+            message: `${fieldLabel} must have exactly 10 digits (currently ${cleanPhone.length} digits). E.g. 0771234567.` 
+        };
+    }
+    return { isValid: true, message: "" };
+};
+
+// Strict Exactly 12-Digit ID / NIC Validation for Individual Donors
+window.validateNicDetailed = function(nic) {
+    if (!nic || typeof nic !== 'string' || !nic.trim()) {
+        return { isValid: false, message: "National Identity Card (NIC) / ID number is required." };
+    }
+    const cleanNic = nic.trim();
+    if (/[^0-9]/.test(cleanNic)) {
+        return { 
+            isValid: false, 
+            message: "ID Number must contain numbers only (no letters or symbols). E.g. 200012345678." 
+        };
+    }
+    if (cleanNic.length !== 12) {
+        return { 
+            isValid: false, 
+            message: `ID Number must have exactly 12 digits (currently ${cleanNic.length} digits). E.g. 200012345678.` 
         };
     }
     return { isValid: true, message: "" };
@@ -843,7 +863,37 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        // Live validation for NIC Number (Strict 10 characters)
+        // Live validation for Contact Phone Number (Strict 10 digits for all users)
+        const phoneInputEl = document.getElementById("regPhone");
+        if (phoneInputEl) {
+            phoneInputEl.addEventListener("input", () => {
+                if (phoneInputEl.value.length > 0) {
+                    const res = window.validatePhoneDetailed(phoneInputEl.value, "Contact phone number");
+                    updateFieldFeedback(phoneInputEl, "phoneValidationFeedback", res);
+                } else {
+                    phoneInputEl.classList.remove("input-error", "input-success");
+                    const fb = document.getElementById("phoneValidationFeedback");
+                    if (fb) fb.style.display = "none";
+                }
+            });
+        }
+
+        // Live validation for Representative Phone Number (Strict 10 digits if provided)
+        const repPhoneInputEl = document.getElementById("regRepPhone");
+        if (repPhoneInputEl) {
+            repPhoneInputEl.addEventListener("input", () => {
+                if (repPhoneInputEl.value.length > 0) {
+                    const res = window.validatePhoneDetailed(repPhoneInputEl.value, "Representative phone number");
+                    updateFieldFeedback(repPhoneInputEl, "repPhoneValidationFeedback", res);
+                } else {
+                    repPhoneInputEl.classList.remove("input-error", "input-success");
+                    const fb = document.getElementById("repPhoneValidationFeedback");
+                    if (fb) fb.style.display = "none";
+                }
+            });
+        }
+
+        // Live validation for NIC Number (Strict 12 digits for individual donors)
         const nicInputEl = document.getElementById("regNicNumber");
         if (nicInputEl) {
             nicInputEl.addEventListener("input", () => {
@@ -950,9 +1000,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            const phoneClean = phone.replace(/[^0-9+]/g, '');
-            if (!phoneClean || phoneClean.replace(/[^0-9]/g, '').length < 9) {
-                showToast("Please enter a valid contact phone number (at least 9 digits).", "warning");
+            // 0. Strict 10-Digit Contact Phone Number Validation for All Users
+            const phoneValidation = window.validatePhoneDetailed(phone, "Contact phone number");
+            if (!phoneValidation.isValid) {
+                showToast(phoneValidation.message, "warning");
+                updateFieldFeedback(phoneInputEl || document.getElementById("regPhone"), "phoneValidationFeedback", phoneValidation);
                 document.getElementById("regPhone")?.focus();
                 return;
             }
@@ -1021,7 +1073,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
 
-                // Strict Exactly 10-Character NIC Format Check
+                // Strict Exactly 12-Digit ID / NIC Format Check
                 const nicValidation = window.validateNicDetailed(nicNumber);
                 if (!nicValidation.isValid) {
                     showToast(nicValidation.message, "warning");
@@ -1092,7 +1144,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 if (!repPhone) {
-                    showToast("Please provide the Representative Phone Number.", "warning");
+                    showToast("Please provide the Representative Phone Number (10 digits).", "warning");
+                    document.getElementById("regRepPhone")?.focus();
+                    return;
+                }
+
+                const repPhoneValidation = window.validatePhoneDetailed(repPhone, "Representative phone number");
+                if (!repPhoneValidation.isValid) {
+                    showToast(repPhoneValidation.message, "warning");
+                    updateFieldFeedback(document.getElementById("regRepPhone"), "repPhoneValidationFeedback", repPhoneValidation);
                     document.getElementById("regRepPhone")?.focus();
                     return;
                 }

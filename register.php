@@ -107,8 +107,9 @@ if (isset($_SESSION['user'])) {
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" for="regPhone">Contact Phone Number <span style="color:#E53E3E;">*</span></label>
-                        <input class="form-control" type="tel" id="regPhone" placeholder="e.g. +94 77 123 4567" required>
+                        <label class="form-label" for="regPhone">Contact Phone Number (10 Digits) <span style="color:#E53E3E;">*</span></label>
+                        <input class="form-control" type="tel" id="regPhone" placeholder="e.g. 0771234567" maxlength="10" required>
+                        <div id="phoneValidationFeedback" class="validation-msg-error" style="display: none;"></div>
                     </div>
                 </div>
 
@@ -195,8 +196,8 @@ if (isset($_SESSION['user'])) {
                     <h4 style="color: var(--color-teal-primary); margin-bottom: 12px; font-size: 0.95rem; font-weight: 800;">Personal Identity Verification (NIC)</h4>
                     <div class="grid-cols-2">
                         <div class="form-group">
-                            <label class="form-label" for="regNicNumber">National Identity Card (NIC) Number (10 Characters) <span style="color:#E53E3E;">*</span></label>
-                            <input class="form-control" type="text" id="regNicNumber" placeholder="e.g. 951234567V" maxlength="10" required>
+                            <label class="form-label" for="regNicNumber">National Identity Card (NIC) / ID Number (12 Digits) <span style="color:#E53E3E;">*</span></label>
+                            <input class="form-control" type="text" id="regNicNumber" placeholder="e.g. 200012345678" maxlength="12" required>
                             <div id="nicValidationFeedback" class="validation-msg-error" style="display: none;"></div>
                         </div>
                         <div class="form-group">
@@ -232,8 +233,9 @@ if (isset($_SESSION['user'])) {
                     </div>
                     <div class="grid-cols-2">
                         <div class="form-group">
-                            <label class="form-label" for="regRepPhone">Representative Phone <span style="color:#E53E3E;">*</span></label>
-                            <input class="form-control" type="tel" id="regRepPhone" placeholder="e.g. +94 71 987 6543">
+                            <label class="form-label" for="regRepPhone">Representative Phone (10 Digits) <span style="color:#E53E3E;">*</span></label>
+                            <input class="form-control" type="tel" id="regRepPhone" placeholder="e.g. 0719876543" maxlength="10">
+                            <div id="repPhoneValidationFeedback" class="validation-msg-error" style="display: none;"></div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Business Registration (BR) Document (PDF / Image) <span style="color:#E53E3E;">*</span></label>

@@ -37,10 +37,10 @@ The purpose of this test plan is to define the verification scope, validation ru
 | :--- | :--- | :--- | :--- |
 | `regEmail` | Email RFC 5322 | Valid email syntax containing `@` and valid domain. | Browser default validation & Firebase Auth format check. |
 | `regPassword` | String | Minimum length $\ge 6$ characters. | Rejects with warning: *"Password must be at least 6 characters long."* |
-| `regPhone` | Tel / Digits | Standard phone number format. | Prevents empty submission. |
+| `regPhone` | Tel / Digits | Exactly 10 digits (e.g. `0771234567`). | Rejects non-10-digit input with explicit error message. |
 | `regDistrict` | Select Dropdown | Must match one of 25 official Sri Lankan administrative districts. | Fallback defaults to "Colombo" with lat/lng: `(6.9271, 79.8612)`. |
 | `regAddress` | String | Required physical street / organization address. | Form blocks submission if blank. |
-| `regNicNumber` | String | 9 digits + 'V'/'X' or 12 modern digits. | Required for individual donor registration. |
+| `regNicNumber` | Digits | Exactly 12 modern digits (e.g. `200012345678`). | Rejects non-12-digit input with explicit error message. |
 | `nicDocUrl` | File (PNG/JPG/PDF) | Encoded Base64/Data URI or valid file upload. | Embeds interactive document preview for Admin review. |
 | `orgRegNumber` / `brDocUrl` | String & File | Valid BR Number & Business Registration document file. | Required for organization donor registration. |
 | `receiverDetails.bankName` | String | Bank name, branch, account name, and account number. | Required for receiver registration and monetary disbursements. |
